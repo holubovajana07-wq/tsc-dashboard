@@ -396,6 +396,23 @@ function setLoading(msg, sub) {
 }
 
 // ===================== FILTERS =====================
+function parseDatum(val) {
+  if (!val) return null;
+  // Handle dd.MM.yyyy format from Sheets
+  const s = val.toString().trim();
+  if (s.match(/^\d{2}\.\d{2}\.\d{4}$/)) {
+    const [d, m, y] = s.split('.');
+    return y + '-' + m + '-' + d;
+  }
+  // Handle Date(...) format from gviz
+  if (typeof val === 'string' && val.startsWith('Date(')) {
+    const parts = val.replace('Date(','').replace(')','').split(',');
+    const y = parts[0], m = String(parseInt(parts[1])+1).padStart(2,'0'), d = String(parts[2]).padStart(2,'0');
+    return y + '-' + m + '-' + d;
+  }
+  return s.slice(0,10);
+}
+
 function applyFilters() {
   const from = document.getElementById('f-from').value;
   const to = document.getElementById('f-to').value;
@@ -404,9 +421,10 @@ function applyFilters() {
   const action = document.getElementById('f-action').value;
 
   filtered = allData.filter(row => {
-    const d = row[COL.datum] || '';
-    if (from && d < from) return false;
-    if (to && d > to) return false;
+    const rawD = row[COL.datum];
+    const d = parseDatum(rawD);
+    if (from && d && d < from) return false;
+    if (to && d && d > to) return false;
     if (cs && row[COL.sklad] !== cs) return false;
     if (group && row[COL.skupina] !== group) return false;
     if (action && row[COL.typ] !== action) return false;
@@ -417,8 +435,12 @@ function applyFilters() {
 }
 
 // ===================== HELPERS =====================
-function num(v) { return typeof v === 'number' ? v : parseFloat(v); }
-function isNum(v) { return v !== '' && v !== null && !isNaN(num(v)); }
+function num(v) { 
+  if (typeof v === 'number') return v; 
+  if (v === '' || v === null || v === undefined) return NaN;
+  return parseFloat(String(v).replace(',','.')); 
+}
+function isNum(v) { return v !== '' && v !== null && v !== undefined && !isNaN(num(v)); }
 function pct(a, b) { return b ? Math.round(a/b*100) : 0; }
 function avg(arr) { return arr.length ? Math.round(arr.reduce((a,b)=>a+b,0)/arr.length) : null; }
 
@@ -513,7 +535,10 @@ function buildDnyChart(data) {
 
 function buildTrendChart(data) {
   destroyChart('c-trend');
-  const byM = groupBy(data, r => (r[COL.datum]||'').slice(0,7));
+  const byM = groupBy(data, r => {
+    const d = parseDatum(r[COL.datum]);
+    return d ? d.slice(0,7) : '';
+  });
   const months = Object.keys(byM).sort().filter(m => m.length === 7);
   const lateArr = [], ontimeArr = [], earlyArr = [];
   months.forEach(m => {
@@ -625,8 +650,15 @@ function updateRampy() {
 
   destroyChart('c-rampy');
   const hours = Array.from({ length: 12 }, (_, i) => i + 5);
-  const s093h = hours.map(h => data.filter(r => r[COL.sklad] === '093' && r[COL.zacatek] && r[COL.zacatek].toString().includes('T' + String(h).padStart(2,'0'))).length);
-  const s095h = hours.map(h => data.filter(r => r[COL.sklad] === '095' && r[COL.zacatek] && r[COL.zacatek].toString().includes('T' + String(h).padStart(2,'0'))).length);
+  function getHour(val) {
+    if (!val) return -1;
+    const s = val.toString();
+    const t = s.match(/T(\d{2}):/); if (t) return parseInt(t[1]);
+    const sp = s.match(/(\d{1,2}):\d{2}$/); if (sp) return parseInt(sp[1]);
+    return -1;
+  }
+  const s093h = hours.map(h => data.filter(r => r[COL.sklad] === '093' && getHour(r[COL.zacatek]) === h).length);
+  const s095h = hours.map(h => data.filter(r => r[COL.sklad] === '095' && getHour(r[COL.zacatek]) === h).length);
   charts['c-rampy'] = new Chart(document.getElementById('c-rampy'), {
     type: 'bar',
     data: { labels: hours.map(h => h + 'h'), datasets: [
@@ -645,10 +677,14 @@ function buildHeatmap(data) {
   const grid = DNY.map(() => hours.map(() => 0));
   data.forEach(r => {
     const di = DNY.indexOf(r[COL.den]);
+    if (di === -1) return;
+    // Parse hour from start time string
     const zac = r[COL.zacatek] ? r[COL.zacatek].toString() : '';
-    const hMatch = zac.match(/T(\d{2}):/);
-    if (di === -1 || !hMatch) return;
-    const h = parseInt(hMatch[1]);
+    let h = -1;
+    const tMatch = zac.match(/T(\d{2}):/);
+    const spaceMatch = zac.match(/(\d{1,2}):(\d{2})$/);
+    if (tMatch) h = parseInt(tMatch[1]);
+    else if (spaceMatch) h = parseInt(spaceMatch[1]);
     const hi = hours.indexOf(h);
     if (hi !== -1) grid[di][hi]++;
   });
@@ -728,7 +764,10 @@ function updateVedeni() {
     <div class="metric"><div class="lbl">S093 / S095</div><div class="val">${cs093} / ${cs095}</div></div>
   `;
 
-  const byM = groupBy(data, r => (r[COL.datum]||'').slice(0,7));
+  const byM = groupBy(data, r => {
+    const d = parseDatum(r[COL.datum]);
+    return d ? d.slice(0,7) : '';
+  });
   const months = Object.keys(byM).sort().filter(m => m.length === 7);
 
   document.getElementById('mgmt-table').innerHTML = months.map(m => {
@@ -772,24 +811,4 @@ function updateVedeni() {
     type: 'radar',
     data: { labels: ['Dochvilnost %','Nakládek %','Vykládek %','Bez nedorazilů %','Podíl celku %'],
       datasets: [
-        { label: 'S093', data: [radarStat(s093), pct(s093.filter(r=>r[COL.typ]==='Nakládka').length, s093.length||1), pct(s093.filter(r=>r[COL.typ]==='Vykládka').length, s093.length||1), 100-pct(s093.filter(r=>r[COL.nedorazil]==='Ano').length, s093.length||1), pct(s093.length, data.length||1)], backgroundColor: 'rgba(127,119,221,0.15)', borderColor: '#7F77DD', pointBackgroundColor: '#7F77DD' },
-        { label: 'S095', data: [radarStat(s095), pct(s095.filter(r=>r[COL.typ]==='Nakládka').length, s095.length||1), pct(s095.filter(r=>r[COL.typ]==='Vykládka').length, s095.length||1), 100-pct(s095.filter(r=>r[COL.nedorazil]==='Ano').length, s095.length||1), pct(s095.length, data.length||1)], backgroundColor: 'rgba(29,158,117,0.15)', borderColor: '#1D9E75', pointBackgroundColor: '#1D9E75' }
-      ]
-    },
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { font: { size: 11 } } } }, scales: { r: { min: 0, max: 100, ticks: { display: false } } } }
-  });
-}
-
-// ===================== TABS =====================
-function showTab(name, btn) {
-  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.getElementById('tab-' + name).classList.add('active');
-  if (btn) btn.classList.add('active');
-}
-
-// ===================== START =====================
-loadFromSheets();
-</script>
-</body>
-</html>
+        { label: 'S093', data: [radarStat(s093), pct(s093.filter(r=>r[COL.typ]==='Nakládka').length, s093.length||1), pct(s093.filter(r=>r[COL.typ]==='Vykládka').length, s093.length||1), 100-pct(s093.filter(r=>r[COL.nedorazil]==='Ano').length, s093.length||1), pct(s093.length, data.length||1)], backgroundColor: 'rgba(127,119,
