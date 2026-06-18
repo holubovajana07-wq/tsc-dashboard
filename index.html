@@ -563,9 +563,10 @@ async function loadFromSheets() {
     loadInfo();
     setDefaults();
     applyFilters();
-    await loadM3Data();
     document.getElementById('loading-screen').style.display = 'none';
     document.getElementById('app').style.display = 'block';
+    // M3 data načítáme na pozadí — neblokuje dashboard
+    loadM3Data().catch(e => console.log('M3 data nedostupná:', e));
   } catch(e) {
     setLoading('Chyba: ' + e.message);
   }
@@ -1235,15 +1236,21 @@ let m3Data = [];
 async function loadM3Data() {
   try {
     const url = `https://docs.google.com/spreadsheets/d/${M3_SHEET_ID_DASH}/gviz/tq?tqx=out:json&sheet=M3_DATA`;
-    const resp = await fetch(url);
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10000); // 10s timeout
+    const resp = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeout);
+    if (!resp.ok) { console.log('M3 HTTP error:', resp.status); return; }
     const text = await resp.text();
+    if (!text || text.length < 50) { console.log('M3 prázdná odpověď'); return; }
     const json = JSON.parse(text.substring(47, text.length - 2));
-    const rows = json.table.rows;
+    const rows = json.table.rows || [];
     m3Data = rows.map(row => row.c.map(cell => cell ? (cell.f || cell.v || '') : ''));
     if (m3Data.length > 0 && m3Data[0][0] === 'Datum') m3Data = m3Data.slice(1);
     console.log('M3 dat načteno:', m3Data.length);
   } catch(e) {
-    console.log('M3 data nedostupná:', e.message);
+    if (e.name === 'AbortError') console.log('M3 data timeout');
+    else console.log('M3 data nedostupná:', e.message);
   }
 }
 
@@ -1298,30 +1305,34 @@ function buildM3() {
   const pctZbytky093 = (odjelo093+zbytky093) > 0 ? Math.round(zbytky093/(odjelo093+zbytky093)*100) : 0;
   const pctOdjelo = totalVstup > 0 ? Math.round(totalOdjelo/totalVstup*100) : 0;
 
+  // Pre-compute colors (cannot use ternary with quotes inside template literal)
+  const colZbytky095 = pctZbytky095 > 20 ? '#E24B4A' : '#EF9F27';
+  const colZbytky093 = pctZbytky093 > 20 ? '#E24B4A' : '#EF9F27';
+  const g1 = makeBigGauge(pctOdjelo, 'Splnění plánu celkem', Math.round(totalOdjelo).toLocaleString('cs-CZ'), 'm3', '#185FA5');
+  const g2 = makeBigGauge(pct095, 'Podíl CS1 Úžice (S095)', Math.round(odjelo095).toLocaleString('cs-CZ'), 'm3', '#1D9E75');
+  const g3 = makeBigGauge(pct093, 'Podíl CS1 Prostějov (S093)', Math.round(odjelo093).toLocaleString('cs-CZ'), 'm3', '#7F77DD');
+  const g4 = makeBigGauge(pctZbytky095, 'Zbytkové S095', Math.round(zbytky095).toLocaleString('cs-CZ'), 'm3', colZbytky095);
+  const g5 = makeBigGauge(pctZbytky093, 'Zbytkové S093', Math.round(zbytky093).toLocaleString('cs-CZ'), 'm3', colZbytky093);
+
   document.getElementById('m3-kpi').innerHTML = `
-    <!-- Budíky hlavní -->
     <div class="card" style="margin-bottom:14px;grid-column:1/-1">
       <h3>Přehled vytíženosti — budíky</h3>
       <div class="gauges-row">
-        ${makeBigGauge(pctOdjelo, 'Splnění plánu celkem', Math.round(totalOdjelo).toLocaleString('cs-CZ'), 'm3', '#185FA5')}
-        ${makeBigGauge(pct095, 'Podíl CS1 Úžice (S095)', Math.round(odjelo095).toLocaleString('cs-CZ'), 'm3', '#1D9E75')}
-        ${makeBigGauge(pct093, 'Podíl CS1 Prostějov (S093)', Math.round(odjelo093).toLocaleString('cs-CZ'), 'm3', '#7F77DD')}
-        ${makeBigGauge(pctZbytky095, 'Zbytkové S095', Math.round(zbytky095).toLocaleString('cs-CZ'), 'm3', pctZbytky095>20?'#E24B4A':'#EF9F27')}
-        ${makeBigGauge(pctZbytky093, 'Zbytkové S093', Math.round(zbytky093).toLocaleString('cs-CZ'), 'm3', pctZbytky093>20?'#E24B4A':'#EF9F27')}
+        ${g1}${g2}${g3}${g4}${g5}
       </div>
     </div>
   `;
 
   // KPI řádek pod budíky
-  document.getElementById('m3-kpi2').innerHTML = \`
-    <div class="metric info"><div class="lbl">Závozy celkem</div><div class="val">\${data.length.toLocaleString('cs-CZ')}</div></div>
-    <div class="metric"><div class="lbl">Vstup m3 (plán)</div><div class="val">\${Math.round(totalVstup).toLocaleString('cs-CZ')}</div><div class="sub">m3</div></div>
-    <div class="metric ok"><div class="lbl">Odjelo m3</div><div class="val">\${Math.round(totalOdjelo).toLocaleString('cs-CZ')}</div><div class="sub">m3 (\${pctOdjelo}% plánu)</div></div>
-    <div class="metric warn"><div class="lbl">Zbytkové celkem</div><div class="val">\${Math.round(totalZbytky).toLocaleString('cs-CZ')}</div><div class="sub">\${pctZbytky}% z celku</div></div>
-    <div class="metric"><div class="lbl">S095 / S093 (závozy)</div><div class="val" style="font-size:14px">\${d095.length} / \${d093.length}</div></div>
-  \`;
+  document.getElementById('m3-kpi2').innerHTML = `
+    <div class="metric info"><div class="lbl">Závozy celkem</div><div class="val">${data.length.toLocaleString('cs-CZ')}</div></div>
+    <div class="metric"><div class="lbl">Vstup m3 (plán)</div><div class="val">${Math.round(totalVstup).toLocaleString('cs-CZ')}</div><div class="sub">m3</div></div>
+    <div class="metric ok"><div class="lbl">Odjelo m3</div><div class="val">${Math.round(totalOdjelo).toLocaleString('cs-CZ')}</div><div class="sub">m3 (${pctOdjelo}% plánu)</div></div>
+    <div class="metric warn"><div class="lbl">Zbytkové celkem</div><div class="val">${Math.round(totalZbytky).toLocaleString('cs-CZ')}</div><div class="sub">${pctZbytky}% z celku</div></div>
+    <div class="metric"><div class="lbl">S095 / S093 (závozy)</div><div class="val" style="font-size:14px">${d095.length} / ${d093.length}</div></div>
+  `;
 
-  // M3 trend po měsících
+    // M3 trend po měsících
   const byM = groupBy(data, r => parseDatum(r[M3.datum])?.slice(0,7) || '');
   const months = Object.keys(byM).sort().filter(m=>m.length===7);
   destroyChart('c-m3-trend');
