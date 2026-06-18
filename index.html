@@ -111,6 +111,36 @@ tr:hover td{background:#fafaf7}
     </div>
   </div>
 
+  <!-- HLAVNÍ FILTR PRO VŠECHNY ZÁLOŽKY -->
+  <div style="background:#fff;border-bottom:1px solid #e8e7e2;padding:8px 20px;display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap">
+    <div style="font-size:11px;font-weight:700;color:#185FA5;align-self:center;white-space:nowrap">🔍 Hlavní filtr:</div>
+    <div class="fg"><label>Datum od</label><input type="date" id="g-from" onchange="applyGlobalFilter()"></div>
+    <div class="fg"><label>Datum do</label><input type="date" id="g-to" onchange="applyGlobalFilter()"></div>
+    <div class="fg"><label>Sklad</label>
+      <select id="g-cs" onchange="applyGlobalFilter()">
+        <option value="">Všechny sklady</option>
+        <option value="095">CS1 Úžice (S095)</option>
+        <option value="093">CS1 Prostějov (S093)</option>
+        <option value="096">CS2 Úžice (S096)</option>
+      </select>
+    </div>
+    <div class="fg"><label>Skupina dopravy</label>
+      <select id="g-doprava" onchange="applyGlobalFilter()">
+        <option value="">Vše</option>
+        <option value="DEK doprava">DEK doprava</option>
+        <option value="Dodavatel">Dodavatelé</option>
+      </select>
+    </div>
+    <div class="fg"><label>Typ akce</label>
+      <select id="g-typ" onchange="applyGlobalFilter()">
+        <option value="">Vše</option>
+        <option value="Nakládka">Nakládka</option>
+        <option value="Vykládka">Vykládka</option>
+      </select>
+    </div>
+    <span style="font-size:11px;color:#aaa;align-self:center" id="g-count"></span>
+  </div>
+
   <div class="tabs">
     <button class="tab active" onclick="showTab('prehled',this)">📊 Přehled</button>
     <button class="tab" onclick="showTab('dispecer',this)">📋 Dispečer</button>
@@ -128,7 +158,7 @@ tr:hover td{background:#fafaf7}
         <div class="fg"><label>Datum od</label><input type="date" id="f-from"></div>
         <div class="fg"><label>Datum do</label><input type="date" id="f-to"></div>
         <div class="fg"><label>Sklad</label>
-          <select id="f-cs"><option value="">Všechny</option><option value="093">S093 — Prostějov</option><option value="095">S095 — Úžice</option><option value="096">S096 — CS2</option></select>
+          <select id="f-cs"><option value="">Všechny sklady</option><option value="095">CS1 Úžice (S095)</option><option value="093">CS1 Prostějov (S093)</option><option value="096">CS2 Úžice (S096)</option></select>
         </div>
         <div class="fg"><label>Skupina dopravy</label>
           <select id="f-doprava"><option value="">Vše</option><option value="DEK doprava">DEK doprava</option><option value="Dodavatel">Dodavatelé</option></select>
@@ -177,7 +207,7 @@ tr:hover td{background:#fafaf7}
       <div class="filters">
         <div class="fg"><label>Datum</label><input type="date" id="d-datum"></div>
         <div class="fg"><label>Sklad</label>
-          <select id="d-cs"><option value="">Oba</option><option value="093">S093 — Prostějov</option><option value="095">S095 — Úžice</option></select>
+          <select id="d-cs"><option value="">Všechny</option><option value="095">CS1 Úžice (S095)</option><option value="093">CS1 Prostějov (S093)</option><option value="096">CS2 Úžice (S096)</option></select>
         </div>
         <div class="fg"><label>Dopravce</label>
           <select id="d-dopravce"><option value="">Všichni</option><option value="C.S.CARGO">C.S.CARGO</option><option value="Autodoprava Siegl">Autodoprava Siegl</option><option value="Ostatní">Ostatní DEK</option></select>
@@ -254,7 +284,7 @@ tr:hover td{background:#fafaf7}
         <div class="fg"><label>Datum od</label><input type="date" id="l-from"></div>
         <div class="fg"><label>Datum do</label><input type="date" id="l-to"></div>
         <div class="fg"><label>Sklad</label>
-          <select id="l-cs"><option value="">Oba</option><option value="093">S093</option><option value="095">S095</option></select>
+          <select id="l-cs"><option value="">Všechny</option><option value="095">CS1 Úžice (S095)</option><option value="093">CS1 Prostějov (S093)</option><option value="096">CS2 Úžice (S096)</option></select>
         </div>
         <button class="btn" onclick="buildLogistik()">↻ Zobrazit</button>
       </div>
@@ -294,12 +324,34 @@ tr:hover td{background:#fafaf7}
 
     <!-- RAMPY -->
     <div id="tab-rampy" class="view">
-      <div class="section-title">Vytíženost ramp</div>
+      <div class="section-title">Vytíženost ramp a provozní statistiky</div>
+
+      <!-- Provozní hodiny skladu -->
+      <div class="card">
+        <h3>Provozní doba skladu — nastavení</h3>
+        <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-end">
+          <div class="fg"><label>Sklad</label>
+            <select id="r-sklad-sel" onchange="updateRampyView()">
+              <option value="">Všechny</option>
+              <option value="095">CS1 Úžice (S095)</option>
+              <option value="093">CS1 Prostějov (S093)</option>
+              <option value="096">CS2 Úžice (S096)</option>
+            </select>
+          </div>
+          <div class="fg"><label>Otevření skladu</label><input type="time" id="r-open" value="06:00" onchange="updateRampyView()"></div>
+          <div class="fg"><label>Zavření skladu</label><input type="time" id="r-close" value="16:00" onchange="updateRampyView()"></div>
+          <div class="fg"><label>Přestávka od</label><input type="time" id="r-break-from" value="11:30" onchange="updateRampyView()"></div>
+          <div class="fg"><label>Přestávka do</label><input type="time" id="r-break-to" value="12:00" onchange="updateRampyView()"></div>
+        </div>
+        <div class="metrics m4" style="margin-top:14px" id="ramp-provoz-kpi"></div>
+      </div>
+
       <div class="metrics m4" id="ramp-kpi"></div>
+
       <div class="grid2">
         <div class="card">
-          <h3>S093 vs S095 — dle hodiny</h3>
-          <div class="legend"><span><span class="ld" style="background:#7F77DD"></span>S093</span><span><span class="ld" style="background:#1D9E75"></span>S095</span></div>
+          <h3>Počet rezervací dle hodiny — CS1 Prostějov vs CS1 Úžice</h3>
+          <div class="legend"><span><span class="ld" style="background:#7F77DD"></span>CS1 Prostějov</span><span><span class="ld" style="background:#1D9E75"></span>CS1 Úžice</span><span><span class="ld" style="background:#D85A30"></span>CS2 Úžice</span></div>
           <div style="position:relative;height:230px"><canvas id="c-rampy-h" role="img" aria-label="Rampy hodiny"></canvas></div>
         </div>
         <div class="card">
@@ -307,9 +359,37 @@ tr:hover td{background:#fafaf7}
           <div class="hm-wrap"><div id="heatmap"></div></div>
         </div>
       </div>
+
+      <div class="grid2">
+        <div class="card">
+          <h3>Průměrná doba odbavení dle hodiny (min)</h3>
+          <div style="position:relative;height:220px"><canvas id="c-odb-hodina" role="img" aria-label="Odbavení dle hodiny"></canvas></div>
+        </div>
+        <div class="card">
+          <h3>Doba odbavení — distribuce</h3>
+          <div class="legend"><span><span class="ld" style="background:#639922"></span>&lt;15 min</span><span><span class="ld" style="background:#EF9F27"></span>15–30</span><span><span class="ld" style="background:#E24B4A"></span>&gt;30 min</span></div>
+          <div style="position:relative;height:220px"><canvas id="c-odb-dist" role="img" aria-label="Distribuce odbavení"></canvas></div>
+        </div>
+      </div>
+
       <div class="card">
-        <h3>Přehled ramp</h3>
-        <table><thead><tr><th>Rampa</th><th style="width:60px">Sklad</th><th style="width:75px">Celkem</th><th style="width:75px">Nakládka</th><th style="width:75px">Vykládka</th><th style="width:75px">% pozdě</th><th style="width:90px">Prům. doba odb.</th></tr></thead><tbody id="ramp-table"></tbody></table>
+        <h3>Přehled ramp — detailní statistiky</h3>
+        <div style="overflow-x:auto"><table>
+          <thead><tr>
+            <th>Rampa</th>
+            <th style="width:110px">Sklad</th>
+            <th style="width:65px">Celkem</th>
+            <th style="width:65px">Nakládka</th>
+            <th style="width:65px">Vykládka</th>
+            <th style="width:65px">% pozdě</th>
+            <th style="width:80px">Prům. odb.</th>
+            <th style="width:65px">&lt;15 min</th>
+            <th style="width:65px">15–30</th>
+            <th style="width:65px">&gt;30 min</th>
+            <th style="width:80px">V okně %</th>
+          </tr></thead>
+          <tbody id="ramp-table"></tbody>
+        </table></div>
       </div>
     </div>
 
@@ -406,12 +486,23 @@ function setDefaults() {
   const today = new Date();
   const from = new Date(); from.setDate(today.getDate() - 90);
   const fmt = d => d.toISOString().slice(0,10);
+  // Global filter defaults
+  document.getElementById('g-from').value = fmt(from);
+  document.getElementById('g-to').value = fmt(today);
+  // Tab filter defaults
   ['f-from','l-from'].forEach(id => { const el=document.getElementById(id); if(el) el.value=fmt(from); });
   ['f-to','l-to'].forEach(id => { const el=document.getElementById(id); if(el) el.value=fmt(today); });
   document.getElementById('d-datum').value = fmt(today);
 }
 
 // ===== HELPERS =====
+function skladNazev(cs) {
+  if (cs === '095') return 'CS1 Úžice';
+  if (cs === '093') return 'CS1 Prostějov';
+  if (cs === '096') return 'CS2 Úžice';
+  return cs ? 'S'+cs : '—';
+}
+
 function parseDatum(val) {
   if (!val) return null;
   const s = val.toString().trim();
@@ -498,7 +589,7 @@ function updatePrehled() {
     return `<tr>
       <td style="font-family:monospace;font-size:11px">${r[C.cislo]}</td>
       <td>${r[C.datum]}</td>
-      <td>${r[C.sklad]?'S'+r[C.sklad]:'—'}</td>
+      <td>${skladNazev(r[C.sklad])}</td>
       <td>${r[C.rampa]||'—'}</td>
       <td>${parseTime(r[C.zacatek])}</td>
       <td title="${r[C.dopravce]}">${(r[C.dopravce]||'—').substring(0,22)}</td>
@@ -573,6 +664,7 @@ function buildDispTable() {
     <div class="metric warn"><div class="lbl">Přijelo pozdě</div><div class="val">${diffs.length?pct(late,diffs.length):0}%</div><div class="sub">${late} vozidel</div></div>
     <div class="metric ok"><div class="lbl">Včas / dříve</div><div class="val">${diffs.length?pct(ontime,diffs.length):0}%</div></div>
     <div class="metric danger"><div class="lbl">Nedorazilo</div><div class="val">${noshow}</div></div>
+    <div class="metric"><div class="lbl">CS1 Prostějov / CS1 Úžice / CS2</div><div class="val" style="font-size:14px">${cs093} / ${cs095} / ${cs096_m}</div></div>
   `;
 
   const tbody = document.getElementById('disp-tbody');
@@ -588,7 +680,7 @@ function buildDispTable() {
       <td>${r[C.datum]}</td>
       <td>${r[C.den]}</td>
       <td>${r[C.kt]}</td>
-      <td>${r[C.sklad]?'S'+r[C.sklad]:'—'}</td>
+      <td>${skladNazev(r[C.sklad])}</td>
       <td>${r[C.rampa]||'—'}</td>
       <td>${parseTime(r[C.zacatek])}</td>
       <td>${parseTime(r[C.konec])}</td>
@@ -789,7 +881,7 @@ function buildLogistik() {
   document.getElementById('nevypl-table').innerHTML = nevyplnena.slice(0,50).map(r=>`<tr>
     <td style="font-family:monospace;font-size:11px">${r[C.cislo]}</td>
     <td>${r[C.datum]}</td>
-    <td>${r[C.sklad]?'S'+r[C.sklad]:'—'}</td>
+    <td>${skladNazev(r[C.sklad])}</td>
     <td>${r[C.rampa]||'—'}</td>
     <td>${parseTime(r[C.zacatek])}</td>
     <td title="${r[C.dopravce]}">${(r[C.dopravce]||'—').substring(0,22)}</td>
@@ -834,15 +926,16 @@ function updateRampy() {
 
   const cs093=data.filter(r=>r[C.sklad]==='093').length;
   const cs095=data.filter(r=>r[C.sklad]==='095').length;
+  const cs096=data.filter(r=>r[C.sklad]==='096').length;
   document.getElementById('ramp-kpi').innerHTML = `
     <div class="metric info"><div class="lbl">Aktivní rampy</div><div class="val">${ramps.length}</div></div>
-    <div class="metric"><div class="lbl">S093 — Prostějov</div><div class="val">${cs093.toLocaleString('cs-CZ')}</div></div>
-    <div class="metric"><div class="lbl">S095 — Úžice</div><div class="val">${cs095.toLocaleString('cs-CZ')}</div></div>
-    <div class="metric warn"><div class="lbl">Nejvytíženější</div><div class="val" style="font-size:16px">${ramps[0]?.name||'—'}</div><div class="sub">${ramps[0]?.n||0} rez.</div></div>
+    <div class="metric"><div class="lbl">CS1 Prostějov (S093)</div><div class="val">${cs093.toLocaleString('cs-CZ')}</div><div class="sub">rezervací</div></div>
+    <div class="metric"><div class="lbl">CS1 Úžice (S095)</div><div class="val">${cs095.toLocaleString('cs-CZ')}</div><div class="sub">rezervací</div></div>
+    <div class="metric"><div class="lbl">CS2 Úžice (S096)</div><div class="val">${cs096.toLocaleString('cs-CZ')}</div><div class="sub">rezervací</div></div>
   `;
 
   document.getElementById('ramp-table').innerHTML = ramps.map(r=>`<tr>
-    <td><strong>${r.name}</strong></td><td>${r.cs?'S'+r.cs:'—'}</td>
+    <td><strong>${r.name}</strong></td><td>${skladNazev(r.cs)}</td>
     <td>${r.n}</td><td>${r.load}</td><td>${r.unload}</td>
     <td style="color:${(r.pctLate||0)>40?'#A32D2D':'inherit'}">${r.pctLate!==null?r.pctLate+'%':'—'}</td>
     <td style="text-align:center">${r.avgDoba!==null?r.avgDoba+' min':'—'}</td>
@@ -860,7 +953,7 @@ function updateRampy() {
   const s093h=hours.map(h=>data.filter(r=>r[C.sklad]==='093'&&getHour(r[C.zacatek])===h).length);
   const s095h=hours.map(h=>data.filter(r=>r[C.sklad]==='095'&&getHour(r[C.zacatek])===h).length);
   charts['c-rampy-h'] = new Chart(document.getElementById('c-rampy-h'), {
-    type:'bar',data:{labels:hours.map(h=>h+'h'),datasets:[{label:'S093',data:s093h,backgroundColor:'#7F77DD',borderRadius:2},{label:'S095',data:s095h,backgroundColor:'#1D9E75',borderRadius:2}]},
+    type:'bar',data:{labels:hours.map(h=>h+'h'),datasets:[{label:'S093',data:s093h,backgroundColor:'#7F77DD',borderRadius:2},{label:'CS1 Úžice',data:s095h,backgroundColor:'#1D9E75',borderRadius:2}]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{autoSkip:false,font:{size:9}}},y:{}}}
   });
 
@@ -899,6 +992,7 @@ function updateVedeni() {
     <div class="metric warn"><div class="lbl">Přijelo pozdě</div><div class="val">${diffs.length?pct(late,diffs.length):0}%</div></div>
     <div class="metric ok"><div class="lbl">Odbaveno v okně</div><div class="val">${hodnoceno?pct(vOkne,hodnoceno):0}%</div></div>
     <div class="metric danger"><div class="lbl">Nedorazilo</div><div class="val">${noshow}</div></div>
+    <div class="metric"><div class="lbl">CS1 Prostějov / CS1 Úžice / CS2</div><div class="val" style="font-size:14px">${cs093} / ${cs095} / ${cs096_m}</div></div>
   `;
 
   const byM=groupBy(data,r=>parseDatum(r[C.datum])?.slice(0,7)||'');
@@ -942,8 +1036,8 @@ function updateVedeni() {
     type:'radar',
     data:{labels:['Dochvilnost %','Nakládek %','Vykládek %','Bez nedorazilů %','Podíl celku %'],
       datasets:[
-        {label:'S093',data:[rStat(s093),pct(s093.filter(r=>r[C.typ].includes('Nakládka')).length,s093.length||1),pct(s093.filter(r=>r[C.typ].includes('Vykládka')).length,s093.length||1),100-pct(s093.filter(r=>r[C.nedorazil]==='Ano').length,s093.length||1),pct(s093.length,data.length||1)],backgroundColor:'rgba(127,119,221,0.15)',borderColor:'#7F77DD',pointBackgroundColor:'#7F77DD'},
-        {label:'S095',data:[rStat(s095),pct(s095.filter(r=>r[C.typ].includes('Nakládka')).length,s095.length||1),pct(s095.filter(r=>r[C.typ].includes('Vykládka')).length,s095.length||1),100-pct(s095.filter(r=>r[C.nedorazil]==='Ano').length,s095.length||1),pct(s095.length,data.length||1)],backgroundColor:'rgba(29,158,117,0.15)',borderColor:'#1D9E75',pointBackgroundColor:'#1D9E75'}
+        {label:'CS1 Prostějov',data:[rStat(s093),pct(s093.filter(r=>r[C.typ].includes('Nakládka')).length,s093.length||1),pct(s093.filter(r=>r[C.typ].includes('Vykládka')).length,s093.length||1),100-pct(s093.filter(r=>r[C.nedorazil]==='Ano').length,s093.length||1),pct(s093.length,data.length||1)],backgroundColor:'rgba(127,119,221,0.15)',borderColor:'#7F77DD',pointBackgroundColor:'#7F77DD'},
+        {label:'CS1 Úžice',data:[rStat(s095),pct(s095.filter(r=>r[C.typ].includes('Nakládka')).length,s095.length||1),pct(s095.filter(r=>r[C.typ].includes('Vykládka')).length,s095.length||1),100-pct(s095.filter(r=>r[C.nedorazil]==='Ano').length,s095.length||1),pct(s095.length,data.length||1)],backgroundColor:'rgba(29,158,117,0.15)',borderColor:'#1D9E75',pointBackgroundColor:'#1D9E75'}
       ]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:11}}}},scales:{r:{min:0,max:100,ticks:{display:false}}}}
   });
@@ -958,6 +1052,40 @@ function showTab(name, btn) {
   // Trigger specific builds
   if(name==='dispecer') buildDispTable();
   if(name==='logistik') buildLogistik();
+}
+
+// ===== GLOBAL FILTER =====
+function applyGlobalFilter() {
+  const from = document.getElementById('g-from').value;
+  const to = document.getElementById('g-to').value;
+  const cs = document.getElementById('g-cs').value;
+  const doprava = document.getElementById('g-doprava').value;
+  const typ = document.getElementById('g-typ').value;
+
+  // Sync to tab filters
+  ['f-from','l-from'].forEach(id=>{const el=document.getElementById(id);if(el&&from)el.value=from;});
+  ['f-to','l-to'].forEach(id=>{const el=document.getElementById(id);if(el&&to)el.value=to;});
+  ['f-cs','l-cs','d-cs'].forEach(id=>{const el=document.getElementById(id);if(el&&cs)el.value=cs;});
+  const fd=document.getElementById('f-doprava');if(fd&&doprava)fd.value=doprava;
+  const ft=document.getElementById('f-typ');if(ft&&typ)ft.value=typ;
+
+  filtered = allData.filter(r => {
+    const d = parseDatum(r[C.datum]);
+    if (from && d && d < from) return false;
+    if (to && d && d > to) return false;
+    if (cs && r[C.sklad] !== cs) return false;
+    if (doprava && r[C.skupDopravy] !== doprava) return false;
+    if (typ && !r[C.typ].includes(typ)) return false;
+    return true;
+  });
+
+  document.getElementById('g-count').textContent = filtered.length.toLocaleString('cs-CZ') + ' rezervací';
+  updateAll();
+  // Rebuild current logistik if active
+  const logActive = document.getElementById('tab-logistik').classList.contains('active');
+  if (logActive) buildLogistik();
+  const dispActive = document.getElementById('tab-dispecer').classList.contains('active');
+  if (dispActive) buildDispTable();
 }
 
 // ===== START =====
