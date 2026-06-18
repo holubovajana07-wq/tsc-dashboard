@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TSC Dashboard — DEK Centrální sklad</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,sans-serif;background:#f0efea;color:#1a1a18;font-size:14px}
+
+/* LOGIN SCREEN */
+#login-screen{position:fixed;inset:0;background:#1a1a18;display:flex;align-items:center;justify-content:center;z-index:1000}
+.login-box{background:#fff;border-radius:12px;padding:32px;width:360px}
+.login-logo{font-size:22px;font-weight:700;color:#1a1a18;margin-bottom:4px}
+.login-logo span{color:#185FA5}
+.login-sub{font-size:12px;color:#aaa;margin-bottom:24px}
+.login-label{font-size:11px;font-weight:600;color:#888;margin-bottom:4px;display:block}
+.login-input{width:100%;padding:9px 12px;border:1px solid #ddd;border-radius:6px;font-size:13px;margin-bottom:14px}
+.login-btn{width:100%;padding:10px;background:#185FA5;color:#fff;border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer}
+.login-btn:hover{background:#0c447c}
+.login-btn:disabled{background:#aaa;cursor:default}
+.login-err{color:#A32D2D;font-size:12px;margin-top:8px;display:none}
+.login-note{font-size:11px;color:#aaa;margin-top:12px;text-align:center}
+
+/* TOPBAR */
+.topbar{background:#fff;border-bottom:1px solid #ddd;padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:52px;position:sticky;top:0;z-index:100}
+.topbar-left{display:flex;align-items:center;gap:12px}
+.logo{font-size:16px;font-weight:700;color:#1a1a18}
+.logo span{color:#185FA5}
+.badge{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:500}
+.badge-green{background:#EAF3DE;color:#27500A}
+.badge-orange{background:#FAEEDA;color:#633806}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.last-update{font-size:11px;color:#aaa}
+.refresh-btn{font-size:12px;padding:5px 12px;border:1px solid #ddd;border-radius:6px;cursor:pointer;background:#fff}
+.refresh-btn:hover{background:#f5f5f0}
+.logout-btn{font-size:12px;padding:5px 12px;border:1px solid #ddd;border-radius:6px;cursor:pointer;background:#fff;color:#A32D2D}
+
+/* TABS */
+.tabs{display:flex;gap:2px;background:#f0efea;padding:12px 20px 0}
+.tab{padding:9px 18px;border-radius:8px 8px 0 0;cursor:pointer;font-size:13px;font-weight:500;color:#888;background:#e4e3de;border:none;transition:all 0.15s}
+.tab.active{background:#fff;color:#1a1a18;border-bottom:2px solid #185FA5}
+.tab:hover:not(.active){background:#dad9d4}
+
+/* CONTENT */
+.content{background:#fff;min-height:calc(100vh - 112px);padding:20px}
+.view{display:none}.view.active{display:block}
+
+/* LOADING */
+.loading-overlay{position:fixed;inset:0;background:rgba(255,255,255,0.85);display:none;align-items:center;justify-content:center;z-index:500;flex-direction:column;gap:12px}
+.loading-overlay.show{display:flex}
+.spinner{width:36px;height:36px;border:3px solid #e0e0e0;border-top-color:#185FA5;border-radius:50%;animation:spin 0.8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-size:13px;color:#888}
+
+/* FILTERS */
+.filters{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-bottom:18px;padding:12px 14px;background:#f8f7f2;border-radius:8px;border:1px solid #e8e7e2}
+.fg{display:flex;flex-direction:column;gap:4px}
+.fg label{font-size:11px;color:#888;font-weight:500}
+.fg select,.fg input{font-size:12px;padding:5px 8px;border:1px solid #ddd;border-radius:6px;background:#fff;min-width:120px}
+.btn-primary{padding:6px 14px;font-size:12px;cursor:pointer;border:none;border-radius:6px;background:#185FA5;color:#fff;margin-top:16px;font-weight:500}
+.btn-primary:hover{background:#0c447c}
+
+/* METRICS */
+.metrics{display:grid;gap:10px;margin-bottom:18px}
+.metrics-5{grid-template-columns:repeat(5,1fr)}
+.metrics-4{grid-template-columns:repeat(4,1fr)}
+.metric{background:#f8f7f2;border-radius:8px;padding:12px 14px;border:1px solid #e8e7e2}
+.metric .lbl{font-size:11px;color:#888;font-weight:500;margin-bottom:4px}
+.metric .val{font-size:24px;font-weight:700;line-height:1.1}
+.metric .sub{font-size:11px;color:#aaa;margin-top:3px}
+.metric.warn .val{color:#BA7517}
+.metric.ok .val{color:#3B6D11}
+.metric.danger .val{color:#A32D2D}
+.metric.info .val{color:#185FA5}
+
+/* GRID */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+
+/* CARDS */
+.card{background:#fff;border:1px solid #e8e7e2;border-radius:10px;padding:16px;margin-bottom:14px}
+.card h3{font-size:12px;font-weight:600;color:#888;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.4px}
+.legend{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px;font-size:11px;color:#888}
+.legend span{display:flex;align-items:center;gap:4px}
+.ld{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+
+/* TABLE */
+table{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed}
+th{text-align:left;color:#888;font-weight:600;padding:6px 8px;border-bottom:1px solid #e8e7e2;font-size:11px;text-transform:uppercase;letter-spacing:0.3px;white-space:nowrap}
+td{padding:7px 8px;border-bottom:1px solid #f5f4ef;color:#1a1a18;vertical-align:middle;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#fafaf7}
+
+/* PILLS */
+.pill{display:inline-block;font-size:10px;padding:2px 8px;border-radius:20px;font-weight:500}
+.pill-late{background:#FAEEDA;color:#633806}
+.pill-ok{background:#EAF3DE;color:#27500A}
+.pill-early{background:#E6F1FB;color:#185FA5}
+.pill-nd{background:#f0efea;color:#888}
+.pill-danger{background:#FCEBEB;color:#501313}
+
+/* RANK */
+.rank-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #f5f4ef}
+.rank-row:last-child{border-bottom:none}
+.rank-num{font-size:13px;font-weight:700;color:#ddd;width:20px;text-align:center}
+.rank-name{font-size:12px;font-weight:500;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar-bg{flex:1;background:#f0efea;border-radius:4px;height:6px;max-width:120px}
+.bar-fill{height:6px;border-radius:4px}
+.rank-pct{font-size:11px;width:40px;text-align:right;font-weight:600}
+
+/* SECTION */
+.section-title{font-size:15px;font-weight:600;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid #e8e7e2}
+
+/* EMPTY STATE */
+.empty{text-align:center;padding:40px;color:#aaa;font-size:13px}
+
+/* ALERT */
+.alert{padding:10px 14px;border-radius:6px;font-size:12px;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.alert-info{background:#E6F1FB;color:#185FA5;border:1px solid #B5D4F4}
+.alert-warn{background:#FAEEDA;color:#633806;border:1px solid #FAC775}
+
+/* HEATMAP */
+.hm-grid{margin-top:4px}
+.hm-header{display:flex;gap:3px;margin-bottom:3px;padding-left:40px}
+.hm-hlabel{width:36px;text-align:center;font-size:10px;color:#888}
+.hm-row{display:flex;gap:3px;margin-bottom:3px;align-items:center}
+.hm-rlabel{width:36px;font-size:10px;color:#888;text-align:right;padding-right:4px;flex-shrink:0}
+.hm-cell{width:36px;height:26px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:500}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">TSC <span>Dashboard</span></div>
+    <div class="login-sub">DEK Centrální sklad — přihlášení</div>
+    <label class="login-label">E-mail</label>
+    <input class="login-input" id="login-email" type="email" value="holubovajana07@gmail.com" placeholder="email@dek-cz.com">
+    <label class="login-label">Heslo</label>
+    <input class="login-input" id="login-pass" type="password" placeholder="••••••••">
+    <button class="login-btn" id="login-btn" onclick="doLogin()">Přihlásit se</button>
+    <div class="login-err" id="login-err">Přihlášení se nezdařilo. Zkontroluj heslo.</div>
+    <div class="login-note">Přihlašovací údaje se neposílají nikam jinam než do TSC API.</div>
+  </div>
+</div>
+
+<!-- LOADING OVERLAY -->
+<div class="loading-overlay" id="loading">
+  <div class="spinner"></div>
+  <div class="loading-text" id="loading-text">Načítám data z TSC...</div>
+</div>
+
+<!-- MAIN APP (hidden until login) -->
+<div id="app" style="display:none">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="logo">TSC <span>Dispečink</span></div>
+      <span class="badge badge-green" id="status-badge">● Připojeno</span>
+      <span class="badge badge-orange" id="tenant-badge">DEK-CENTRALNISKLAD</span>
+    </div>
+    <div class="topbar-right">
+      <span class="last-update" id="last-update-text">—</span>
+      <button class="refresh-btn" onclick="loadData()">↻ Obnovit</button>
+      <button class="logout-btn" onclick="doLogout()">Odhlásit</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('prehled',this)">📊 Přehled</button>
+    <button class="tab" onclick="showTab('dopravci',this)">🚛 Dopravci</button>
+    <button class="tab" onclick="showTab('rampy',this)">🏭 Rampy</button>
+    <button class="tab" onclick="showTab('plan',this)">📦 Plán vs. realita</button>
+    <button class="tab" onclick="showTab('vedeni',this)">📈 KPI vedení</button>
+  </div>
+
+  <div class="content">
+
+    <!-- TAB: PŘEHLED -->
+    <div id="tab-prehled" class="view active">
+      <div class="filters">
+        <div class="fg"><label>Datum od</label><input type="date" id="f-from"></div>
+        <div class="fg"><label>Datum do</label><input type="date" id="f-to"></div>
+        <div class="fg"><label>Sklad</label>
+          <select id="f-cs">
+            <option value="vse">Všechny</option>
+            <option value="093">S093 — Prostějov</option>
+            <option value="095">S095 — Úžice</option>
+          </select>
+        </div>
+        <div class="fg"><label>Dopravce</label><select id="f-carrier"><option value="">Všichni</option></select></div>
+        <div class="fg"><label>Typ akce</label>
+          <select id="f-action">
+            <option value="">Vše</option>
+            <option value="Loading">Nakládka</option>
+            <option value="Unloading">Vykládka</option>
+          </select>
+        </div>
+        <button class="btn-primary" onclick="applyFilters()">↻ Načíst</button>
+      </div>
+
+      <div class="metrics metrics-5" id="kpi-row">
+        <div class="metric info"><div class="lbl">Celkem rezervací</div><div class="val" id="kpi-total">—</div><div class="sub" id="kpi-period">za vybrané období</div></div>
+        <div class="metric warn"><div class="lbl">Přijelo pozdě</div><div class="val" id="kpi-late">—</div><div class="sub" id="kpi-late-n">—</div></div>
+        <div class="metric ok"><div class="lbl">Přijelo včas</div><div class="val" id="kpi-ontime">—</div><div class="sub" id="kpi-ontime-n">—</div></div>
+        <div class="metric"><div class="lbl">Průměr. zpoždění</div><div class="val" id="kpi-avg">—</div><div class="sub">plán vs. příjezd</div></div>
+        <div class="metric danger"><div class="lbl">Nedorazilo</div><div class="val" id="kpi-noshow">—</div><div class="sub">vozidel</div></div>
+      </div>
+
+      <div class="grid2">
+        <div class="card">
+          <h3>Rezervace podle dne v týdnu</h3>
+          <div class="legend">
+            <span><span class="ld" style="background:#378ADD"></span>Nakládka</span>
+            <span><span class="ld" style="background:#1D9E75"></span>Vykládka</span>
+          </div>
+          <div style="position:relative;height:220px"><canvas id="c-dny" role="img" aria-label="Rezervace dle dne"></canvas></div>
+        </div>
+        <div class="card">
+          <h3>Dochvilnost — trend po měsících</h3>
+          <div class="legend">
+            <span><span class="ld" style="background:#E24B4A"></span>Pozdě</span>
+            <span><span class="ld" style="background:#639922"></span>Včas</span>
+            <span><span class="ld" style="background:#378ADD"></span>Před časem</span>
+          </div>
+          <div style="position:relative;height:220px"><canvas id="c-trend" role="img" aria-label="Trend dochvilnosti"></canvas></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Posledních 20 rezervací</h3>
+        <div style="overflow-x:auto">
+          <table>
+            <thead><tr>
+              <th style="width:90px">Číslo</th>
+              <th style="width:70px">Sklad</th>
+              <th style="width:75px">Začátek</th>
+              <th style="width:75px">Příjezd</th>
+              <th>Dopravce</th>
+              <th style="width:75px">Typ</th>
+              <th style="width:80px">Dochvilnost</th>
+              <th style="width:60px">Odch.</th>
+            </tr></thead>
+            <tbody id="recent-table"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: DOPRAVCI -->
+    <div id="tab-dopravci" class="view">
+      <div class="section-title">Výkonnost dopravců</div>
+      <div class="metrics metrics-4" id="carrier-kpi"></div>
+      <div class="grid2">
+        <div class="card">
+          <h3>Žebříček dochvilnosti</h3>
+          <div id="carrier-rank"></div>
+        </div>
+        <div class="card">
+          <h3>Dochvilnost — porovnání</h3>
+          <div class="legend">
+            <span><span class="ld" style="background:#E24B4A"></span>Pozdě</span>
+            <span><span class="ld" style="background:#378ADD"></span>Před časem</span>
+            <span><span class="ld" style="background:#639922"></span>Na čas</span>
+          </div>
+          <div style="position:relative;height:280px"><canvas id="c-dopravci" role="img" aria-label="Dochvilnost dopravců"></canvas></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Detail dopravců</h3>
+        <div style="overflow-x:auto">
+          <table>
+            <thead><tr>
+              <th>Dopravce</th>
+              <th style="width:80px">Jízd</th>
+              <th style="width:80px">Před časem</th>
+              <th style="width:70px">Na čas</th>
+              <th style="width:70px">Pozdě</th>
+              <th style="width:80px">Nedorazil</th>
+              <th style="width:90px">Hodnocení</th>
+            </tr></thead>
+            <tbody id="carrier-table"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: RAMPY -->
+    <div id="tab-rampy" class="view">
+      <div class="section-title">Vytíženost ramp</div>
+      <div class="metrics metrics-4" id="ramp-kpi"></div>
+      <div class="grid2">
+        <div class="card">
+          <h3>Vytíženost S093 vs S095 — dle hodiny</h3>
+          <div class="legend">
+            <span><span class="ld" style="background:#7F77DD"></span>S093 — Prostějov</span>
+            <span><span class="ld" style="background:#1D9E75"></span>S095 — Úžice</span>
+          </div>
+          <div style="position:relative;height:240px"><canvas id="c-rampy" role="img" aria-label="Vytíženost ramp"></canvas></div>
+        </div>
+        <div class="card">
+          <h3>Tepelná mapa — rezervace dle dne a hodiny</h3>
+          <div class="hm-grid" id="heatmap"></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Přehled ramp</h3>
+        <table>
+          <thead><tr>
+            <th>Rampa</th><th style="width:70px">Sklad</th>
+            <th style="width:80px">Celkem</th>
+            <th style="width:80px">Nakládka</th>
+            <th style="width:80px">Vykládka</th>
+            <th style="width:80px">% pozdě</th>
+          </tr></thead>
+          <tbody id="ramp-table"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB: PLÁN vs REALITA -->
+    <div id="tab-plan" class="view">
+      <div class="section-title">Plán vs. realita — dochvilnost a koše</div>
+      <div class="metrics metrics-4" id="plan-kpi"></div>
+      <div class="grid2">
+        <div class="card">
+          <h3>Koš předčasných příjezdů</h3>
+          <div class="legend"><span><span class="ld" style="background:#378ADD"></span>Počet rezervací</span></div>
+          <div style="position:relative;height:230px"><canvas id="c-early" role="img" aria-label="Předčasné příjezdy"></canvas></div>
+        </div>
+        <div class="card">
+          <h3>Koš zpožděných příjezdů</h3>
+          <div class="legend"><span><span class="ld" style="background:#E24B4A"></span>Počet rezervací</span></div>
+          <div style="position:relative;height:230px"><canvas id="c-late-bins" role="img" aria-label="Zpožděné příjezdy"></canvas></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Průměrná odchylka příjezdu (min) — dle dopravce</h3>
+        <div style="position:relative;height:260px"><canvas id="c-avg-carrier" role="img" aria-label="Průměrná odchylka dle dopravce"></canvas></div>
+      </div>
+    </div>
+
+    <!-- TAB: KPI VEDENÍ -->
+    <div id="tab-vedeni" class="view">
+      <div class="section-title">KPI přehled pro vedení</div>
+      <div class="metrics metrics-5" id="mgmt-kpi"></div>
+      <div class="grid2">
+        <div class="card">
+          <h3>Měsíční trend — počty a dochvilnost</h3>
+          <div class="legend">
+            <span><span class="ld" style="background:#378ADD"></span>Celkem</span>
+            <span><span class="ld" style="background:#E24B4A"></span>Pozdě</span>
+            <span><span class="ld" style="background:#639922"></span>Včas+před</span>
+          </div>
+          <div style="position:relative;height:230px"><canvas id="c-mgmt-trend" role="img" aria-label="Měsíční trend"></canvas></div>
+        </div>
+        <div class="card">
+          <h3>Porovnání S093 vs S095</h3>
+          <div style="position:relative;height:230px"><canvas id="c-sklady" role="img" aria-label="Porovnání skladů"></canvas></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Měsíční souhrn KPI</h3>
+        <table>
+          <thead><tr>
+            <th>Měsíc</th>
+            <th style="width:90px">Rezervací</th>
+            <th style="width:90px">Pozdě</th>
+            <th style="width:80px">% pozdě</th>
+            <th style="width:90px">Před časem</th>
+            <th style="width:90px">Nedorazilo</th>
+            <th style="width:100px">Průměr. odch.</th>
+          </tr></thead>
+          <tbody id="mgmt-table"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /app -->
+
+<script>
+// ========== CONFIG ==========
+const API_BASE = 'https://api.timeslotcontrol.com';
+const TENANT = 'DEK-CENTRALNISKLAD';
+
+// Ramp map (from API)
+const RESOURCE_MAP = {
+  'a49eb052-cc10-4c71-b3d0-194947354fe6': {name:'S095 - 1', cs:'095'},
+  '5a458b83-d10e-43d5-8ed4-ebc7fecae24d': {name:'S095 - 2', cs:'095'},
+  '80882980-99ae-4581-af4b-b720728a9f3c': {name:'S095 - 3', cs:'095'},
+  'cd872959-ba49-47e8-941a-d5865b936661': {name:'S095 - Z', cs:'095'},
+  '75e403a1-9104-4b16-80f7-4719275e34ae': {name:'S093 - 1', cs:'093'},
+  '44d5d55b-8718-462c-936c-aa199ed061c9': {name:'S093 - 2', cs:'093'},
+  '5cc564b4-d20f-4ceb-861a-0eb6a75bfd67': {name:'S093 - 3', cs:'093'},
+  'f5615a4c-5147-46e3-93db-cdc493ac6264': {name:'S093 - 4', cs:'093'},
+  '4eab69ee-653b-4744-9489-a7256a6ca5c7': {name:'S093 - 5', cs:'093'},
+  '9bed8ce1-646a-4f5c-85e6-bbbb6b6dc755': {name:'S093 - 6', cs:'093'},
+};
+
+// Branch offices (pobočky)
+const BRANCHES = {
+  'P100':'Praha Hostivař','P106':'Nehvizdy','P110':'Mladá Boleslav','P120':'Kladno',
+  'P125':'Nymburk','P130':'Mělník','P131':'Kralupy n. Vlt.','P135':'Praha Kbely',
+  'P140':'Benešov','P150':'Praha Stodůlky','P160':'Beroun','P162':'Hořovice',
+  'P165':'Rakovník Lubná','P166':'Nové Strašecí','P170':'Praha Vestec','P180':'Kolín',
+  'P200':'Liberec','P250':'Hradec Králové','P260':'Svitavy','P270':'Svitavy Olomoucká',
+  'P280':'Trutnov','P290':'Jičín','P300':'Ostrava Hrušov','P305':'Ostrava Hrabová',
+  'P320':'Třinec','P350':'Pardubice','P360':'Frýdek-Místek','P370':'Havířov',
+  'P400':'Ústí n. Lab.','P420':'Most','P450':'Teplice','P500':'Sokolov',
+  'P520':'Karlovy Vary','P530':'Cheb','P540':'Plzeň Jateční','P550':'Plzeň Černice',
+  'P560':'Příbram','P570':'Strakonice','P590':'Jindřichův Hradec','P600':'Č. Budějovice',
+  'P620':'Tábor','P640':'Č. Budějovice Hrdějovice','P650':'Jihlava','P670':'Pelhřimov',
+  'P675':'Žďár n. Sázavou','P680':'Vyškov','P690':'Třebíč','P700':'Brno',
+  'P710':'Břeclav','P720':'Hodonín','P730':'Blansko','P740':'Znojmo',
+  'P750':'Zlín Příluky','P760':'Val. Meziříčí','P770':'Staré Město','P780':'Zlín Louky',
+  'P800':'Olomouc','P810':'Přerov','P820':'Prostějov','P830':'Šumperk',
+  'P840':'Ústí n. Orlicí','P850':'Opava','P860':'Chrudim','P890':'Jeseník',
+  'S093':'CS Prostějov','S095':'CS Úžice','S096':'CS2 Úžice'
+};
+
+// ========== STATE ==========
+let token = null;
+let allReservations = [];
+let filteredReservations = [];
+let charts = {};
+
+// ========== AUTH ==========
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pass = document.getElementById('login-pass').value;
+  const btn = document.getElementById('login-btn');
+  const err = document.getElementById('login-err');
+
+  if (!email || !pass) { err.style.display='block'; err.textContent='Vyplň e-mail a heslo.'; return; }
+
+  btn.disabled = true; btn.textContent = 'Přihlašuji...'; err.style.display='none';
+
+  try {
+    const r = await fetch(`${API_BASE}/v3/${TENANT}/Token`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({username: email, password: pass})
+    });
+    const d = await r.json();
+    if (!d.token) throw new Error('No token');
+    token = d.token;
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    // Set default date range (last 90 days)
+    const today = new Date();
+    const from = new Date(); from.setDate(today.getDate() - 90);
+    document.getElementById('f-from').value = from.toISOString().slice(0,10);
+    document.getElementById('f-to').value = today.toISOString().slice(0,10);
+    await loadData();
+  } catch(e) {
+    err.style.display='block'; err.textContent='Přihlášení se nezdařilo. Zkontroluj heslo.';
+    btn.disabled=false; btn.textContent='Přihlásit se';
+  }
+}
+
+function doLogout() {
+  token = null; allReservations = [];
+  document.getElementById('app').style.display='none';
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('login-pass').value='';
+}
+
+// Enter key on password field
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('login-pass').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+});
+
+// ========== API FETCH ==========
+async function fetchAll(url) {
+  let results = [];
+  let nextUrl = url;
+  let pages = 0;
+  while (nextUrl && pages < 20) {
+    const r = await fetch(nextUrl, {headers: {'Authorization': `Bearer ${token}`}});
+    if (!r.ok) throw new Error(`API error ${r.status}`);
+    const d = await r.json();
+    results = results.concat(d.value || []);
+    nextUrl = d['@odata.nextLink'] || null;
+    pages++;
+  }
+  return results;
+}
+
+async function loadData() {
+  showLoading('Načítám rezervace z TSC API...');
+  try {
+    const from = document.getElementById('f-from').value;
+    const to = document.getElementById('f-to').value;
+    const toDate = new Date(to); toDate.setDate(toDate.getDate()+1);
+    const toStr = toDate.toISOString().slice(0,10);
+
+    const url = `${API_BASE}/odata/v1/${TENANT}/Reservation?$filter=Start ge ${from}T00:00:00Z and Start lt ${toStr}T00:00:00Z&$orderby=Start desc&$top=5000`;
+
+    showLoading('Stahuju data z API...');
+    allReservations = await fetchAll(url);
+
+    // Populate carrier filter
+    const carriers = [...new Set(allReservations.map(r => r.Carrier).filter(Boolean))].sort();
+    const sel = document.getElementById('f-carrier');
+    sel.innerHTML = '<option value="">Všichni</option>';
+    carriers.forEach(c => { const o=document.createElement('option'); o.value=c; o.textContent=c; sel.appendChild(o); });
+
+    document.getElementById('last-update-text').textContent = 'Aktualizováno: ' + new Date().toLocaleString('cs-CZ');
+    applyFilters();
+  } catch(e) {
+    hideLoading();
+    alert('Chyba při načítání dat: ' + e.message + '\nZkuste se odhlásit a přihlásit znovu.');
+  }
+}
+
+function applyFilters() {
+  const csFilter = document.getElementById('f-cs').value;
+  const carrierFilter = document.getElementById('f-carrier').value;
+  const actionFilter = document.getElementById('f-action').value;
+
+  filteredReservations = allReservations.filter(r => {
+    const res = RESOURCE_MAP[r.ResourceId];
+    if (csFilter !== 'vse' && res?.cs !== csFilter) return false;
+    if (carrierFilter && r.Carrier !== carrierFilter) return false;
+    if (actionFilter && r.ReservationType !== actionFilter) return false;
+    return true;
+  });
+
+  updateAllViews();
+  hideLoading();
+}
+
+// ========== DATA PROCESSING ==========
+function getCS(r) { return RESOURCE_MAP[r.ResourceId]?.cs || '?'; }
+function getRampName(r) { return RESOURCE_MAP[r.ResourceId]?.name || 'Neznámá'; }
+
+function getArrival(r) {
+  // Priority: RealGateVehicleArrival (parkuje mimo areál) > RealVehicleArrival (na parkoviště)
+  return r.RealGateVehicleArrival || r.RealVehicleArrival || null;
+}
+
+function getDiffMin(r) {
+  const arrival = getArrival(r);
+  if (!arrival || !r.Start) return null;
+  return Math.round((new Date(arrival) - new Date(r.Start)) / 60000);
+}
+
+function getDochvilnost(diff) {
+  if (diff === null) return null;
+  if (diff < -5) return 'před časem';
+  if (diff <= 5) return 'na čas';
+  return 'po čase';
+}
+
+function getEarlyBin(diff) {
+  if (diff === null || diff >= 0) return null;
+  const m = -diff;
+  if (m <= 15) return 'do 15 min';
+  if (m <= 30) return 'do 30 min';
+  if (m <= 60) return 'do 1 h';
+  if (m <= 90) return 'do 1,5 h';
+  if (m <= 120) return 'do 2 h';
+  return 'více než 2 h';
+}
+
+function getLateBin(diff) {
+  if (diff === null || diff <= 0) return null;
+  if (diff <= 15) return 'do 15 min';
+  if (diff <= 30) return 'do 30 min';
+  if (diff <= 60) return 'do 1 h';
+  if (diff <= 90) return 'do 1,5 h';
+  if (diff <= 120) return 'do 2 h';
+  return 'více než 2 h';
+}
+
+function getCarrierGroup(r) {
+  const d = (r.Carrier || '').toUpperCase();
+  if (d.includes('C.S.CARGO') || d.includes('CS CARGO') || d.includes('CSCARGO')) return 'C.S.CARGO';
+  if (d.includes('SIEGL')) return 'Autodoprava Siegl';
+  return 'Ostatní';
+}
+
+function fmtDate(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return d.toLocaleDateString('cs-CZ', {day:'2-digit',month:'2-digit'}) + ' ' + d.toLocaleTimeString('cs-CZ', {hour:'2-digit',minute:'2-digit'});
+}
+
+function fmtTime(iso) {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleTimeString('cs-CZ', {hour:'2-digit',minute:'2-digit'});
+}
+
+function groupBy(arr, key) {
+  return arr.reduce((acc, item) => {
+    const k = key(item);
+    if (!acc[k]) acc[k] = [];
+    acc[k].push(item);
+    return acc;
+  }, {});
+}
+
+// ========== VIEWS ==========
+function updateAllViews() {
+  updatePrehled();
+  updateDopravci();
+  updateRampy();
+  updatePlan();
+  updateVedeni();
+}
+
+function updatePrehled() {
+  const data = filteredReservations;
+  const total = data.length;
+  const withArrival = data.filter(r => getArrival(r));
+  const diffs = data.map(r => getDiffMin(r)).filter(d => d !== null);
+
+  const late = diffs.filter(d => d > 5).length;
+  const ontime = diffs.filter(d => d >= -5 && d <= 5).length;
+  const early = diffs.filter(d => d < -5).length;
+  const noshow = data.filter(r => r.CarrierNotArrived).length;
+  const avgDiff = diffs.length ? Math.round(diffs.reduce((a,b)=>a+b,0)/diffs.length) : null;
+
+  document.getElementById('kpi-total').textContent = total.toLocaleString('cs-CZ');
+  document.getElementById('kpi-late').textContent = diffs.length ? Math.round(late/diffs.length*100)+'%' : '—';
+  document.getElementById('kpi-late-n').textContent = late + ' rezervací';
+  document.getElementById('kpi-ontime').textContent = diffs.length ? Math.round((ontime+early)/diffs.length*100)+'%' : '—';
+  document.getElementById('kpi-ontime-n').textContent = (ontime+early) + ' rezervací';
+  document.getElementById('kpi-avg').textContent = avgDiff !== null ? (avgDiff > 0 ? '+' : '') + avgDiff + ' min' : '—';
+  document.getElementById('kpi-noshow').textContent = noshow;
+
+  // Recent table
+  const recent = [...data].sort((a,b) => new Date(b.Start)-new Date(a.Start)).slice(0,20);
+  const tbody = document.getElementById('recent-table');
+  tbody.innerHTML = recent.map(r => {
+    const diff = getDiffMin(r);
+    const doch = getDochvilnost(diff);
+    const pillCls = doch==='po čase'?'pill-late':doch==='na čas'?'pill-ok':doch==='před časem'?'pill-early':'pill-nd';
+    const devColor = diff===null?'#aaa':diff>5?'#A32D2D':diff<-5?'#185FA5':'#3B6D11';
+    const devText = diff===null?'—':(diff>0?'+':'')+diff;
+    return `<tr>
+      <td style="font-family:monospace;font-size:11px">${r.ReservationNumber}</td>
+      <td>${getCS(r)==='093'?'S093':'S095'}</td>
+      <td>${fmtTime(r.Start)}</td>
+      <td>${fmtTime(getArrival(r))}</td>
+      <td title="${r.Carrier||''}">${(r.Carrier||'—').substring(0,22)}</td>
+      <td>${r.ReservationType==='Loading'?'Nakládka':'Vykládka'}</td>
+      <td><span class="pill ${pillCls}">${doch||'—'}</span></td>
+      <td style="text-align:right;color:${devColor};font-weight:600">${devText}</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="8" class="empty">Žádná data</td></tr>';
+
+  // Charts
+  buildDnyChart(data);
+  buildTrendChart(data);
+}
+
+function buildDnyChart(data) {
+  destroyChart('c-dny');
+  const days = ['Pondělí','Úterý','Středa','Čtvrtek','Pátek','Sobota','Neděle'];
+  const dayMap = {1:0,2:1,3:2,4:3,5:4,6:5,0:6};
+  const loading = new Array(7).fill(0);
+  const unloading = new Array(7).fill(0);
+  data.forEach(r => {
+    const d = new Date(r.Start).getDay();
+    const idx = dayMap[d];
+    if (r.ReservationType==='Loading') loading[idx]++;
+    else unloading[idx]++;
+  });
+  charts['c-dny'] = new Chart(document.getElementById('c-dny'), {
+    type:'bar',
+    data:{labels:days,datasets:[
+      {label:'Nakládka',data:loading,backgroundColor:'#378ADD',borderRadius:3},
+      {label:'Vykládka',data:unloading,backgroundColor:'#1D9E75',borderRadius:3}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{stacked:true,ticks:{autoSkip:false,font:{size:10}}},y:{stacked:true}}}
+  });
+}
+
+function buildTrendChart(data) {
+  destroyChart('c-trend');
+  const byMonth = groupBy(data, r => r.Start.slice(0,7));
+  const months = Object.keys(byMonth).sort();
+  const lateArr=[],ontimeArr=[],earlyArr=[];
+  months.forEach(m => {
+    const diffs = byMonth[m].map(r=>getDiffMin(r)).filter(d=>d!==null);
+    const n = diffs.length || 1;
+    lateArr.push(Math.round(diffs.filter(d=>d>5).length/n*100));
+    ontimeArr.push(Math.round(diffs.filter(d=>d>=-5&&d<=5).length/n*100));
+    earlyArr.push(Math.round(diffs.filter(d=>d<-5).length/n*100));
+  });
+  charts['c-trend'] = new Chart(document.getElementById('c-trend'), {
+    type:'bar',
+    data:{labels:months,datasets:[
+      {label:'Pozdě',data:lateArr,backgroundColor:'#E24B4A',borderRadius:2},
+      {label:'Na čas',data:ontimeArr,backgroundColor:'#639922',borderRadius:2},
+      {label:'Před časem',data:earlyArr,backgroundColor:'#378ADD',borderRadius:2}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{stacked:true,ticks:{autoSkip:false,font:{size:10}}},y:{stacked:true,max:100,ticks:{callback:v=>v+'%'}}}}
+  });
+}
+
+function updateDopravci() {
+  const data = filteredReservations;
+  const byCarrier = groupBy(data, r => r.Carrier || 'Neznámý');
+  const carriers = Object.entries(byCarrier)
+    .map(([name, rows]) => {
+      const diffs = rows.map(r=>getDiffMin(r)).filter(d=>d!==null);
+      const n = rows.length;
+      const late = diffs.filter(d=>d>5).length;
+      const ontime = diffs.filter(d=>d>=-5&&d<=5).length;
+      const early = diffs.filter(d=>d<-5).length;
+      const noshow = rows.filter(r=>r.CarrierNotArrived).length;
+      const pctLate = diffs.length ? Math.round(late/diffs.length*100) : null;
+      return {name,n,late,ontime,early,noshow,pctLate,diffs};
+    })
+    .filter(c=>c.n>=3)
+    .sort((a,b)=>b.n-a.n)
+    .slice(0,10);
+
+  // KPI
+  const best = carriers.filter(c=>c.pctLate!==null).sort((a,b)=>a.pctLate-b.pctLate)[0];
+  const worst = carriers.filter(c=>c.pctLate!==null).sort((a,b)=>b.pctLate-a.pctLate)[0];
+  document.getElementById('carrier-kpi').innerHTML = `
+    <div class="metric info"><div class="lbl">Dopravců (min. 3 jízdy)</div><div class="val">${carriers.length}</div></div>
+    <div class="metric ok"><div class="lbl">Nejlepší dochvilnost</div><div class="val">${best?.pctLate??'—'}%</div><div class="sub">${best?.name?.substring(0,20)||'—'}</div></div>
+    <div class="metric danger"><div class="lbl">Nejhorší dochvilnost</div><div class="val">${worst?.pctLate??'—'}%</div><div class="sub">${worst?.name?.substring(0,20)||'—'}</div></div>
+    <div class="metric warn"><div class="lbl">Průměr pozdě</div><div class="val">${carriers.length?Math.round(carriers.reduce((a,c)=>a+(c.pctLate||0),0)/carriers.length):'—'}%</div></div>
+  `;
+
+  // Rank
+  const rankHtml = carriers.map((c,i) => {
+    const pct = c.pctLate ?? 0;
+    const color = pct<20?'#639922':pct<40?'#EF9F27':'#E24B4A';
+    return `<div class="rank-row">
+      <span class="rank-num">${i+1}</span>
+      <span class="rank-name" title="${c.name}">${c.name.substring(0,28)}</span>
+      <div class="bar-bg"><div class="bar-fill" style="width:${pct}%;background:${color}"></div></div>
+      <span class="rank-pct" style="color:${color}">${pct}%</span>
+    </div>`;
+  }).join('');
+  document.getElementById('carrier-rank').innerHTML = rankHtml || '<div class="empty">Nedostatek dat</div>';
+
+  // Table
+  document.getElementById('carrier-table').innerHTML = carriers.map(c => {
+    const pct = c.pctLate??0;
+    const rating = pct<20?'<span class="pill pill-ok">Výborné</span>':pct<35?'<span class="pill pill-ok">Dobré</span>':pct<50?'<span class="pill pill-late">Průměrné</span>':'<span class="pill pill-danger">Špatné</span>';
+    return `<tr>
+      <td title="${c.name}"><strong>${c.name.substring(0,32)}</strong></td>
+      <td>${c.n}</td>
+      <td>${c.early}</td>
+      <td>${c.ontime}</td>
+      <td style="color:${pct>40?'#A32D2D':'inherit'};font-weight:${pct>40?'600':'400'}">${c.late}</td>
+      <td>${c.noshow}</td>
+      <td>${rating}</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="7" class="empty">Žádná data</td></tr>';
+
+  // Chart
+  destroyChart('c-dopravci');
+  const top8 = carriers.slice(0,8);
+  charts['c-dopravci'] = new Chart(document.getElementById('c-dopravci'), {
+    type:'bar',
+    data:{
+      labels:top8.map(c=>c.name.substring(0,15)),
+      datasets:[
+        {label:'Pozdě %',data:top8.map(c=>c.pctLate??0),backgroundColor:'#E24B4A',borderRadius:3},
+        {label:'Na čas %',data:top8.map(c=>c.diffs.length?Math.round(c.ontime/c.diffs.length*100):0),backgroundColor:'#639922',borderRadius:3},
+        {label:'Před časem %',data:top8.map(c=>c.diffs.length?Math.round(c.early/c.diffs.length*100):0),backgroundColor:'#378ADD',borderRadius:3},
+      ]
+    },
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{stacked:true,max:100,ticks:{callback:v=>v+'%'}},y:{stacked:true,ticks:{font:{size:10}}}}}
+  });
+}
+
+function updateRampy() {
+  const data = filteredReservations;
+  const byRamp = groupBy(data, r => getRampName(r));
+  const ramps = Object.entries(byRamp).map(([name,rows])=>{
+    const cs = rows[0] ? getCS(rows[0]) : '?';
+    const diffs = rows.map(r=>getDiffMin(r)).filter(d=>d!==null);
+    const pctLate = diffs.length ? Math.round(diffs.filter(d=>d>5).length/diffs.length*100) : null;
+    return {name,cs,n:rows.length,loading:rows.filter(r=>r.ReservationType==='Loading').length,unloading:rows.filter(r=>r.ReservationType==='Unloading').length,pctLate};
+  }).sort((a,b)=>b.n-a.n);
+
+  const cs093 = data.filter(r=>getCS(r)==='093').length;
+  const cs095 = data.filter(r=>getCS(r)==='095').length;
+
+  document.getElementById('ramp-kpi').innerHTML = `
+    <div class="metric info"><div class="lbl">Aktivní rampy</div><div class="val">${ramps.length}</div></div>
+    <div class="metric"><div class="lbl">S093 — Prostějov</div><div class="val">${cs093}</div><div class="sub">rezervací</div></div>
+    <div class="metric"><div class="lbl">S095 — Úžice</div><div class="val">${cs095}</div><div class="sub">rezervací</div></div>
+    <div class="metric warn"><div class="lbl">Nejvytíženější</div><div class="val">${ramps[0]?.name||'—'}</div><div class="sub">${ramps[0]?.n||0} rezervací</div></div>
+  `;
+
+  document.getElementById('ramp-table').innerHTML = ramps.map(r=>`<tr>
+    <td><strong>${r.name}</strong></td>
+    <td>${r.cs==='093'?'S093':'S095'}</td>
+    <td>${r.n}</td><td>${r.loading}</td><td>${r.unloading}</td>
+    <td style="color:${(r.pctLate||0)>40?'#A32D2D':'inherit'}">${r.pctLate!==null?r.pctLate+'%':'—'}</td>
+  </tr>`).join('') || '<tr><td colspan="6" class="empty">Žádná data</td></tr>';
+
+  // Ramp by hour chart
+  destroyChart('c-rampy');
+  const hours = Array.from({length:12},(_,i)=>i+5);
+  const s093h = hours.map(h=>data.filter(r=>getCS(r)==='093'&&new Date(r.Start).getHours()===h).length);
+  const s095h = hours.map(h=>data.filter(r=>getCS(r)==='095'&&new Date(r.Start).getHours()===h).length);
+  charts['c-rampy'] = new Chart(document.getElementById('c-rampy'), {
+    type:'bar',
+    data:{labels:hours.map(h=>h+'h'),datasets:[
+      {label:'S093',data:s093h,backgroundColor:'#7F77DD',borderRadius:2},
+      {label:'S095',data:s095h,backgroundColor:'#1D9E75',borderRadius:2}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{autoSkip:false,font:{size:10}}},y:{}}}
+  });
+
+  // Heatmap
+  buildHeatmap(data);
+}
+
+function buildHeatmap(data) {
+  const days = ['Po','Út','St','Čt','Pá'];
+  const dayMap = {1:0,2:1,3:2,4:3,5:4};
+  const hours = [6,7,8,9,10,11,12,13,14,15];
+  const grid = days.map(()=>hours.map(()=>0));
+  data.forEach(r=>{
+    const d=new Date(r.Start); const di=dayMap[d.getDay()]; const h=d.getHours();
+    const hi=hours.indexOf(h);
+    if(di!==undefined&&hi!==-1) grid[di][hi]++;
+  });
+  const max=Math.max(...grid.flat(),1);
+  let html='<div class="hm-header">'+hours.map(h=>`<div class="hm-hlabel">${h}h</div>`).join('')+'</div>';
+  days.forEach((day,di)=>{
+    html+=`<div class="hm-row"><div class="hm-rlabel">${day}</div>`;
+    hours.forEach((_,hi)=>{
+      const v=grid[di][hi]; const t=v/max;
+      const r2=Math.round(29+(226-29)*t),g2=Math.round(158+(75-158)*t),b2=Math.round(117+(74-117)*t);
+      const tc=t>0.6?'#fff':'#333';
+      html+=`<div class="hm-cell" style="background:rgb(${r2},${g2},${b2});color:${tc}">${v||''}</div>`;
+    });
+    html+='</div>';
+  });
+  document.getElementById('heatmap').innerHTML=html;
+}
+
+function updatePlan() {
+  const data = filteredReservations;
+  const diffs = data.map(r=>getDiffMin(r)).filter(d=>d!==null);
+  const early = diffs.filter(d=>d<-5).length;
+  const ontime = diffs.filter(d=>d>=-5&&d<=5).length;
+  const late = diffs.filter(d=>d>5).length;
+  const avg = diffs.length ? Math.round(diffs.reduce((a,b)=>a+b,0)/diffs.length) : null;
+
+  document.getElementById('plan-kpi').innerHTML = `
+    <div class="metric info"><div class="lbl">S měřitelným příjezdem</div><div class="val">${diffs.length}</div><div class="sub">z ${data.length} rezervací</div></div>
+    <div class="metric ok"><div class="lbl">Přijelo před časem</div><div class="val">${early}</div><div class="sub">${diffs.length?Math.round(early/diffs.length*100):0}%</div></div>
+    <div class="metric ok"><div class="lbl">Přijelo na čas (±5)</div><div class="val">${ontime}</div><div class="sub">${diffs.length?Math.round(ontime/diffs.length*100):0}%</div></div>
+    <div class="metric danger"><div class="lbl">Přijelo pozdě</div><div class="val">${late}</div><div class="sub">${diffs.length?Math.round(late/diffs.length*100):0}%</div></div>
+  `;
+
+  // Early bins
+  const earlyBins = ['do 15 min','do 30 min','do 1 h','do 1,5 h','do 2 h','více než 2 h'];
+  const earlyData = earlyBins.map(b=>diffs.filter(d=>d<-5&&getEarlyBin(d)===b).length);
+  destroyChart('c-early');
+  charts['c-early'] = new Chart(document.getElementById('c-early'), {
+    type:'bar',data:{labels:earlyBins,datasets:[{label:'Počet',data:earlyData,backgroundColor:'#378ADD',borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{autoSkip:false,font:{size:10}}},y:{}}}
+  });
+
+  // Late bins
+  const lateBins = ['do 15 min','do 30 min','do 1 h','do 1,5 h','do 2 h','více než 2 h'];
+  const lateData = lateBins.map(b=>diffs.filter(d=>d>5&&getLateBin(d)===b).length);
+  destroyChart('c-late-bins');
+  charts['c-late-bins'] = new Chart(document.getElementById('c-late-bins'), {
+    type:'bar',data:{labels:lateBins,datasets:[{label:'Počet',data:lateData,backgroundColor:'#E24B4A',borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{autoSkip:false,font:{size:10}}},y:{}}}
+  });
+
+  // Avg by carrier
+  const byCarrier = groupBy(data, r=>r.Carrier||'Neznámý');
+  const carrierAvgs = Object.entries(byCarrier)
+    .map(([name,rows])=>{
+      const d=rows.map(r=>getDiffMin(r)).filter(x=>x!==null);
+      return {name,avg:d.length?Math.round(d.reduce((a,b)=>a+b,0)/d.length):null,n:rows.length};
+    }).filter(c=>c.n>=3&&c.avg!==null).sort((a,b)=>a.avg-b.avg).slice(0,10);
+
+  destroyChart('c-avg-carrier');
+  charts['c-avg-carrier'] = new Chart(document.getElementById('c-avg-carrier'), {
+    type:'bar',
+    data:{labels:carrierAvgs.map(c=>c.name.substring(0,18)),datasets:[{
+      label:'Průměrná odchylka (min)',
+      data:carrierAvgs.map(c=>c.avg),
+      backgroundColor:carrierAvgs.map(c=>c.avg>5?'#E24B4A':c.avg<-5?'#378ADD':'#639922'),
+      borderRadius:3
+    }]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{callback:v=>(v>0?'+':'')+v+' min'}},y:{ticks:{font:{size:10}}}}}
+  });
+}
+
+function updateVedeni() {
+  const data = filteredReservations;
+  const diffs = data.map(r=>getDiffMin(r)).filter(d=>d!==null);
+  const late=diffs.filter(d=>d>5).length;
+  const noshow=data.filter(r=>r.CarrierNotArrived).length;
+  const cs093=data.filter(r=>getCS(r)==='093').length;
+  const cs095=data.filter(r=>getCS(r)==='095').length;
+
+  document.getElementById('mgmt-kpi').innerHTML = `
+    <div class="metric info"><div class="lbl">Rezervací celkem</div><div class="val">${data.length.toLocaleString('cs-CZ')}</div></div>
+    <div class="metric ok"><div class="lbl">Dochvilnost (včas+dříve)</div><div class="val">${diffs.length?Math.round((diffs.length-late)/diffs.length*100):0}%</div></div>
+    <div class="metric warn"><div class="lbl">Přijelo pozdě</div><div class="val">${diffs.length?Math.round(late/diffs.length*100):0}%</div></div>
+    <div class="metric danger"><div class="lbl">Nedorazilo</div><div class="val">${noshow}</div></div>
+    <div class="metric"><div class="lbl">S093 / S095</div><div class="val">${cs093} / ${cs095}</div></div>
+  `;
+
+  // Monthly table + chart
+  const byMonth = groupBy(data, r=>r.Start.slice(0,7));
+  const months = Object.keys(byMonth).sort();
+  const tbody = document.getElementById('mgmt-table');
+  tbody.innerHTML = months.map(m=>{
+    const rows=byMonth[m];
+    const d=rows.map(r=>getDiffMin(r)).filter(x=>x!==null);
+    const l=d.filter(x=>x>5).length;
+    const pct=d.length?Math.round(l/d.length*100):null;
+    const avg=d.length?Math.round(d.reduce((a,b)=>a+b,0)/d.length):null;
+    const ns=rows.filter(r=>r.CarrierNotArrived).length;
+    const early=d.filter(x=>x<-5).length;
+    return `<tr>
+      <td><strong>${m}</strong></td>
+      <td>${rows.length}</td>
+      <td style="color:${(pct||0)>40?'#A32D2D':'inherit'}">${l}</td>
+      <td style="color:${(pct||0)>40?'#A32D2D':'inherit'};font-weight:${(pct||0)>40?'600':'400'}">${pct!==null?pct+'%':'—'}</td>
+      <td>${early}</td>
+      <td>${ns}</td>
+      <td>${avg!==null?(avg>0?'+':'')+avg+' min':'—'}</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="7" class="empty">Žádná data</td></tr>';
+
+  // Trend chart
+  destroyChart('c-mgmt-trend');
+  const totals=months.map(m=>byMonth[m].length);
+  const lates=months.map(m=>{const d=byMonth[m].map(r=>getDiffMin(r)).filter(x=>x!==null);return d.filter(x=>x>5).length;});
+  const goods=months.map(m=>{const d=byMonth[m].map(r=>getDiffMin(r)).filter(x=>x!==null);return d.filter(x=>x<=5).length;});
+  charts['c-mgmt-trend'] = new Chart(document.getElementById('c-mgmt-trend'), {
+    type:'line',
+    data:{labels:months,datasets:[
+      {label:'Celkem',data:totals,borderColor:'#378ADD',backgroundColor:'rgba(55,138,221,0.08)',tension:0.3,fill:true,pointRadius:4},
+      {label:'Pozdě',data:lates,borderColor:'#E24B4A',backgroundColor:'rgba(226,75,74,0.08)',tension:0.3,fill:true,pointRadius:4},
+      {label:'Včas+před',data:goods,borderColor:'#639922',backgroundColor:'rgba(99,153,34,0.08)',tension:0.3,fill:true,pointRadius:4},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{autoSkip:false,font:{size:10}}},y:{}}}
+  });
+
+  // Radar
+  destroyChart('c-sklady');
+  const s093data=data.filter(r=>getCS(r)==='093');
+  const s095data=data.filter(r=>getCS(r)==='095');
+  const radarStat=(arr)=>{
+    const d=arr.map(r=>getDiffMin(r)).filter(x=>x!==null);
+    return d.length?Math.round((d.filter(x=>x<=5).length/d.length)*100):0;
+  };
+  charts['c-sklady'] = new Chart(document.getElementById('c-sklady'), {
+    type:'radar',
+    data:{
+      labels:['Dochvilnost %','Počet rez.','Nakládek','Vykládek','Nedorazilo'],
+      datasets:[
+        {label:'S093',data:[
+          radarStat(s093data),
+          Math.min(100,Math.round(s093data.length/data.length*100)*2),
+          Math.round(s093data.filter(r=>r.ReservationType==='Loading').length/Math.max(s093data.length,1)*100),
+          Math.round(s093data.filter(r=>r.ReservationType==='Unloading').length/Math.max(s093data.length,1)*100),
+          100-Math.round(s093data.filter(r=>r.CarrierNotArrived).length/Math.max(s093data.length,1)*100)
+        ],backgroundColor:'rgba(127,119,221,0.15)',borderColor:'#7F77DD',pointBackgroundColor:'#7F77DD'},
+        {label:'S095',data:[
+          radarStat(s095data),
+          Math.min(100,Math.round(s095data.length/data.length*100)*2),
+          Math.round(s095data.filter(r=>r.ReservationType==='Loading').length/Math.max(s095data.length,1)*100),
+          Math.round(s095data.filter(r=>r.ReservationType==='Unloading').length/Math.max(s095data.length,1)*100),
+          100-Math.round(s095data.filter(r=>r.CarrierNotArrived).length/Math.max(s095data.length,1)*100)
+        ],backgroundColor:'rgba(29,158,117,0.15)',borderColor:'#1D9E75',pointBackgroundColor:'#1D9E75'}
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:11}}}},scales:{r:{min:0,max:100,ticks:{display:false}}}}
+  });
+}
+
+// ========== UTILS ==========
+function destroyChart(id) { if(charts[id]){charts[id].destroy();delete charts[id];} }
+function showLoading(txt) { document.getElementById('loading').classList.add('show'); document.getElementById('loading-text').textContent=txt||'Načítám...'; }
+function hideLoading() { document.getElementById('loading').classList.remove('show'); }
+
+function showTab(name, btn) {
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  if(btn) btn.classList.add('active');
+}
+</script>
+</body>
+</html>
