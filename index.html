@@ -77,6 +77,14 @@ tr:hover td{background:#fafaf7}
 .hm-row{display:flex;gap:2px;margin-bottom:2px;align-items:center}
 .hm-rlabel{width:30px;font-size:10px;color:#888;text-align:right;padding-right:4px;flex-shrink:0}
 .hm-cell{width:32px;height:22px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:500;flex-shrink:0}
+/* Gauge / budíky */
+.gauge-wrap{display:flex;flex-direction:column;align-items:center;gap:4px}
+.gauge-svg{overflow:visible}
+.gauge-val{font-size:22px;font-weight:700;text-anchor:middle;dominant-baseline:middle}
+.gauge-lbl{font-size:11px;color:#888;text-align:center;font-weight:500}
+.gauge-sub{font-size:11px;color:#aaa;text-align:center}
+.gauges-row{display:flex;gap:20px;justify-content:center;flex-wrap:wrap;padding:10px 0}
+.gauge-box{background:#f8f7f2;border:1px solid #e8e7e2;border-radius:10px;padding:14px 18px;text-align:center;min-width:140px}
 /* Dispečer */
 .dispatcher-table{font-size:12px}
 .dispatcher-table th{background:#185FA5;color:#fff;font-size:11px}
@@ -433,7 +441,8 @@ tr:hover td{background:#fafaf7}
       </div>
 
       <!-- KPI -->
-      <div class="metrics m4" id="m3-kpi"></div>
+      <div id="m3-kpi"></div>
+      <div class="metrics m5" id="m3-kpi2" style="margin-bottom:14px"></div>
 
       <!-- Porovnání skladů -->
       <div class="grid2">
@@ -1153,6 +1162,72 @@ function showTab(name, btn) {
   if(name==='m3') buildM3();
 }
 
+// ===== GAUGE HELPER =====
+function makeGauge(pct, label, sub, color) {
+  const r = 54, cx = 70, cy = 70;
+  const startAngle = -210, endAngle = 30; // 240 degrees arc
+  const totalDeg = 240;
+  const fillDeg = Math.min(pct / 100 * totalDeg, totalDeg);
+  
+  function polar(cx, cy, r, deg) {
+    const rad = (deg - 90) * Math.PI / 180;
+    return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+  }
+  
+  const s = polar(cx, cy, r, startAngle);
+  const trackEnd = polar(cx, cy, r, endAngle);
+  const fillEnd = polar(cx, cy, r, startAngle + fillDeg);
+  const largeArcTrack = totalDeg > 180 ? 1 : 0;
+  const largeArcFill = fillDeg > 180 ? 1 : 0;
+  
+  // Color based on value
+  const col = color || (pct >= 80 ? '#3B6D11' : pct >= 60 ? '#EF9F27' : '#E24B4A');
+  
+  return `<div class="gauge-wrap">
+    <svg class="gauge-svg" width="140" height="90" viewBox="0 0 140 100">
+      <!-- Track -->
+      <path d="M ${s.x} ${s.y} A ${r} ${r} 0 ${largeArcTrack} 1 ${trackEnd.x} ${trackEnd.y}"
+        fill="none" stroke="#e8e7e2" stroke-width="10" stroke-linecap="round"/>
+      <!-- Fill -->
+      ${fillDeg > 0 ? `<path d="M ${s.x} ${s.y} A ${r} ${r} 0 ${largeArcFill} 1 ${fillEnd.x} ${fillEnd.y}"
+        fill="none" stroke="${col}" stroke-width="10" stroke-linecap="round"/>` : ''}
+      <!-- Value text -->
+      <text x="${cx}" y="${cy + 10}" text-anchor="middle" font-size="20" font-weight="700" fill="${col}">${pct}%</text>
+    </svg>
+    <div class="gauge-lbl">${label}</div>
+    ${sub ? `<div class="gauge-sub">${sub}</div>` : ''}
+  </div>`;
+}
+
+function makeBigGauge(pct, label, value, unit, color) {
+  const r = 70, cx = 90, cy = 90;
+  const totalDeg = 240;
+  const fillDeg = Math.min(pct / 100 * totalDeg, totalDeg);
+  const startAngle = -210, endAngle = 30;
+  
+  function polar(cx, cy, r, deg) {
+    const rad = (deg - 90) * Math.PI / 180;
+    return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+  }
+  const s = polar(cx, cy, r, startAngle);
+  const trackEnd = polar(cx, cy, r, endAngle);
+  const fillEnd = polar(cx, cy, r, startAngle + fillDeg);
+  const largeArcFill = fillDeg > 180 ? 1 : 0;
+  const col = color || (pct >= 80 ? '#3B6D11' : pct >= 60 ? '#EF9F27' : '#E24B4A');
+  
+  return `<div class="gauge-wrap">
+    <svg class="gauge-svg" width="180" height="120" viewBox="0 0 180 120">
+      <path d="M ${s.x} ${s.y} A ${r} ${r} 0 1 1 ${trackEnd.x} ${trackEnd.y}"
+        fill="none" stroke="#e8e7e2" stroke-width="12" stroke-linecap="round"/>
+      ${fillDeg > 0 ? `<path d="M ${s.x} ${s.y} A ${r} ${r} 0 ${largeArcFill} 1 ${fillEnd.x} ${fillEnd.y}"
+        fill="none" stroke="${col}" stroke-width="12" stroke-linecap="round"/>` : ''}
+      <text x="${cx}" y="${cy - 8}" text-anchor="middle" font-size="26" font-weight="700" fill="${col}">${pct}%</text>
+      <text x="${cx}" y="${cy + 16}" text-anchor="middle" font-size="12" fill="#888">${value} ${unit}</text>
+    </svg>
+    <div class="gauge-lbl">${label}</div>
+  </div>`;
+}
+
 // ===== M3 DATA =====
 const M3_SHEET_ID_DASH = '1ZHcTr58rhftY_4cZiNr0tJb0wwLXsHsIQrpNEiZUtrE';
 let m3Data = [];
@@ -1207,12 +1282,44 @@ function buildM3() {
   const totalPrevoz = data.reduce((a,r)=>a+m3num(r[M3.prevoz]),0);
   const pctZbytky = totalOdjelo > 0 ? Math.round(totalZbytky/(totalOdjelo+totalZbytky)*100) : 0;
 
+  // Výpočty pro S095 a S093
+  const d095 = data.filter(r=>r[M3.sklad]==='095');
+  const d093 = data.filter(r=>r[M3.sklad]==='093');
+  const vstup095 = d095.reduce((a,r)=>a+m3num(r[M3.celkemVstupM3]),0);
+  const vstup093 = d093.reduce((a,r)=>a+m3num(r[M3.celkemVstupM3]),0);
+  const odjelo095 = d095.reduce((a,r)=>a+m3num(r[M3.odjeloCelkem]),0);
+  const odjelo093 = d093.reduce((a,r)=>a+m3num(r[M3.odjeloCelkem]),0);
+  const zbytky095 = d095.reduce((a,r)=>a+m3num(r[M3.zbytkove]),0);
+  const zbytky093 = d093.reduce((a,r)=>a+m3num(r[M3.zbytkove]),0);
+  const totalAll = odjelo095 + odjelo093;
+  const pct095 = totalAll > 0 ? Math.round(odjelo095/totalAll*100) : 0;
+  const pct093 = totalAll > 0 ? Math.round(odjelo093/totalAll*100) : 0;
+  const pctZbytky095 = (odjelo095+zbytky095) > 0 ? Math.round(zbytky095/(odjelo095+zbytky095)*100) : 0;
+  const pctZbytky093 = (odjelo093+zbytky093) > 0 ? Math.round(zbytky093/(odjelo093+zbytky093)*100) : 0;
+  const pctOdjelo = totalVstup > 0 ? Math.round(totalOdjelo/totalVstup*100) : 0;
+
   document.getElementById('m3-kpi').innerHTML = `
-    <div class="metric info"><div class="lbl">Závozy celkem</div><div class="val">${data.length.toLocaleString('cs-CZ')}</div></div>
-    <div class="metric"><div class="lbl">Vstup m3 (plán)</div><div class="val">${Math.round(totalVstup).toLocaleString('cs-CZ')}</div><div class="sub">m3</div></div>
-    <div class="metric ok"><div class="lbl">Odjelo m3</div><div class="val">${Math.round(totalOdjelo).toLocaleString('cs-CZ')}</div><div class="sub">m3</div></div>
-    <div class="metric warn"><div class="lbl">Zbytkové m3</div><div class="val">${Math.round(totalZbytky).toLocaleString('cs-CZ')}</div><div class="sub">${pctZbytky}% z celku</div></div>
+    <!-- Budíky hlavní -->
+    <div class="card" style="margin-bottom:14px;grid-column:1/-1">
+      <h3>Přehled vytíženosti — budíky</h3>
+      <div class="gauges-row">
+        ${makeBigGauge(pctOdjelo, 'Splnění plánu celkem', Math.round(totalOdjelo).toLocaleString('cs-CZ'), 'm3', '#185FA5')}
+        ${makeBigGauge(pct095, 'Podíl CS1 Úžice (S095)', Math.round(odjelo095).toLocaleString('cs-CZ'), 'm3', '#1D9E75')}
+        ${makeBigGauge(pct093, 'Podíl CS1 Prostějov (S093)', Math.round(odjelo093).toLocaleString('cs-CZ'), 'm3', '#7F77DD')}
+        ${makeBigGauge(pctZbytky095, 'Zbytkové S095', Math.round(zbytky095).toLocaleString('cs-CZ'), 'm3', pctZbytky095>20?'#E24B4A':'#EF9F27')}
+        ${makeBigGauge(pctZbytky093, 'Zbytkové S093', Math.round(zbytky093).toLocaleString('cs-CZ'), 'm3', pctZbytky093>20?'#E24B4A':'#EF9F27')}
+      </div>
+    </div>
   `;
+
+  // KPI řádek pod budíky
+  document.getElementById('m3-kpi2').innerHTML = \`
+    <div class="metric info"><div class="lbl">Závozy celkem</div><div class="val">\${data.length.toLocaleString('cs-CZ')}</div></div>
+    <div class="metric"><div class="lbl">Vstup m3 (plán)</div><div class="val">\${Math.round(totalVstup).toLocaleString('cs-CZ')}</div><div class="sub">m3</div></div>
+    <div class="metric ok"><div class="lbl">Odjelo m3</div><div class="val">\${Math.round(totalOdjelo).toLocaleString('cs-CZ')}</div><div class="sub">m3 (\${pctOdjelo}% plánu)</div></div>
+    <div class="metric warn"><div class="lbl">Zbytkové celkem</div><div class="val">\${Math.round(totalZbytky).toLocaleString('cs-CZ')}</div><div class="sub">\${pctZbytky}% z celku</div></div>
+    <div class="metric"><div class="lbl">S095 / S093 (závozy)</div><div class="val" style="font-size:14px">\${d095.length} / \${d093.length}</div></div>
+  \`;
 
   // M3 trend po měsících
   const byM = groupBy(data, r => parseDatum(r[M3.datum])?.slice(0,7) || '');
