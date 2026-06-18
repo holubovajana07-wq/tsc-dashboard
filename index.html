@@ -14,44 +14,46 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#f0efea;color:#1a
 .badge{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:500}
 .badge-green{background:#EAF3DE;color:#27500A}
 .badge-blue{background:#E6F1FB;color:#185FA5}
-.topbar-right{display:flex;align-items:center;gap:12px}
+.topbar-right{display:flex;align-items:center;gap:10px}
 .last-update{font-size:11px;color:#aaa}
-.refresh-btn{font-size:12px;padding:5px 12px;border:1px solid #ddd;border-radius:6px;cursor:pointer;background:#fff}
-.refresh-btn:hover{background:#f0efea}
-.tabs{display:flex;gap:2px;background:#f0efea;padding:12px 20px 0}
-.tab{padding:9px 18px;border-radius:8px 8px 0 0;cursor:pointer;font-size:13px;font-weight:500;color:#888;background:#e4e3de;border:none;transition:all 0.15s}
+.btn-refresh{font-size:12px;padding:5px 12px;border:1px solid #ddd;border-radius:6px;cursor:pointer;background:#fff}
+.btn-refresh:hover{background:#f0efea}
+.tabs{display:flex;gap:2px;background:#f0efea;padding:12px 20px 0;flex-wrap:wrap}
+.tab{padding:8px 16px;border-radius:8px 8px 0 0;cursor:pointer;font-size:12px;font-weight:500;color:#888;background:#e4e3de;border:none}
 .tab.active{background:#fff;color:#1a1a18;border-bottom:2px solid #185FA5}
 .tab:hover:not(.active){background:#dad9d4}
-.content{background:#fff;min-height:calc(100vh - 112px);padding:20px}
+.content{background:#fff;min-height:calc(100vh - 116px);padding:20px}
 .view{display:none}.view.active{display:block}
 .loading-screen{position:fixed;inset:0;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:200}
 .spinner{width:40px;height:40px;border:3px solid #e0e0e0;border-top-color:#185FA5;border-radius:50%;animation:spin 0.8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .loading-msg{font-size:13px;color:#888}
-.loading-sub{font-size:11px;color:#aaa}
-.filters{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-bottom:18px;padding:12px 14px;background:#f8f7f2;border-radius:8px;border:1px solid #e8e7e2}
+.filters{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px;padding:12px 14px;background:#f8f7f2;border-radius:8px;border:1px solid #e8e7e2}
 .fg{display:flex;flex-direction:column;gap:4px}
 .fg label{font-size:11px;color:#888;font-weight:500}
-.fg select,.fg input{font-size:12px;padding:5px 8px;border:1px solid #ddd;border-radius:6px;background:#fff;min-width:120px}
-.btn-primary{padding:6px 14px;font-size:12px;cursor:pointer;border:none;border-radius:6px;background:#185FA5;color:#fff;margin-top:16px;font-weight:500}
-.btn-primary:hover{background:#0c447c}
-.metrics{display:grid;gap:10px;margin-bottom:18px}
+.fg select,.fg input{font-size:12px;padding:5px 8px;border:1px solid #ddd;border-radius:6px;background:#fff;min-width:110px}
+.btn{padding:6px 14px;font-size:12px;cursor:pointer;border:none;border-radius:6px;background:#185FA5;color:#fff;margin-top:16px;font-weight:500}
+.btn:hover{background:#0c447c}
+.btn-copy{padding:6px 14px;font-size:12px;cursor:pointer;border:1px solid #185FA5;border-radius:6px;background:#fff;color:#185FA5;font-weight:500}
+.btn-copy:hover{background:#E6F1FB}
+.metrics{display:grid;gap:10px;margin-bottom:16px}
 .m5{grid-template-columns:repeat(5,1fr)}.m4{grid-template-columns:repeat(4,1fr)}.m3{grid-template-columns:repeat(3,1fr)}
 .metric{background:#f8f7f2;border-radius:8px;padding:12px 14px;border:1px solid #e8e7e2}
 .metric .lbl{font-size:11px;color:#888;font-weight:500;margin-bottom:4px}
-.metric .val{font-size:24px;font-weight:700;line-height:1.1}
+.metric .val{font-size:22px;font-weight:700;line-height:1.1}
 .metric .sub{font-size:11px;color:#aaa;margin-top:3px}
 .metric.warn .val{color:#BA7517}.metric.ok .val{color:#3B6D11}
 .metric.danger .val{color:#A32D2D}.metric.info .val{color:#185FA5}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px}
 .card{background:#fff;border:1px solid #e8e7e2;border-radius:10px;padding:16px;margin-bottom:14px}
-.card h3{font-size:12px;font-weight:600;color:#888;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.4px}
+.card h3{font-size:12px;font-weight:600;color:#888;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.4px;display:flex;align-items:center;justify-content:space-between}
 .legend{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px;font-size:11px;color:#888}
 .legend span{display:flex;align-items:center;gap:4px}
 .ld{width:10px;height:10px;border-radius:2px;flex-shrink:0}
 table{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed}
-th{text-align:left;color:#888;font-weight:600;padding:6px 8px;border-bottom:1px solid #e8e7e2;font-size:11px;text-transform:uppercase;letter-spacing:0.3px;white-space:nowrap}
-td{padding:7px 8px;border-bottom:1px solid #f5f4ef;color:#1a1a18;vertical-align:middle;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+th{text-align:left;color:#888;font-weight:600;padding:6px 8px;border-bottom:1px solid #e8e7e2;font-size:11px;text-transform:uppercase;letter-spacing:0.3px;white-space:nowrap;background:#f8f7f2}
+td{padding:6px 8px;border-bottom:1px solid #f5f4ef;color:#1a1a18;vertical-align:middle;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 tr:last-child td{border-bottom:none}
 tr:hover td{background:#fafaf7}
 .pill{display:inline-block;font-size:10px;padding:2px 8px;border-radius:20px;font-weight:500}
@@ -59,21 +61,34 @@ tr:hover td{background:#fafaf7}
 .pill-ok{background:#EAF3DE;color:#27500A}
 .pill-early{background:#E6F1FB;color:#185FA5}
 .pill-bad{background:#FCEBEB;color:#501313}
-.rank-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #f5f4ef}
+.pill-nd{background:#f0efea;color:#888}
+.section-title{font-size:15px;font-weight:600;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid #e8e7e2;display:flex;align-items:center;justify-content:space-between}
+.rank-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid #f5f4ef}
 .rank-row:last-child{border-bottom:none}
-.rank-num{font-size:13px;font-weight:700;color:#ddd;width:20px;text-align:center}
+.rank-num{font-size:12px;font-weight:700;color:#ddd;width:18px;text-align:center}
 .rank-name{font-size:12px;font-weight:500;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.bar-bg{width:100px;background:#f0efea;border-radius:4px;height:6px;flex-shrink:0}
-.bar-fill{height:6px;border-radius:4px}
+.bar-bg{width:100px;background:#f0efea;border-radius:4px;height:5px;flex-shrink:0}
+.bar-fill{height:5px;border-radius:4px}
 .rank-pct{font-size:11px;width:36px;text-align:right;font-weight:600}
-.section-title{font-size:15px;font-weight:600;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid #e8e7e2}
-.empty{text-align:center;padding:40px;color:#aaa;font-size:13px}
+.empty{text-align:center;padding:30px;color:#aaa;font-size:13px}
 .hm-wrap{overflow-x:auto}
 .hm-header{display:flex;gap:2px;margin-bottom:2px;padding-left:34px}
-.hm-hlabel{width:34px;text-align:center;font-size:10px;color:#888;flex-shrink:0}
+.hm-hlabel{width:32px;text-align:center;font-size:9px;color:#888;flex-shrink:0}
 .hm-row{display:flex;gap:2px;margin-bottom:2px;align-items:center}
 .hm-rlabel{width:30px;font-size:10px;color:#888;text-align:right;padding-right:4px;flex-shrink:0}
-.hm-cell{width:34px;height:24px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:500;flex-shrink:0}
+.hm-cell{width:32px;height:22px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:500;flex-shrink:0}
+/* Dispečer */
+.dispatcher-table{font-size:12px}
+.dispatcher-table th{background:#185FA5;color:#fff;font-size:11px}
+.dispatcher-table tr.header-row td{background:#E6F1FB;font-weight:600;color:#185FA5;font-size:11px}
+/* KPI boxes */
+.kpi-box{background:#f8f7f2;border-radius:8px;padding:10px 12px;border:1px solid #e8e7e2;text-align:center}
+.kpi-box .kv{font-size:20px;font-weight:700}
+.kpi-box .kl{font-size:10px;color:#888;margin-top:2px}
+.kpi-box.ok .kv{color:#3B6D11}
+.kpi-box.warn .kv{color:#BA7517}
+.kpi-box.danger .kv{color:#A32D2D}
+.kpi-box.info .kv{color:#185FA5}
 </style>
 </head>
 <body>
@@ -81,7 +96,6 @@ tr:hover td{background:#fafaf7}
 <div class="loading-screen" id="loading-screen">
   <div class="spinner"></div>
   <div class="loading-msg" id="loading-msg">Načítám data z Google Sheets...</div>
-  <div class="loading-sub" id="loading-sub">Připravuji dashboard</div>
 </div>
 
 <div id="app" style="display:none">
@@ -93,15 +107,16 @@ tr:hover td{background:#fafaf7}
     </div>
     <div class="topbar-right">
       <span class="last-update" id="last-update">—</span>
-      <button class="refresh-btn" onclick="location.reload()">↻ Obnovit</button>
+      <button class="btn-refresh" onclick="location.reload()">↻ Obnovit</button>
     </div>
   </div>
 
   <div class="tabs">
     <button class="tab active" onclick="showTab('prehled',this)">📊 Přehled</button>
+    <button class="tab" onclick="showTab('dispecer',this)">📋 Dispečer</button>
     <button class="tab" onclick="showTab('dopravci',this)">🚛 Dopravci</button>
-    <button class="tab" onclick="showTab('rampy',this)">🏭 Rampy</button>
-    <button class="tab" onclick="showTab('plan',this)">📦 Plán vs. realita</button>
+    <button class="tab" onclick="showTab('logistik',this)">🏭 Logistik CS</button>
+    <button class="tab" onclick="showTab('rampy',this)">📍 Rampy</button>
     <button class="tab" onclick="showTab('vedeni',this)">📈 KPI vedení</button>
   </div>
 
@@ -113,34 +128,21 @@ tr:hover td{background:#fafaf7}
         <div class="fg"><label>Datum od</label><input type="date" id="f-from"></div>
         <div class="fg"><label>Datum do</label><input type="date" id="f-to"></div>
         <div class="fg"><label>Sklad</label>
-          <select id="f-cs">
-            <option value="">Všechny</option>
-            <option value="093">S093 — Prostějov</option>
-            <option value="095">S095 — Úžice</option>
-          </select>
+          <select id="f-cs"><option value="">Všechny</option><option value="093">S093 — Prostějov</option><option value="095">S095 — Úžice</option><option value="096">S096 — CS2</option></select>
         </div>
-        <div class="fg"><label>Skupina dopravce</label>
-          <select id="f-group">
-            <option value="">Všichni</option>
-            <option value="C.S.CARGO">C.S.CARGO</option>
-            <option value="Autodoprava Siegl">Autodoprava Siegl</option>
-            <option value="Ostatní">Ostatní</option>
-          </select>
+        <div class="fg"><label>Skupina dopravy</label>
+          <select id="f-doprava"><option value="">Vše</option><option value="DEK doprava">DEK doprava</option><option value="Dodavatel">Dodavatelé</option></select>
         </div>
         <div class="fg"><label>Typ akce</label>
-          <select id="f-action">
-            <option value="">Vše</option>
-            <option value="Nakládka">Nakládka</option>
-            <option value="Vykládka">Vykládka</option>
-          </select>
+          <select id="f-typ"><option value="">Vše</option><option value="Nakládka">Nakládka</option><option value="Vykládka">Vykládka</option></select>
         </div>
-        <button class="btn-primary" onclick="applyFilters()">↻ Použít filtry</button>
+        <button class="btn" onclick="applyFilters()">↻ Použít</button>
       </div>
 
       <div class="metrics m5">
         <div class="metric info"><div class="lbl">Celkem rezervací</div><div class="val" id="k-total">—</div><div class="sub" id="k-period">—</div></div>
         <div class="metric warn"><div class="lbl">Přijelo pozdě</div><div class="val" id="k-late">—</div><div class="sub" id="k-late-n">—</div></div>
-        <div class="metric ok"><div class="lbl">Přijelo včas / dříve</div><div class="val" id="k-ontime">—</div><div class="sub" id="k-ontime-n">—</div></div>
+        <div class="metric ok"><div class="lbl">Včas / dříve</div><div class="val" id="k-ontime">—</div><div class="sub" id="k-ontime-n">—</div></div>
         <div class="metric"><div class="lbl">Průměr. odchylka</div><div class="val" id="k-avg">—</div><div class="sub">min (příjezd vs. plán)</div></div>
         <div class="metric danger"><div class="lbl">Nedorazilo</div><div class="val" id="k-noshow">—</div><div class="sub">vozidel</div></div>
       </div>
@@ -148,77 +150,144 @@ tr:hover td{background:#fafaf7}
       <div class="grid2">
         <div class="card">
           <h3>Rezervace podle dne v týdnu</h3>
-          <div class="legend">
-            <span><span class="ld" style="background:#378ADD"></span>Nakládka</span>
-            <span><span class="ld" style="background:#1D9E75"></span>Vykládka</span>
-          </div>
-          <div style="position:relative;height:220px"><canvas id="c-dny" role="img" aria-label="Rezervace dle dne"></canvas></div>
+          <div class="legend"><span><span class="ld" style="background:#378ADD"></span>Nakládka</span><span><span class="ld" style="background:#1D9E75"></span>Vykládka</span></div>
+          <div style="position:relative;height:210px"><canvas id="c-dny" role="img" aria-label="Rezervace dle dne"></canvas></div>
         </div>
         <div class="card">
-          <h3>Trend dochvilnosti — po měsících</h3>
-          <div class="legend">
-            <span><span class="ld" style="background:#E24B4A"></span>Pozdě</span>
-            <span><span class="ld" style="background:#639922"></span>Na čas</span>
-            <span><span class="ld" style="background:#378ADD"></span>Před časem</span>
-          </div>
-          <div style="position:relative;height:220px"><canvas id="c-trend" role="img" aria-label="Trend dochvilnosti"></canvas></div>
+          <h3>Dochvilnost — trend po měsících</h3>
+          <div class="legend"><span><span class="ld" style="background:#E24B4A"></span>Pozdě</span><span><span class="ld" style="background:#639922"></span>Na čas</span><span><span class="ld" style="background:#378ADD"></span>Před časem</span></div>
+          <div style="position:relative;height:210px"><canvas id="c-trend" role="img" aria-label="Trend dochvilnosti"></canvas></div>
         </div>
       </div>
-
       <div class="card">
-        <h3>Posledních 25 rezervací</h3>
-        <div style="overflow-x:auto">
-          <table>
-            <thead><tr>
-              <th style="width:95px">Číslo rez.</th>
-              <th style="width:65px">Datum</th>
-              <th style="width:55px">Sklad</th>
-              <th style="width:55px">Začátek</th>
-              <th style="width:55px">Příjezd</th>
-              <th>Dopravce</th>
-              <th style="width:70px">Typ</th>
-              <th style="width:85px">Dochvilnost</th>
-              <th style="width:55px">Min</th>
-            </tr></thead>
-            <tbody id="recent-table"></tbody>
-          </table>
+        <h3>Posledních 20 rezervací</h3>
+        <div style="overflow-x:auto"><table>
+          <thead><tr><th style="width:90px">Číslo</th><th style="width:75px">Datum</th><th style="width:50px">Sklad</th><th style="width:80px">Rampa</th><th style="width:55px">Začátek</th><th>Dopravce</th><th style="width:70px">Typ</th><th style="width:85px">Dochvilnost</th><th style="width:50px">Min</th></tr></thead>
+          <tbody id="recent-table"></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- DISPEČER -->
+    <div id="tab-dispecer" class="view">
+      <div class="section-title">
+        <span>Denní report pro dispečera</span>
+        <button class="btn-copy" onclick="copyDispTable()">📋 Kopírovat tabulku</button>
+      </div>
+      <div class="filters">
+        <div class="fg"><label>Datum</label><input type="date" id="d-datum"></div>
+        <div class="fg"><label>Sklad</label>
+          <select id="d-cs"><option value="">Oba</option><option value="093">S093 — Prostějov</option><option value="095">S095 — Úžice</option></select>
         </div>
+        <div class="fg"><label>Dopravce</label>
+          <select id="d-dopravce"><option value="">Všichni</option><option value="C.S.CARGO">C.S.CARGO</option><option value="Autodoprava Siegl">Autodoprava Siegl</option><option value="Ostatní">Ostatní DEK</option></select>
+        </div>
+        <button class="btn" onclick="buildDispTable()">↻ Zobrazit</button>
+      </div>
+      <div id="disp-stats" class="metrics m4" style="margin-bottom:14px"></div>
+      <div style="overflow-x:auto">
+        <table class="dispatcher-table" id="disp-table">
+          <thead><tr>
+            <th style="width:85px">Číslo rez.</th>
+            <th style="width:70px">Datum</th>
+            <th style="width:35px">Den</th>
+            <th style="width:40px">KT</th>
+            <th style="width:50px">Sklad</th>
+            <th style="width:75px">Rampa</th>
+            <th style="width:55px">Začátek</th>
+            <th style="width:55px">Konec</th>
+            <th>Dopravce</th>
+            <th style="width:75px">Typ rez.</th>
+            <th>Pobočky / NO</th>
+            <th style="width:55px">Příjezd</th>
+            <th style="width:55px">Parkov.</th>
+            <th style="width:60px">Odch. min</th>
+            <th style="width:85px">Dochvilnost</th>
+            <th style="width:55px">Odbavení</th>
+          </tr></thead>
+          <tbody id="disp-tbody"></tbody>
+        </table>
       </div>
     </div>
 
     <!-- DOPRAVCI -->
     <div id="tab-dopravci" class="view">
       <div class="section-title">Výkonnost dopravců</div>
-      <div class="metrics m4" id="carrier-kpi"></div>
-      <div class="grid2">
-        <div class="card">
-          <h3>Žebříček dochvilnosti</h3>
-          <div id="carrier-rank"></div>
-        </div>
-        <div class="card">
-          <h3>Porovnání — pozdě vs. včas</h3>
-          <div class="legend">
-            <span><span class="ld" style="background:#E24B4A"></span>Pozdě</span>
-            <span><span class="ld" style="background:#639922"></span>Na čas</span>
-            <span><span class="ld" style="background:#378ADD"></span>Před časem</span>
+
+      <!-- DEK doprava sekce -->
+      <div class="card">
+        <h3>DEK DOPRAVA — C.S.CARGO vs. Autodoprava Siegl vs. Ostatní</h3>
+        <div class="grid3" id="dek-kpi" style="margin-bottom:12px"></div>
+        <div class="grid2">
+          <div>
+            <div class="legend"><span><span class="ld" style="background:#E24B4A"></span>Pozdě</span><span><span class="ld" style="background:#639922"></span>Na čas</span><span><span class="ld" style="background:#378ADD"></span>Před časem</span></div>
+            <div style="position:relative;height:200px"><canvas id="c-dek-skupiny" role="img" aria-label="DEK skupiny"></canvas></div>
           </div>
-          <div style="position:relative;height:280px"><canvas id="c-dopravci" role="img" aria-label="Dochvilnost dopravců"></canvas></div>
+          <div id="dek-rank"></div>
         </div>
       </div>
+
+      <!-- Dodavatelé sekce -->
       <div class="card">
-        <h3>Detail všech dopravců</h3>
+        <h3>DODAVATELÉ — dochvilnost podle dopravce</h3>
+        <div class="metrics m4" id="dod-kpi" style="margin-bottom:12px"></div>
+        <div style="overflow-x:auto"><table>
+          <thead><tr><th>Dopravce dodavatele</th><th style="width:70px">Jízd</th><th style="width:80px">Před časem</th><th style="width:70px">Na čas</th><th style="width:70px">Pozdě</th><th style="width:75px">% pozdě</th><th style="width:90px">Hodnocení</th></tr></thead>
+          <tbody id="dod-table"></tbody>
+        </table></div>
+      </div>
+
+      <!-- Všichni dopravci žebříček -->
+      <div class="card">
+        <h3>Žebříček dochvilnosti — všichni dopravci (min. 5 jízd)</h3>
+        <div class="grid2">
+          <div id="all-rank"></div>
+          <div style="position:relative;height:300px"><canvas id="c-all-dopravci" role="img" aria-label="Všichni dopravci"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LOGISTIK CS -->
+    <div id="tab-logistik" class="view">
+      <div class="section-title">Logistik CS — dochvilnost natažení + odbavení v okně</div>
+      <div class="filters">
+        <div class="fg"><label>Datum od</label><input type="date" id="l-from"></div>
+        <div class="fg"><label>Datum do</label><input type="date" id="l-to"></div>
+        <div class="fg"><label>Sklad</label>
+          <select id="l-cs"><option value="">Oba</option><option value="093">S093</option><option value="095">S095</option></select>
+        </div>
+        <button class="btn" onclick="buildLogistik()">↻ Zobrazit</button>
+      </div>
+
+      <!-- KPI boxes -->
+      <div class="metrics m4" id="log-kpi" style="margin-bottom:14px"></div>
+
+      <div class="grid2">
+        <div class="card">
+          <h3>Dochvilnost natažení na plac</h3>
+          <div style="position:relative;height:200px"><canvas id="c-natazeni" role="img" aria-label="Natažení"></canvas></div>
+        </div>
+        <div class="card">
+          <h3>Odbavení v okně</h3>
+          <div style="position:relative;height:200px"><canvas id="c-okno" role="img" aria-label="Okno"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Nevyplněná data -->
+      <div class="card">
+        <h3>Stav dat — nevyplněné záznamy <span id="nevypl-count" style="font-size:11px;color:#A32D2D;font-weight:400"></span></h3>
+        <div style="overflow-x:auto"><table>
+          <thead><tr><th style="width:90px">Číslo rez.</th><th style="width:75px">Datum</th><th style="width:50px">Sklad</th><th style="width:75px">Rampa</th><th style="width:55px">Začátek</th><th>Dopravce</th><th style="width:110px">Stav dat</th></tr></thead>
+          <tbody id="nevypl-table"></tbody>
+        </table></div>
+      </div>
+
+      <!-- KPI skladníků -->
+      <div class="card">
+        <h3>KPI skladníků — počet odbavení a průměrná doba</h3>
         <table>
-          <thead><tr>
-            <th>Dopravce</th>
-            <th style="width:70px">Jízd</th>
-            <th style="width:80px">Před časem</th>
-            <th style="width:70px">Na čas</th>
-            <th style="width:70px">Pozdě</th>
-            <th style="width:75px">% pozdě</th>
-            <th style="width:80px">Nedorazil</th>
-            <th style="width:90px">Hodnocení</th>
-          </tr></thead>
-          <tbody id="carrier-table"></tbody>
+          <thead><tr><th>Skladník</th><th style="width:70px">Zahájil</th><th style="width:70px">Dokončil</th><th style="width:90px">Průměr. doba</th><th style="width:90px">V okně</th><th style="width:90px">% v okně</th></tr></thead>
+          <tbody id="skladnici-table"></tbody>
         </table>
       </div>
     </div>
@@ -229,12 +298,9 @@ tr:hover td{background:#fafaf7}
       <div class="metrics m4" id="ramp-kpi"></div>
       <div class="grid2">
         <div class="card">
-          <h3>S093 vs S095 — počty dle hodiny</h3>
-          <div class="legend">
-            <span><span class="ld" style="background:#7F77DD"></span>S093 Prostějov</span>
-            <span><span class="ld" style="background:#1D9E75"></span>S095 Úžice</span>
-          </div>
-          <div style="position:relative;height:240px"><canvas id="c-rampy" role="img" aria-label="Vytíženost ramp"></canvas></div>
+          <h3>S093 vs S095 — dle hodiny</h3>
+          <div class="legend"><span><span class="ld" style="background:#7F77DD"></span>S093</span><span><span class="ld" style="background:#1D9E75"></span>S095</span></div>
+          <div style="position:relative;height:230px"><canvas id="c-rampy-h" role="img" aria-label="Rampy hodiny"></canvas></div>
         </div>
         <div class="card">
           <h3>Tepelná mapa — den × hodina</h3>
@@ -243,36 +309,7 @@ tr:hover td{background:#fafaf7}
       </div>
       <div class="card">
         <h3>Přehled ramp</h3>
-        <table>
-          <thead><tr>
-            <th>Rampa</th><th style="width:70px">Sklad</th>
-            <th style="width:80px">Celkem</th>
-            <th style="width:80px">Nakládka</th>
-            <th style="width:80px">Vykládka</th>
-            <th style="width:80px">% pozdě</th>
-          </tr></thead>
-          <tbody id="ramp-table"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- PLÁN vs REALITA -->
-    <div id="tab-plan" class="view">
-      <div class="section-title">Plán vs. realita — dochvilnost a koše</div>
-      <div class="metrics m4" id="plan-kpi"></div>
-      <div class="grid2">
-        <div class="card">
-          <h3>Koš předčasných příjezdů</h3>
-          <div style="position:relative;height:230px"><canvas id="c-early" role="img" aria-label="Předčasné příjezdy"></canvas></div>
-        </div>
-        <div class="card">
-          <h3>Koš zpožděných příjezdů</h3>
-          <div style="position:relative;height:230px"><canvas id="c-late-bins" role="img" aria-label="Zpožděné příjezdy"></canvas></div>
-        </div>
-      </div>
-      <div class="card">
-        <h3>Průměrná odchylka příjezdu (min) — dle dopravce</h3>
-        <div style="position:relative;height:280px"><canvas id="c-avg-dev" role="img" aria-label="Průměrná odchylka dle dopravce"></canvas></div>
+        <table><thead><tr><th>Rampa</th><th style="width:60px">Sklad</th><th style="width:75px">Celkem</th><th style="width:75px">Nakládka</th><th style="width:75px">Vykládka</th><th style="width:75px">% pozdě</th><th style="width:90px">Prům. doba odb.</th></tr></thead><tbody id="ramp-table"></tbody></table>
       </div>
     </div>
 
@@ -283,33 +320,17 @@ tr:hover td{background:#fafaf7}
       <div class="grid2">
         <div class="card">
           <h3>Měsíční trend</h3>
-          <div class="legend">
-            <span><span class="ld" style="background:#378ADD"></span>Celkem</span>
-            <span><span class="ld" style="background:#E24B4A"></span>Pozdě</span>
-            <span><span class="ld" style="background:#639922"></span>Včas+dříve</span>
-          </div>
-          <div style="position:relative;height:230px"><canvas id="c-mgmt-trend" role="img" aria-label="Měsíční trend"></canvas></div>
+          <div class="legend"><span><span class="ld" style="background:#378ADD"></span>Celkem</span><span><span class="ld" style="background:#E24B4A"></span>Pozdě</span><span><span class="ld" style="background:#639922"></span>Včas+dříve</span></div>
+          <div style="position:relative;height:220px"><canvas id="c-mgmt-trend" role="img" aria-label="Trend"></canvas></div>
         </div>
         <div class="card">
           <h3>S093 vs S095 — porovnání</h3>
-          <div style="position:relative;height:230px"><canvas id="c-sklady" role="img" aria-label="Porovnání skladů"></canvas></div>
+          <div style="position:relative;height:220px"><canvas id="c-sklady-radar" role="img" aria-label="Sklady"></canvas></div>
         </div>
       </div>
       <div class="card">
         <h3>Měsíční souhrn KPI</h3>
-        <table>
-          <thead><tr>
-            <th>Měsíc</th>
-            <th style="width:80px">Celkem</th>
-            <th style="width:80px">Pozdě</th>
-            <th style="width:70px">% pozdě</th>
-            <th style="width:80px">Před časem</th>
-            <th style="width:80px">Na čas</th>
-            <th style="width:80px">Nedorazilo</th>
-            <th style="width:100px">Průměr. odch.</th>
-          </tr></thead>
-          <tbody id="mgmt-table"></tbody>
-        </table>
+        <table><thead><tr><th>Měsíc</th><th style="width:75px">Celkem</th><th style="width:75px">Pozdě</th><th style="width:70px">% pozdě</th><th style="width:80px">Před časem</th><th style="width:75px">Na čas</th><th style="width:80px">Nedorazilo</th><th style="width:100px">Prům. odch.</th><th style="width:110px">V okně %</th></tr></thead><tbody id="mgmt-table"></tbody></table>
       </div>
     </div>
 
@@ -317,242 +338,176 @@ tr:hover td{background:#fafaf7}
 </div>
 
 <script>
-// ===================== CONFIG =====================
 const SHEET_ID = '1ZHcTr58rhftY_4cZiNr0tJb0wwLXsHsIQrpNEiZUtrE';
 const SHEET_NAME = 'DATA';
-const INFO_SHEET = 'INFO';
 
-// ===================== STATE =====================
-let allData = [];
-let filtered = [];
-let charts = {};
-
-// Sloupce (index v tabulce, 0-based)
-const COL = {
-  cislo: 0, datum: 1, den: 2, kt: 3,
-  sklad: 4, rampa: 5,
-  dopravce: 6, skupina: 7,
-  typ: 8, no: 9,
-  zacatek: 10, konec: 11,
-  prijezd: 12, zahajeni: 13, dokonceni: 14, odjezd: 15,
-  diff: 16, dochvilnost: 17,
-  kosEarly: 18, kosLate: 19,
-  nedorazil: 20, opakovana: 21, aktualizovano: 22
+// Column indices (0-based) matching Apps Script headers
+const C = {
+  cislo:0, datum:1, den:2, kt:3, sklad:4, rampa:5,
+  dopravce:6, skupDopravce:7, skupDopravy:8,
+  dodavatel:9, no:10, typ:11, pocetRadku:12,
+  zacatek:13, konec:14,
+  parkujeMimo:15, parkoviste:16, prijezdPodniku:17,
+  prijato:18, vjezdArealu:19, vjezdRampu:20,
+  zahajeni:21, dokonceni:22, odjezd:23,
+  diffMin:24, dochvilnost:25,
+  kosEarly:26, kosLate:27,
+  stavDat:28,
+  skladStart:29, skladEnd:30, procesne:31,
+  dobaOdb:32,
+  zadPrijezdPodniku:33, zadZahajeni:34, zadDokonceni:35, zadOdjezd:36,
+  zadNedorazil:37, vytvoril:38, upravil:39,
+  nedorazil:40, bezRezervace:41, opakovana:42,
+  aktualizovano:43
 };
 
-// ===================== LOAD =====================
+let allData = [], filtered = [], charts = {};
+
+// ===== LOAD =====
 async function loadFromSheets() {
-  setLoading('Stahuju data z Google Sheets...', 'Může to trvat chvíli (13 000+ řádků)');
+  setLoading('Načítám data ze Sheets...');
   try {
     const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_NAME)}`;
     const resp = await fetch(url);
     const text = await resp.text();
     const json = JSON.parse(text.substring(47, text.length - 2));
-
     const rows = json.table.rows;
-    allData = rows.map(row => row.c.map(cell => cell ? (cell.v !== undefined ? cell.v : cell.f || '') : ''));
-
-    // Skip header row
-    if (allData.length > 0 && typeof allData[0][COL.diff] === 'string' && isNaN(allData[0][COL.diff])) {
+    allData = rows.map(row => row.c.map(cell => cell ? (cell.f || cell.v || '') : ''));
+    // Skip header if first row has text in numeric column
+    if (allData.length > 0 && isNaN(parseFloat(allData[0][C.diffMin])) && allData[0][C.diffMin] !== '') {
       allData = allData.slice(1);
     }
-
-    // Load INFO sheet for last update
     loadInfo();
-
-    // Set default date range
-    const today = new Date();
-    const from = new Date(); from.setDate(today.getDate() - 90);
-    document.getElementById('f-from').value = from.toISOString().slice(0,10);
-    document.getElementById('f-to').value = today.toISOString().slice(0,10);
-
-    console.log('Celkem načteno řádků:', allData.length);
-    if (allData.length > 0) {
-      console.log('Ukázka prvního řádku:', JSON.stringify(allData[0]));
-      console.log('Datum prvního řádku (raw):', allData[0][COL.datum]);
-      console.log('Sklad prvního řádku:', allData[0][COL.sklad]);
-      console.log('Diff prvního řádku:', allData[0][COL.diff]);
-    }
+    setDefaults();
     applyFilters();
-    console.log('Po filtru:', filtered.length, 'řádků');
     document.getElementById('loading-screen').style.display = 'none';
     document.getElementById('app').style.display = 'block';
-
   } catch(e) {
-    setLoading('Chyba při načítání dat', e.message);
-    console.error(e);
+    setLoading('Chyba: ' + e.message);
   }
 }
 
 async function loadInfo() {
   try {
-    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(INFO_SHEET)}`;
+    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=INFO`;
     const resp = await fetch(url);
     const text = await resp.text();
     const json = JSON.parse(text.substring(47, text.length - 2));
     const rows = json.table.rows;
-    if (rows && rows[0]) {
-      const raw = rows[0].c[1] ? (rows[0].c[1].f || rows[0].c[1].v || '') : '';
-      const cas = fmtGvizDateTime(raw.toString());
-      document.getElementById('last-update').textContent = 'Aktualizováno: ' + cas;
+    if (rows && rows[0] && rows[0].c[1]) {
+      document.getElementById('last-update').textContent = 'Aktualizováno: ' + (rows[0].c[1].f || rows[0].c[1].v || '');
     }
   } catch(e) {}
 }
 
-function fmtGvizDateTime(val) {
-  if (!val) return '—';
-  const s = val.toString().trim();
-  if (s.startsWith('Date(')) {
-    const p = s.replace('Date(','').replace(')','').split(',');
-    if (p.length >= 5) {
-      const d = String(p[2]).padStart(2,'0');
-      const m = String(parseInt(p[1])+1).padStart(2,'0');
-      const y = p[0];
-      const h = String(p[3]||0).padStart(2,'0');
-      const min = String(p[4]||0).padStart(2,'0');
-      return d+'.'+m+'.'+y+' '+h+':'+min;
-    }
-  }
-  return s;
+function setLoading(msg) { document.getElementById('loading-msg').textContent = msg; }
+
+function setDefaults() {
+  const today = new Date();
+  const from = new Date(); from.setDate(today.getDate() - 90);
+  const fmt = d => d.toISOString().slice(0,10);
+  ['f-from','l-from'].forEach(id => { const el=document.getElementById(id); if(el) el.value=fmt(from); });
+  ['f-to','l-to'].forEach(id => { const el=document.getElementById(id); if(el) el.value=fmt(today); });
+  document.getElementById('d-datum').value = fmt(today);
 }
 
-function setLoading(msg, sub) {
-  document.getElementById('loading-msg').textContent = msg;
-  document.getElementById('loading-sub').textContent = sub || '';
-}
-
-// ===================== FILTERS =====================
-function fmtGvizTime(val) {
-  if (!val) return '—';
-  const s = val.toString().trim();
-  // gviz Date object: Date(2026,5,18,6,15,0)
-  if (s.startsWith('Date(')) {
-    const parts = s.replace('Date(','').replace(')','').split(',');
-    if (parts.length >= 5) {
-      return String(parts[3]).padStart(2,'0') + ':' + String(parts[4]).padStart(2,'0');
-    }
-    return '—';
-  }
-  // ISO string: 2026-06-18T06:15:00
-  const tMatch = s.match(/T(\d{2}):(\d{2})/);
-  if (tMatch) return tMatch[1] + ':' + tMatch[2];
-  // dd.MM.yyyy HH:mm
-  const spMatch = s.match(/(\d{1,2}):(\d{2})$/);
-  if (spMatch) return spMatch[0];
-  return s.slice(0,5) || '—';
-}
-
+// ===== HELPERS =====
 function parseDatum(val) {
   if (!val) return null;
-  // Handle dd.MM.yyyy format from Sheets
   const s = val.toString().trim();
-  if (s.match(/^\d{2}\.\d{2}\.\d{4}$/)) {
-    const [d, m, y] = s.split('.');
-    return y + '-' + m + '-' + d;
-  }
-  // Handle Date(...) format from gviz
-  if (typeof val === 'string' && val.startsWith('Date(')) {
-    const parts = val.replace('Date(','').replace(')','').split(',');
-    const y = parts[0], m = String(parseInt(parts[1])+1).padStart(2,'0'), d = String(parts[2]).padStart(2,'0');
-    return y + '-' + m + '-' + d;
-  }
+  if (s.match(/^\d{2}\.\d{2}\.\d{4}$/)) { const [d,m,y]=s.split('.'); return y+'-'+m+'-'+d; }
+  if (s.startsWith('Date(')) { const p=s.replace('Date(','').replace(')','').split(','); return p[0]+'-'+String(parseInt(p[1])+1).padStart(2,'0')+'-'+String(p[2]).padStart(2,'0'); }
   return s.slice(0,10);
 }
 
+function parseTime(val) {
+  if (!val) return '';
+  const s = val.toString().trim();
+  const m = s.match(/(\d{1,2}):(\d{2})$/);
+  if (m) return m[1].padStart(2,'0')+':'+m[2];
+  if (s.startsWith('Date(')) { const p=s.replace('Date(','').replace(')','').split(','); return String(p[3]||0).padStart(2,'0')+':'+String(p[4]||0).padStart(2,'0'); }
+  return s.slice(11,16) || '';
+}
+
+function num(v) { if (typeof v === 'number') return v; if (!v || v==='') return NaN; return parseFloat(String(v).replace(',','.')); }
+function isNum(v) { return !isNaN(num(v)); }
+function pct(a,b) { return b ? Math.round(a/b*100) : 0; }
+function avg(arr) { return arr.length ? Math.round(arr.reduce((a,b)=>a+b,0)/arr.length) : null; }
+function groupBy(arr, fn) { return arr.reduce((acc,item) => { const k=fn(item); if(!acc[k]) acc[k]=[]; acc[k].push(item); return acc; }, {}); }
+function destroyChart(id) { if(charts[id]){charts[id].destroy();delete charts[id];} }
+
+function pillDoch(d) {
+  if (!d) return 'pill-nd';
+  if (d.includes('pozdě') || d.includes('po čase')) return 'pill-late';
+  if (d.includes('na čas')) return 'pill-ok';
+  if (d.includes('před')) return 'pill-early';
+  return 'pill-nd';
+}
+
+// ===== FILTERS =====
 function applyFilters() {
   const from = document.getElementById('f-from').value;
   const to = document.getElementById('f-to').value;
   const cs = document.getElementById('f-cs').value;
-  const group = document.getElementById('f-group').value;
-  const action = document.getElementById('f-action').value;
+  const doprava = document.getElementById('f-doprava').value;
+  const typ = document.getElementById('f-typ').value;
 
-  filtered = allData.filter(row => {
-    const rawD = row[COL.datum];
-    const d = parseDatum(rawD);
+  filtered = allData.filter(r => {
+    const d = parseDatum(r[C.datum]);
     if (from && d && d < from) return false;
     if (to && d && d > to) return false;
-    if (cs && row[COL.sklad] !== cs) return false;
-    if (group && row[COL.skupina] !== group) return false;
-    if (action && row[COL.typ] !== action) return false;
+    if (cs && r[C.sklad] !== cs) return false;
+    if (doprava && r[C.skupDopravy] !== doprava) return false;
+    if (typ && !r[C.typ].includes(typ)) return false;
     return true;
   });
 
   updateAll();
 }
 
-// ===================== HELPERS =====================
-function num(v) { 
-  if (typeof v === 'number') return v; 
-  if (v === '' || v === null || v === undefined) return NaN;
-  return parseFloat(String(v).replace(',','.')); 
-}
-function isNum(v) { return v !== '' && v !== null && v !== undefined && !isNaN(num(v)); }
-function pct(a, b) { return b ? Math.round(a/b*100) : 0; }
-function avg(arr) { return arr.length ? Math.round(arr.reduce((a,b)=>a+b,0)/arr.length) : null; }
-
-function groupBy(arr, fn) {
-  return arr.reduce((acc, item) => {
-    const k = fn(item); if (!acc[k]) acc[k] = []; acc[k].push(item); return acc;
-  }, {});
-}
-
-function destroyChart(id) { if(charts[id]){charts[id].destroy();delete charts[id];} }
-
-function pillDoch(d) {
-  if (d === 'po čase') return 'pill-late';
-  if (d === 'na čas') return 'pill-ok';
-  if (d === 'před časem') return 'pill-early';
-  return 'pill-bad';
-}
-
-// ===================== UPDATE ALL =====================
 function updateAll() {
   updatePrehled();
   updateDopravci();
   updateRampy();
-  updatePlan();
   updateVedeni();
 }
 
-// ===================== PŘEHLED =====================
+// ===== PŘEHLED =====
 function updatePrehled() {
   const data = filtered;
-  const withDiff = data.filter(r => isNum(r[COL.diff]));
-  const diffs = withDiff.map(r => num(r[COL.diff]));
-  const late = diffs.filter(d => d > 5).length;
-  const ontime = diffs.filter(d => d <= 5).length;
-  const noshow = data.filter(r => r[COL.nedorazil] === 'Ano').length;
-  const avgDiff = avg(diffs);
+  const diffs = data.map(r=>num(r[C.diffMin])).filter(d=>isNum(d));
+  const late = diffs.filter(d=>d>5).length;
+  const ontime = diffs.filter(d=>d<=5).length;
+  const noshow = data.filter(r=>r[C.nedorazil]==='Ano').length;
+  const avgD = avg(diffs);
 
   document.getElementById('k-total').textContent = data.length.toLocaleString('cs-CZ');
-  document.getElementById('k-late').textContent = diffs.length ? pct(late, diffs.length) + '%' : '—';
-  document.getElementById('k-late-n').textContent = late + ' rezervací';
-  document.getElementById('k-ontime').textContent = diffs.length ? pct(ontime, diffs.length) + '%' : '—';
-  document.getElementById('k-ontime-n').textContent = ontime + ' rezervací';
-  document.getElementById('k-avg').textContent = avgDiff !== null ? (avgDiff > 0 ? '+' : '') + avgDiff + ' min' : '—';
+  document.getElementById('k-late').textContent = diffs.length ? pct(late,diffs.length)+'%' : '—';
+  document.getElementById('k-late-n').textContent = late+' rezervací';
+  document.getElementById('k-ontime').textContent = diffs.length ? pct(ontime,diffs.length)+'%' : '—';
+  document.getElementById('k-ontime-n').textContent = ontime+' rezervací';
+  document.getElementById('k-avg').textContent = avgD!==null ? (avgD>0?'+':'')+avgD+' min' : '—';
   document.getElementById('k-noshow').textContent = noshow;
 
   // Recent table
-  const recent = [...data].reverse().slice(0, 25);
+  const recent = [...data].reverse().slice(0,20);
   document.getElementById('recent-table').innerHTML = recent.map(r => {
-    const d = r[COL.dochvilnost];
-    const diff = isNum(r[COL.diff]) ? num(r[COL.diff]) : null;
-    const devColor = diff === null ? '#aaa' : diff > 5 ? '#A32D2D' : diff < -5 ? '#185FA5' : '#3B6D11';
-    const zac = r[COL.zacatek] ? r[COL.zacatek].toString().slice(11,16) : '—';
-    const prij = r[COL.prijezd] ? r[COL.prijezd].toString().slice(11,16) : '—';
+    const d = r[C.dochvilnost];
+    const diff = isNum(r[C.diffMin]) ? num(r[C.diffMin]) : null;
+    const dc = diff===null?'#aaa':diff>5?'#A32D2D':diff<-5?'#185FA5':'#3B6D11';
     return `<tr>
-      <td style="font-family:monospace;font-size:11px">${r[COL.cislo]}</td>
-      <td>${r[COL.datum]}</td>
-      <td>${r[COL.sklad] ? 'S'+r[COL.sklad] : '—'}</td>
-      <td>${zac}</td><td>${prij}</td>
-      <td title="${r[COL.dopravce]}">${(r[COL.dopravce]||'—').substring(0,22)}</td>
-      <td>${r[COL.typ]||'—'}</td>
+      <td style="font-family:monospace;font-size:11px">${r[C.cislo]}</td>
+      <td>${r[C.datum]}</td>
+      <td>${r[C.sklad]?'S'+r[C.sklad]:'—'}</td>
+      <td>${r[C.rampa]||'—'}</td>
+      <td>${parseTime(r[C.zacatek])}</td>
+      <td title="${r[C.dopravce]}">${(r[C.dopravce]||'—').substring(0,22)}</td>
+      <td>${r[C.typ]||'—'}</td>
       <td><span class="pill ${pillDoch(d)}">${d||'—'}</span></td>
-      <td style="text-align:right;color:${devColor};font-weight:600">${diff!==null?(diff>0?'+':'')+diff:'—'}</td>
+      <td style="text-align:right;color:${dc};font-weight:600">${diff!==null?(diff>0?'+':'')+diff:'—'}</td>
     </tr>`;
-  }).join('') || '<tr><td colspan="9" class="empty">Žádná data pro vybrané filtry</td></tr>';
+  }).join('') || '<tr><td colspan="9" class="empty">Žádná data</td></tr>';
 
-  // Charts
   buildDnyChart(data);
   buildTrendChart(data);
 }
@@ -560,320 +515,452 @@ function updatePrehled() {
 function buildDnyChart(data) {
   destroyChart('c-dny');
   const DNY = ['Po','Út','St','Čt','Pá','So','Ne'];
-  const loading = new Array(7).fill(0);
-  const unloading = new Array(7).fill(0);
+  const load=new Array(7).fill(0), unload=new Array(7).fill(0);
   data.forEach(r => {
-    const den = r[COL.den];
-    const idx = DNY.indexOf(den);
-    if (idx === -1) return;
-    if (r[COL.typ] === 'Nakládka') loading[idx]++;
-    else unloading[idx]++;
+    const di = DNY.indexOf(r[C.den]);
+    if (di===-1) return;
+    if (r[C.typ].includes('Nakládka')) load[di]++;
+    if (r[C.typ].includes('Vykládka')) unload[di]++;
   });
   charts['c-dny'] = new Chart(document.getElementById('c-dny'), {
-    type: 'bar',
-    data: { labels: DNY, datasets: [
-      { label: 'Nakládka', data: loading, backgroundColor: '#378ADD', borderRadius: 3 },
-      { label: 'Vykládka', data: unloading, backgroundColor: '#1D9E75', borderRadius: 3 }
-    ]},
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { stacked: true, ticks: { autoSkip: false } }, y: { stacked: true } } }
+    type:'bar', data:{labels:DNY,datasets:[{label:'Nakládka',data:load,backgroundColor:'#378ADD',borderRadius:3},{label:'Vykládka',data:unload,backgroundColor:'#1D9E75',borderRadius:3}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{stacked:true,ticks:{autoSkip:false}},y:{stacked:true}}}
   });
 }
 
 function buildTrendChart(data) {
   destroyChart('c-trend');
-  const byM = groupBy(data, r => {
-    const d = parseDatum(r[COL.datum]);
-    return d ? d.slice(0,7) : '';
-  });
-  const months = Object.keys(byM).sort().filter(m => m.length === 7);
-  const lateArr = [], ontimeArr = [], earlyArr = [];
+  const byM = groupBy(data, r => parseDatum(r[C.datum])?.slice(0,7) || '');
+  const months = Object.keys(byM).sort().filter(m=>m.length===7);
+  const lA=[],oA=[],eA=[];
   months.forEach(m => {
-    const diffs = byM[m].map(r => num(r[COL.diff])).filter(d => !isNaN(d));
-    const n = diffs.length || 1;
-    lateArr.push(pct(diffs.filter(d=>d>5).length, n));
-    ontimeArr.push(pct(diffs.filter(d=>d>=-5&&d<=5).length, n));
-    earlyArr.push(pct(diffs.filter(d=>d<-5).length, n));
+    const diffs = byM[m].map(r=>num(r[C.diffMin])).filter(d=>isNum(d));
+    const n=diffs.length||1;
+    lA.push(pct(diffs.filter(d=>d>5).length,n));
+    oA.push(pct(diffs.filter(d=>d>=-5&&d<=5).length,n));
+    eA.push(pct(diffs.filter(d=>d<-5).length,n));
   });
   charts['c-trend'] = new Chart(document.getElementById('c-trend'), {
-    type: 'bar',
-    data: { labels: months, datasets: [
-      { label: 'Pozdě', data: lateArr, backgroundColor: '#E24B4A', borderRadius: 2 },
-      { label: 'Na čas', data: ontimeArr, backgroundColor: '#639922', borderRadius: 2 },
-      { label: 'Před časem', data: earlyArr, backgroundColor: '#378ADD', borderRadius: 2 }
-    ]},
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { stacked: true, ticks: { autoSkip: false, font: { size: 10 } } }, y: { stacked: true, max: 100, ticks: { callback: v => v + '%' } } } }
+    type:'bar', data:{labels:months,datasets:[{label:'Pozdě',data:lA,backgroundColor:'#E24B4A',borderRadius:2},{label:'Na čas',data:oA,backgroundColor:'#639922',borderRadius:2},{label:'Před časem',data:eA,backgroundColor:'#378ADD',borderRadius:2}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{stacked:true,ticks:{autoSkip:false,font:{size:9}}},y:{stacked:true,max:100,ticks:{callback:v=>v+'%'}}}}
   });
 }
 
-// ===================== DOPRAVCI =====================
+// ===== DISPEČER =====
+function buildDispTable() {
+  const datum = document.getElementById('d-datum').value;
+  const cs = document.getElementById('d-cs').value;
+  const dopravceFilter = document.getElementById('d-dopravce').value;
+
+  let data = allData.filter(r => {
+    const d = parseDatum(r[C.datum]);
+    if (datum && d !== datum) return false;
+    if (cs && r[C.sklad] !== cs) return false;
+    if (dopravceFilter === 'C.S.CARGO' && r[C.skupDopravce] !== 'C.S.CARGO') return false;
+    if (dopravceFilter === 'Autodoprava Siegl' && r[C.skupDopravce] !== 'Autodoprava Siegl') return false;
+    if (dopravceFilter === 'Ostatní' && !['Ostatní'].includes(r[C.skupDopravce])) return false;
+    return true;
+  }).sort((a,b) => (parseTime(a[C.zacatek]) > parseTime(b[C.zacatek]) ? 1 : -1));
+
+  // Stats
+  const diffs = data.map(r=>num(r[C.diffMin])).filter(d=>isNum(d));
+  const late = diffs.filter(d=>d>5).length;
+  const ontime = diffs.filter(d=>d<=5).length;
+  const noshow = data.filter(r=>r[C.nedorazil]==='Ano').length;
+
+  document.getElementById('disp-stats').innerHTML = `
+    <div class="metric info"><div class="lbl">Rezervací celkem</div><div class="val">${data.length}</div></div>
+    <div class="metric warn"><div class="lbl">Přijelo pozdě</div><div class="val">${diffs.length?pct(late,diffs.length):0}%</div><div class="sub">${late} vozidel</div></div>
+    <div class="metric ok"><div class="lbl">Včas / dříve</div><div class="val">${diffs.length?pct(ontime,diffs.length):0}%</div></div>
+    <div class="metric danger"><div class="lbl">Nedorazilo</div><div class="val">${noshow}</div></div>
+  `;
+
+  const tbody = document.getElementById('disp-tbody');
+  tbody.innerHTML = data.map(r => {
+    const diff = isNum(r[C.diffMin]) ? num(r[C.diffMin]) : null;
+    const dc = diff===null?'#aaa':diff>5?'#A32D2D':diff<-5?'#185FA5':'#3B6D11';
+    const d = r[C.dochvilnost];
+    // Příjezd: preferuj parkuje mimo areál, pak parkoviště
+    const prijezd = parseTime(r[C.parkujeMimo]) || parseTime(r[C.parkoviste]) || '—';
+    const parkov = parseTime(r[C.parkoviste]) || '—';
+    return `<tr>
+      <td style="font-family:monospace;font-size:11px">${r[C.cislo]}</td>
+      <td>${r[C.datum]}</td>
+      <td>${r[C.den]}</td>
+      <td>${r[C.kt]}</td>
+      <td>${r[C.sklad]?'S'+r[C.sklad]:'—'}</td>
+      <td>${r[C.rampa]||'—'}</td>
+      <td>${parseTime(r[C.zacatek])}</td>
+      <td>${parseTime(r[C.konec])}</td>
+      <td title="${r[C.dopravce]}">${(r[C.dopravce]||'—').substring(0,20)}</td>
+      <td>${r[C.typ]||'—'}</td>
+      <td title="${r[C.no]}">${(r[C.no]||'—').substring(0,25)}</td>
+      <td>${prijezd}</td>
+      <td>${parkov}</td>
+      <td style="text-align:right;color:${dc};font-weight:600">${diff!==null?(diff>0?'+':'')+diff:'—'}</td>
+      <td><span class="pill ${pillDoch(d)}">${d||'—'}</span></td>
+      <td style="text-align:right">${r[C.dobaOdb]||'—'}</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="16" class="empty">Žádné rezervace pro vybrané filtry</td></tr>';
+}
+
+function copyDispTable() {
+  const table = document.getElementById('disp-table');
+  const range = document.createRange();
+  range.selectNode(table);
+  window.getSelection().removeAllRanges();
+  window.getSelection().addRange(range);
+  document.execCommand('copy');
+  window.getSelection().removeAllRanges();
+  alert('Tabulka zkopírována do schránky! Vložte do emailu nebo Excelu (Ctrl+V).');
+}
+
+// ===== DOPRAVCI =====
 function updateDopravci() {
   const data = filtered;
-  const byCarrier = groupBy(data, r => r[COL.dopravce] || 'Neznámý');
-  const carriers = Object.entries(byCarrier).map(([name, rows]) => {
-    const diffs = rows.map(r => num(r[COL.diff])).filter(d => !isNaN(d));
-    const late = diffs.filter(d => d > 5).length;
-    const ontime = diffs.filter(d => d >= -5 && d <= 5).length;
-    const early = diffs.filter(d => d < -5).length;
-    const noshow = rows.filter(r => r[COL.nedorazil] === 'Ano').length;
-    const pctLate = diffs.length ? pct(late, diffs.length) : null;
-    return { name, n: rows.length, late, ontime, early, noshow, pctLate, diffs };
-  }).filter(c => c.n >= 3).sort((a, b) => b.n - a.n).slice(0, 12);
 
-  const best = carriers.filter(c => c.pctLate !== null).sort((a, b) => a.pctLate - b.pctLate)[0];
-  const worst = carriers.filter(c => c.pctLate !== null).sort((a, b) => b.pctLate - a.pctLate)[0];
-  const avgPct = carriers.length ? Math.round(carriers.reduce((a, c) => a + (c.pctLate || 0), 0) / carriers.length) : 0;
+  // DEK doprava
+  const dek = data.filter(r=>r[C.skupDopravy]==='DEK doprava');
+  const cargo = dek.filter(r=>r[C.skupDopravce]==='C.S.CARGO');
+  const siegl = dek.filter(r=>r[C.skupDopravce]==='Autodoprava Siegl');
+  const ostatni = dek.filter(r=>r[C.skupDopravce]==='Ostatní');
 
-  document.getElementById('carrier-kpi').innerHTML = `
-    <div class="metric info"><div class="lbl">Dopravců (min. 3 jízdy)</div><div class="val">${carriers.length}</div></div>
-    <div class="metric ok"><div class="lbl">Nejlepší dochvilnost</div><div class="val">${best?.pctLate ?? '—'}%</div><div class="sub">${(best?.name||'—').substring(0,20)}</div></div>
-    <div class="metric danger"><div class="lbl">Nejhorší dochvilnost</div><div class="val">${worst?.pctLate ?? '—'}%</div><div class="sub">${(worst?.name||'—').substring(0,20)}</div></div>
-    <div class="metric warn"><div class="lbl">Průměr pozdě</div><div class="val">${avgPct}%</div></div>
+  function skupStat(arr) {
+    const d = arr.map(r=>num(r[C.diffMin])).filter(d=>isNum(d));
+    const l = d.filter(x=>x>5).length;
+    return {n:arr.length, pctLate: d.length?pct(l,d.length):null, noshow:arr.filter(r=>r[C.nedorazil]==='Ano').length};
+  }
+
+  const cStat = skupStat(cargo), sStat = skupStat(siegl), oStat = skupStat(ostatni);
+
+  document.getElementById('dek-kpi').innerHTML = `
+    <div class="card" style="margin:0">
+      <div style="font-size:11px;font-weight:600;color:#185FA5;margin-bottom:8px">C.S.CARGO a.s.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+        <div class="kpi-box info"><div class="kv">${cStat.n}</div><div class="kl">jízd</div></div>
+        <div class="kpi-box ${(cStat.pctLate||0)>40?'danger':(cStat.pctLate||0)>25?'warn':'ok'}"><div class="kv">${cStat.pctLate!==null?cStat.pctLate+'%':'—'}</div><div class="kl">pozdě</div></div>
+      </div>
+    </div>
+    <div class="card" style="margin:0">
+      <div style="font-size:11px;font-weight:600;color:#185FA5;margin-bottom:8px">Autodoprava Siegl</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+        <div class="kpi-box info"><div class="kv">${sStat.n}</div><div class="kl">jízd</div></div>
+        <div class="kpi-box ${(sStat.pctLate||0)>40?'danger':(sStat.pctLate||0)>25?'warn':'ok'}"><div class="kv">${sStat.pctLate!==null?sStat.pctLate+'%':'—'}</div><div class="kl">pozdě</div></div>
+      </div>
+    </div>
+    <div class="card" style="margin:0">
+      <div style="font-size:11px;font-weight:600;color:#185FA5;margin-bottom:8px">Ostatní DEK dopravci</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+        <div class="kpi-box info"><div class="kv">${oStat.n}</div><div class="kl">jízd</div></div>
+        <div class="kpi-box ${(oStat.pctLate||0)>40?'danger':(oStat.pctLate||0)>25?'warn':'ok'}"><div class="kv">${oStat.pctLate!==null?oStat.pctLate+'%':'—'}</div><div class="kl">pozdě</div></div>
+      </div>
+    </div>
   `;
 
-  document.getElementById('carrier-rank').innerHTML = carriers.slice(0, 10).map((c, i) => {
-    const pctL = c.pctLate ?? 0;
-    const col = pctL < 20 ? '#639922' : pctL < 40 ? '#EF9F27' : '#E24B4A';
-    return `<div class="rank-row">
-      <span class="rank-num">${i + 1}</span>
-      <span class="rank-name" title="${c.name}">${c.name.substring(0, 28)}</span>
-      <div class="bar-bg"><div class="bar-fill" style="width:${pctL}%;background:${col}"></div></div>
-      <span class="rank-pct" style="color:${col}">${pctL}%</span>
-    </div>`;
+  // DEK skupiny chart
+  destroyChart('c-dek-skupiny');
+  charts['c-dek-skupiny'] = new Chart(document.getElementById('c-dek-skupiny'), {
+    type:'bar',
+    data:{labels:['C.S.CARGO','Siegl','Ostatní'],datasets:[
+      {label:'Pozdě %',data:[cStat.pctLate||0,sStat.pctLate||0,oStat.pctLate||0],backgroundColor:'#E24B4A',borderRadius:4},
+      {label:'Včas %',data:[100-(cStat.pctLate||0),100-(sStat.pctLate||0),100-(oStat.pctLate||0)],backgroundColor:'#639922',borderRadius:4}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{stacked:true},y:{stacked:true,max:100,ticks:{callback:v=>v+'%'}}}}
+  });
+
+  // DEK rank - ostatní dopravci
+  const ostatniByCarrier = groupBy(ostatni, r=>r[C.dopravce]||'Neznámý');
+  const ostatniRank = Object.entries(ostatniByCarrier).map(([name,rows])=>{
+    const d=rows.map(r=>num(r[C.diffMin])).filter(d=>isNum(d));
+    return {name,n:rows.length,pctLate:d.length?pct(d.filter(x=>x>5).length,d.length):null};
+  }).filter(c=>c.n>=3).sort((a,b)=>b.pctLate-a.pctLate).slice(0,8);
+
+  document.getElementById('dek-rank').innerHTML = `<div style="font-size:11px;font-weight:600;color:#888;margin-bottom:8px;text-transform:uppercase">Ostatní DEK dopravci — žebříček</div>` +
+    ostatniRank.map((c,i)=>{
+      const pL=c.pctLate||0;
+      const col=pL<20?'#639922':pL<40?'#EF9F27':'#E24B4A';
+      return `<div class="rank-row"><span class="rank-num">${i+1}</span><span class="rank-name" title="${c.name}">${c.name.substring(0,25)}</span><div class="bar-bg"><div class="bar-fill" style="width:${pL}%;background:${col}"></div></div><span class="rank-pct" style="color:${col}">${pL}%</span></div>`;
+    }).join('') || '<div class="empty">Nedostatek dat</div>';
+
+  // Dodavatelé
+  const dod = data.filter(r=>r[C.skupDopravy]==='Dodavatel');
+  const dodStat = skupStat(dod);
+  const dodByCarrier = groupBy(dod, r=>r[C.dopravce]||'Neznámý');
+  const dodCarriers = Object.entries(dodByCarrier).map(([name,rows])=>{
+    const d=rows.map(r=>num(r[C.diffMin])).filter(d=>isNum(d));
+    const l=d.filter(x=>x>5).length;
+    const e=d.filter(x=>x<-5).length;
+    const o=d.filter(x=>x>=-5&&x<=5).length;
+    return {name,n:rows.length,late:l,early:e,ontime:o,pctLate:d.length?pct(l,d.length):null};
+  }).filter(c=>c.n>=2).sort((a,b)=>b.n-a.n).slice(0,10);
+
+  document.getElementById('dod-kpi').innerHTML = `
+    <div class="metric info"><div class="lbl">Dodavatelé celkem</div><div class="val">${dod.length}</div></div>
+    <div class="metric ok"><div class="lbl">Včas / dříve</div><div class="val">${dodStat.pctLate!==null?100-dodStat.pctLate:0}%</div></div>
+    <div class="metric warn"><div class="lbl">Pozdě</div><div class="val">${dodStat.pctLate!==null?dodStat.pctLate:0}%</div></div>
+    <div class="metric danger"><div class="lbl">Nedorazilo</div><div class="val">${dodStat.noshow}</div></div>
+  `;
+
+  document.getElementById('dod-table').innerHTML = dodCarriers.map(c=>{
+    const pL=c.pctLate!==null?c.pctLate:0;
+    const r=pL<20?'<span class="pill pill-ok">Výborné</span>':pL<35?'<span class="pill pill-ok">Dobré</span>':pL<50?'<span class="pill pill-late">Průměrné</span>':'<span class="pill pill-bad">Špatné</span>';
+    return `<tr><td title="${c.name}"><strong>${c.name.substring(0,30)}</strong></td><td>${c.n}</td><td>${c.early}</td><td>${c.ontime}</td><td style="color:${pL>40?'#A32D2D':'inherit'}">${c.late}</td><td style="color:${pL>40?'#A32D2D':'inherit'};font-weight:${pL>40?600:400}">${c.pctLate!==null?c.pctLate+'%':'—'}</td><td>${r}</td></tr>`;
+  }).join('') || '<tr><td colspan="7" class="empty">Žádná data</td></tr>';
+
+  // Všichni dopravci žebříček
+  const allCarriers = groupBy(data, r=>r[C.dopravce]||'Neznámý');
+  const allRank = Object.entries(allCarriers).map(([name,rows])=>{
+    const d=rows.map(r=>num(r[C.diffMin])).filter(d=>isNum(d));
+    return {name,n:rows.length,pctLate:d.length?pct(d.filter(x=>x>5).length,d.length):null};
+  }).filter(c=>c.n>=5).sort((a,b)=>a.pctLate-b.pctLate).slice(0,12);
+
+  document.getElementById('all-rank').innerHTML = allRank.map((c,i)=>{
+    const pL=c.pctLate||0;
+    const col=pL<20?'#639922':pL<40?'#EF9F27':'#E24B4A';
+    return `<div class="rank-row"><span class="rank-num">${i+1}</span><span class="rank-name" title="${c.name}">${c.name.substring(0,26)}</span><div class="bar-bg"><div class="bar-fill" style="width:${Math.min(pL,100)}%;background:${col}"></div></div><span class="rank-pct" style="color:${col}">${pL}%</span></div>`;
   }).join('') || '<div class="empty">Nedostatek dat</div>';
 
-  document.getElementById('carrier-table').innerHTML = carriers.map(c => {
-    const pctL = c.pctLate ?? 0;
-    const rating = pctL < 20 ? '<span class="pill pill-ok">Výborné</span>' : pctL < 35 ? '<span class="pill pill-ok">Dobré</span>' : pctL < 50 ? '<span class="pill pill-late">Průměrné</span>' : '<span class="pill pill-bad">Špatné</span>';
-    return `<tr>
-      <td title="${c.name}"><strong>${c.name.substring(0, 30)}</strong></td>
-      <td>${c.n}</td><td>${c.early}</td><td>${c.ontime}</td>
-      <td style="color:${pctL>40?'#A32D2D':'inherit'}">${c.late}</td>
-      <td style="color:${pctL>40?'#A32D2D':'inherit'};font-weight:${pctL>40?'600':'400'}">${c.pctLate !== null ? c.pctLate + '%' : '—'}</td>
-      <td>${c.noshow}</td><td>${rating}</td>
-    </tr>`;
-  }).join('') || '<tr><td colspan="8" class="empty">Žádná data</td></tr>';
-
-  destroyChart('c-dopravci');
-  const top8 = carriers.slice(0, 8);
-  charts['c-dopravci'] = new Chart(document.getElementById('c-dopravci'), {
-    type: 'bar',
-    data: { labels: top8.map(c => c.name.substring(0, 14)), datasets: [
-      { label: 'Pozdě %', data: top8.map(c => c.pctLate ?? 0), backgroundColor: '#E24B4A', borderRadius: 3 },
-      { label: 'Na čas %', data: top8.map(c => c.diffs.length ? pct(c.ontime, c.diffs.length) : 0), backgroundColor: '#639922', borderRadius: 3 },
-      { label: 'Před časem %', data: top8.map(c => c.diffs.length ? pct(c.early, c.diffs.length) : 0), backgroundColor: '#378ADD', borderRadius: 3 }
+  destroyChart('c-all-dopravci');
+  const top8 = allRank.slice(0,8);
+  charts['c-all-dopravci'] = new Chart(document.getElementById('c-all-dopravci'), {
+    type:'bar',
+    data:{labels:top8.map(c=>c.name.substring(0,14)),datasets:[
+      {label:'Pozdě %',data:top8.map(c=>c.pctLate||0),backgroundColor:'#E24B4A',borderRadius:3},
+      {label:'Včas %',data:top8.map(c=>100-(c.pctLate||0)),backgroundColor:'#639922',borderRadius:3}
     ]},
-    options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { stacked: true, max: 100, ticks: { callback: v => v + '%' } }, y: { stacked: true, ticks: { font: { size: 10 } } } } }
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{stacked:true,max:100,ticks:{callback:v=>v+'%'}},y:{stacked:true,ticks:{font:{size:10}}}}}
   });
 }
 
-// ===================== RAMPY =====================
-function updateRampy() {
-  const data = filtered;
-  const byRamp = groupBy(data, r => r[COL.rampa] || 'Neznámá');
-  const ramps = Object.entries(byRamp).map(([name, rows]) => {
-    const cs = rows[0]?.[COL.sklad] || '';
-    const diffs = rows.map(r => num(r[COL.diff])).filter(d => !isNaN(d));
-    const pctLate = diffs.length ? pct(diffs.filter(d => d > 5).length, diffs.length) : null;
-    return { name, cs, n: rows.length, loading: rows.filter(r => r[COL.typ] === 'Nakládka').length, unloading: rows.filter(r => r[COL.typ] === 'Vykládka').length, pctLate };
-  }).sort((a, b) => b.n - a.n);
+// ===== LOGISTIK CS =====
+function buildLogistik() {
+  const from = document.getElementById('l-from').value;
+  const to = document.getElementById('l-to').value;
+  const cs = document.getElementById('l-cs').value;
 
-  const cs093 = data.filter(r => r[COL.sklad] === '093').length;
-  const cs095 = data.filter(r => r[COL.sklad] === '095').length;
+  const data = allData.filter(r => {
+    const d = parseDatum(r[C.datum]);
+    if (from && d && d < from) return false;
+    if (to && d && d > to) return false;
+    if (cs && r[C.sklad] !== cs) return false;
+    return true;
+  });
 
-  document.getElementById('ramp-kpi').innerHTML = `
-    <div class="metric info"><div class="lbl">Aktivní rampy</div><div class="val">${ramps.length}</div></div>
-    <div class="metric"><div class="lbl">S093 — Prostějov</div><div class="val">${cs093.toLocaleString('cs-CZ')}</div><div class="sub">rezervací</div></div>
-    <div class="metric"><div class="lbl">S095 — Úžice</div><div class="val">${cs095.toLocaleString('cs-CZ')}</div><div class="sub">rezervací</div></div>
-    <div class="metric warn"><div class="lbl">Nejvytíženější rampa</div><div class="val">${ramps[0]?.name || '—'}</div><div class="sub">${ramps[0]?.n || 0} rezervací</div></div>
+  const kompletni = data.filter(r=>r[C.stavDat]==='Kompletní');
+  const nevyplnena = data.filter(r=>r[C.stavDat]==='Nevyplněná data'||r[C.stavDat]==='Částečně nevyplněná');
+  const malaOdb = data.filter(r=>r[C.stavDat]==='Odbavení < 10 min');
+
+  // KPI
+  const vOkne = kompletni.filter(r=>r[C.procesne]==='Ano').length;
+  const hodnoceno = kompletni.filter(r=>r[C.procesne]==='Ano'||r[C.procesne].includes('Ne')).length;
+
+  document.getElementById('log-kpi').innerHTML = `
+    <div class="metric info"><div class="lbl">Rezervací celkem</div><div class="val">${data.length}</div></div>
+    <div class="metric ok"><div class="lbl">Odbaveno v okně</div><div class="val">${hodnoceno?pct(vOkne,hodnoceno):0}%</div><div class="sub">${vOkne} z ${hodnoceno}</div></div>
+    <div class="metric danger"><div class="lbl">Nevyplněná data</div><div class="val">${nevyplnena.length}</div><div class="sub">${pct(nevyplnena.length,data.length)}% rezervací</div></div>
+    <div class="metric warn"><div class="lbl">Odbavení &lt; 10 min</div><div class="val">${malaOdb.length}</div><div class="sub">podezřelé záznamy</div></div>
   `;
 
-  document.getElementById('ramp-table').innerHTML = ramps.map(r => `<tr>
-    <td><strong>${r.name}</strong></td>
-    <td>${r.cs ? 'S' + r.cs : '—'}</td>
-    <td>${r.n}</td><td>${r.loading}</td><td>${r.unloading}</td>
-    <td style="color:${(r.pctLate||0)>40?'#A32D2D':'inherit'}">${r.pctLate !== null ? r.pctLate + '%' : '—'}</td>
-  </tr>`).join('') || '<tr><td colspan="6" class="empty">Žádná data</td></tr>';
+  // Natažení na plac chart (dochvilnost řidiče)
+  const diffs = kompletni.map(r=>num(r[C.diffMin])).filter(d=>isNum(d));
+  const lateN=diffs.filter(d=>d>5).length, ontimeN=diffs.filter(d=>d>=-5&&d<=5).length, earlyN=diffs.filter(d=>d<-5).length;
+  destroyChart('c-natazeni');
+  charts['c-natazeni'] = new Chart(document.getElementById('c-natazeni'), {
+    type:'doughnut',
+    data:{labels:[`Pozdě (${lateN})`,`Na čas (${ontimeN})`,`Před časem (${earlyN})`],
+      datasets:[{data:[lateN,ontimeN,earlyN],backgroundColor:['#E24B4A','#639922','#378ADD'],borderWidth:2,borderColor:'#fff'}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:11}}}}}
+  });
 
-  destroyChart('c-rampy');
-  const hours = Array.from({ length: 12 }, (_, i) => i + 5);
+  // Odbavení v okně chart
+  const ano=kompletni.filter(r=>r[C.procesne]==='Ano').length;
+  const ne=kompletni.filter(r=>r[C.procesne].includes('Ne')).length;
+  const nevyhod=kompletni.filter(r=>r[C.procesne]==='Nevyhodnocuje se').length;
+  destroyChart('c-okno');
+  charts['c-okno'] = new Chart(document.getElementById('c-okno'), {
+    type:'doughnut',
+    data:{labels:[`V okně (${ano})`,`Překročil okno (${ne})`,`Nevyhod. (${nevyhod})`],
+      datasets:[{data:[ano,ne,nevyhod],backgroundColor:['#639922','#E24B4A','#ddd'],borderWidth:2,borderColor:'#fff'}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:11}}}}}
+  });
+
+  // Nevyplněná data tabulka
+  document.getElementById('nevypl-count').textContent = `(${nevyplnena.length} záznamů)`;
+  document.getElementById('nevypl-table').innerHTML = nevyplnena.slice(0,50).map(r=>`<tr>
+    <td style="font-family:monospace;font-size:11px">${r[C.cislo]}</td>
+    <td>${r[C.datum]}</td>
+    <td>${r[C.sklad]?'S'+r[C.sklad]:'—'}</td>
+    <td>${r[C.rampa]||'—'}</td>
+    <td>${parseTime(r[C.zacatek])}</td>
+    <td title="${r[C.dopravce]}">${(r[C.dopravce]||'—').substring(0,22)}</td>
+    <td><span class="pill pill-bad">${r[C.stavDat]}</span></td>
+  </tr>`).join('') || '<tr><td colspan="7" class="empty">Vše vyplněno 👍</td></tr>';
+
+  // KPI skladníků
+  const byZahajil = groupBy(kompletni.filter(r=>r[C.zadZahajeni]), r=>r[C.zadZahajeni]);
+  const skladnici = Object.entries(byZahajil).map(([jmeno,rows])=>{
+    const doby = rows.map(r=>num(r[C.dobaOdb])).filter(d=>isNum(d)&&d>=0);
+    const vOkneS = rows.filter(r=>r[C.procesne]==='Ano').length;
+    const hodnocS = rows.filter(r=>r[C.procesne]==='Ano'||r[C.procesne].includes('Ne')).length;
+    // Dokončil může být jiný
+    const dokRows = kompletni.filter(r=>r[C.zadDokonceni]===jmeno);
+    return {jmeno,zahajil:rows.length,dokoncil:dokRows.length,avgDoba:avg(doby),vOkne:vOkneS,hodnoceno:hodnocS};
+  }).sort((a,b)=>b.zahajil-a.zahajil);
+
+  document.getElementById('skladnici-table').innerHTML = skladnici.map(s=>{
+    const pVOkne = s.hodnoceno?pct(s.vOkne,s.hodnoceno):null;
+    const col = pVOkne===null?'#aaa':pVOkne>=80?'#3B6D11':pVOkne>=60?'#BA7517':'#A32D2D';
+    return `<tr>
+      <td><strong>${s.jmeno}</strong></td>
+      <td style="text-align:center">${s.zahajil}</td>
+      <td style="text-align:center">${s.dokoncil}</td>
+      <td style="text-align:center">${s.avgDoba!==null?s.avgDoba+' min':'—'}</td>
+      <td style="text-align:center">${s.vOkne} / ${s.hodnoceno}</td>
+      <td style="text-align:center;color:${col};font-weight:600">${pVOkne!==null?pVOkne+'%':'—'}</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="6" class="empty">Žádná data</td></tr>';
+}
+
+// ===== RAMPY =====
+function updateRampy() {
+  const data = filtered;
+  const byRamp = groupBy(data, r=>r[C.rampa]||'—');
+  const ramps = Object.entries(byRamp).map(([name,rows])=>{
+    const cs=rows[0]?.[C.sklad]||'';
+    const diffs=rows.map(r=>num(r[C.diffMin])).filter(d=>isNum(d));
+    const doby=rows.map(r=>num(r[C.dobaOdb])).filter(d=>isNum(d)&&d>=0);
+    return {name,cs,n:rows.length,load:rows.filter(r=>r[C.typ].includes('Nakládka')).length,unload:rows.filter(r=>r[C.typ].includes('Vykládka')).length,pctLate:diffs.length?pct(diffs.filter(d=>d>5).length,diffs.length):null,avgDoba:avg(doby)};
+  }).sort((a,b)=>b.n-a.n);
+
+  const cs093=data.filter(r=>r[C.sklad]==='093').length;
+  const cs095=data.filter(r=>r[C.sklad]==='095').length;
+  document.getElementById('ramp-kpi').innerHTML = `
+    <div class="metric info"><div class="lbl">Aktivní rampy</div><div class="val">${ramps.length}</div></div>
+    <div class="metric"><div class="lbl">S093 — Prostějov</div><div class="val">${cs093.toLocaleString('cs-CZ')}</div></div>
+    <div class="metric"><div class="lbl">S095 — Úžice</div><div class="val">${cs095.toLocaleString('cs-CZ')}</div></div>
+    <div class="metric warn"><div class="lbl">Nejvytíženější</div><div class="val" style="font-size:16px">${ramps[0]?.name||'—'}</div><div class="sub">${ramps[0]?.n||0} rez.</div></div>
+  `;
+
+  document.getElementById('ramp-table').innerHTML = ramps.map(r=>`<tr>
+    <td><strong>${r.name}</strong></td><td>${r.cs?'S'+r.cs:'—'}</td>
+    <td>${r.n}</td><td>${r.load}</td><td>${r.unload}</td>
+    <td style="color:${(r.pctLate||0)>40?'#A32D2D':'inherit'}">${r.pctLate!==null?r.pctLate+'%':'—'}</td>
+    <td style="text-align:center">${r.avgDoba!==null?r.avgDoba+' min':'—'}</td>
+  </tr>`).join('') || '<tr><td colspan="7" class="empty">Žádná data</td></tr>';
+
+  destroyChart('c-rampy-h');
+  const hours=Array.from({length:12},(_,i)=>i+5);
   function getHour(val) {
     if (!val) return -1;
-    const s = val.toString();
-    const t = s.match(/T(\d{2}):/); if (t) return parseInt(t[1]);
-    const sp = s.match(/(\d{1,2}):\d{2}$/); if (sp) return parseInt(sp[1]);
+    const s=val.toString();
+    const m=s.match(/T(\d{2}):/); if(m) return parseInt(m[1]);
+    const sp=s.match(/(\d{1,2}):\d{2}$/); if(sp) return parseInt(sp[1]);
     return -1;
   }
-  const s093h = hours.map(h => data.filter(r => r[COL.sklad] === '093' && getHour(r[COL.zacatek]) === h).length);
-  const s095h = hours.map(h => data.filter(r => r[COL.sklad] === '095' && getHour(r[COL.zacatek]) === h).length);
-  charts['c-rampy'] = new Chart(document.getElementById('c-rampy'), {
-    type: 'bar',
-    data: { labels: hours.map(h => h + 'h'), datasets: [
-      { label: 'S093', data: s093h, backgroundColor: '#7F77DD', borderRadius: 2 },
-      { label: 'S095', data: s095h, backgroundColor: '#1D9E75', borderRadius: 2 }
-    ]},
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { autoSkip: false, font: { size: 10 } } }, y: {} } }
+  const s093h=hours.map(h=>data.filter(r=>r[C.sklad]==='093'&&getHour(r[C.zacatek])===h).length);
+  const s095h=hours.map(h=>data.filter(r=>r[C.sklad]==='095'&&getHour(r[C.zacatek])===h).length);
+  charts['c-rampy-h'] = new Chart(document.getElementById('c-rampy-h'), {
+    type:'bar',data:{labels:hours.map(h=>h+'h'),datasets:[{label:'S093',data:s093h,backgroundColor:'#7F77DD',borderRadius:2},{label:'S095',data:s095h,backgroundColor:'#1D9E75',borderRadius:2}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{autoSkip:false,font:{size:9}}},y:{}}}
   });
 
   buildHeatmap(data);
 }
 
 function buildHeatmap(data) {
-  const DNY = ['Po','Út','St','Čt','Pá'];
-  const hours = [6,7,8,9,10,11,12,13,14,15];
-  const grid = DNY.map(() => hours.map(() => 0));
-  data.forEach(r => {
-    const di = DNY.indexOf(r[COL.den]);
-    if (di === -1) return;
-    // Parse hour from start time string
-    const zac = r[COL.zacatek] ? r[COL.zacatek].toString() : '';
-    let h = -1;
-    const tMatch = zac.match(/T(\d{2}):/);
-    const spaceMatch = zac.match(/(\d{1,2}):(\d{2})$/);
-    if (tMatch) h = parseInt(tMatch[1]);
-    else if (spaceMatch) h = parseInt(spaceMatch[1]);
-    const hi = hours.indexOf(h);
-    if (hi !== -1) grid[di][hi]++;
+  const DNY=['Po','Út','St','Čt','Pá'];
+  const hours=[6,7,8,9,10,11,12,13,14,15];
+  const grid=DNY.map(()=>hours.map(()=>0));
+  function getHour(val){if(!val)return -1;const s=val.toString();const m=s.match(/T(\d{2}):/);if(m)return parseInt(m[1]);const sp=s.match(/(\d{1,2}):\d{2}$/);if(sp)return parseInt(sp[1]);return -1;}
+  data.forEach(r=>{const di=DNY.indexOf(r[C.den]);const h=getHour(r[C.zacatek]);const hi=hours.indexOf(h);if(di!==-1&&hi!==-1)grid[di][hi]++;});
+  const maxV=Math.max(...grid.flat(),1);
+  let html='<div class="hm-header">'+hours.map(h=>`<div class="hm-hlabel">${h}h</div>`).join('')+'</div>';
+  DNY.forEach((day,di)=>{
+    html+=`<div class="hm-row"><div class="hm-rlabel">${day}</div>`;
+    hours.forEach((_,hi)=>{const v=grid[di][hi];const t=v/maxV;const r2=Math.round(29+(226-29)*t),g2=Math.round(158+(75-158)*t),b2=Math.round(117+(74-117)*t);const tc=t>0.6?'#fff':'#333';html+=`<div class="hm-cell" style="background:rgb(${r2},${g2},${b2});color:${tc}">${v||''}</div>`;});
+    html+='</div>';
   });
-  const maxVal = Math.max(...grid.flat(), 1);
-  let html = '<div class="hm-header">' + hours.map(h => `<div class="hm-hlabel">${h}h</div>`).join('') + '</div>';
-  DNY.forEach((day, di) => {
-    html += `<div class="hm-row"><div class="hm-rlabel">${day}</div>`;
-    hours.forEach((_, hi) => {
-      const v = grid[di][hi]; const t = v / maxVal;
-      const r2 = Math.round(29 + (226-29)*t), g2 = Math.round(158 + (75-158)*t), b2 = Math.round(117 + (74-117)*t);
-      const tc = t > 0.6 ? '#fff' : '#333';
-      html += `<div class="hm-cell" style="background:rgb(${r2},${g2},${b2});color:${tc}">${v||''}</div>`;
-    });
-    html += '</div>';
-  });
-  document.getElementById('heatmap').innerHTML = html;
+  document.getElementById('heatmap').innerHTML=html;
 }
 
-// ===================== PLÁN vs REALITA =====================
-function updatePlan() {
-  const data = filtered;
-  const diffs = data.map(r => num(r[COL.diff])).filter(d => !isNaN(d));
-  const early = diffs.filter(d => d < -5).length;
-  const ontime = diffs.filter(d => d >= -5 && d <= 5).length;
-  const late = diffs.filter(d => d > 5).length;
-
-  document.getElementById('plan-kpi').innerHTML = `
-    <div class="metric info"><div class="lbl">S měřitelným příjezdem</div><div class="val">${diffs.length}</div><div class="sub">z ${data.length} rezervací</div></div>
-    <div class="metric ok"><div class="lbl">Před časem</div><div class="val">${early}</div><div class="sub">${pct(early,diffs.length||1)}%</div></div>
-    <div class="metric ok"><div class="lbl">Na čas (±5 min)</div><div class="val">${ontime}</div><div class="sub">${pct(ontime,diffs.length||1)}%</div></div>
-    <div class="metric danger"><div class="lbl">Pozdě</div><div class="val">${late}</div><div class="sub">${pct(late,diffs.length||1)}%</div></div>
-  `;
-
-  const bins = ['do 15 min','do 30 min','do 1 h','do 1,5 h','do 2 h','více než 2 h'];
-  destroyChart('c-early');
-  charts['c-early'] = new Chart(document.getElementById('c-early'), {
-    type: 'bar',
-    data: { labels: bins, datasets: [{ label: 'Počet', data: bins.map(b => data.filter(r => r[COL.kosEarly] === b).length), backgroundColor: '#378ADD', borderRadius: 4 }] },
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { autoSkip: false, font: { size: 10 } } } } }
-  });
-
-  destroyChart('c-late-bins');
-  charts['c-late-bins'] = new Chart(document.getElementById('c-late-bins'), {
-    type: 'bar',
-    data: { labels: bins, datasets: [{ label: 'Počet', data: bins.map(b => data.filter(r => r[COL.kosLate] === b).length), backgroundColor: '#E24B4A', borderRadius: 4 }] },
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { autoSkip: false, font: { size: 10 } } } } }
-  });
-
-  const byCarrier = groupBy(data, r => r[COL.dopravce] || 'Neznámý');
-  const carrierAvgs = Object.entries(byCarrier).map(([name, rows]) => {
-    const d = rows.map(r => num(r[COL.diff])).filter(d => !isNaN(d));
-    return { name, avgD: d.length ? Math.round(d.reduce((a,b)=>a+b,0)/d.length) : null, n: rows.length };
-  }).filter(c => c.n >= 3 && c.avgD !== null).sort((a,b) => a.avgD - b.avgD).slice(0, 10);
-
-  destroyChart('c-avg-dev');
-  charts['c-avg-dev'] = new Chart(document.getElementById('c-avg-dev'), {
-    type: 'bar',
-    data: { labels: carrierAvgs.map(c => c.name.substring(0, 18)), datasets: [{ label: 'Odchylka', data: carrierAvgs.map(c => c.avgD), backgroundColor: carrierAvgs.map(c => c.avgD > 5 ? '#E24B4A' : c.avgD < -5 ? '#378ADD' : '#639922'), borderRadius: 3 }] },
-    options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { callback: v => (v>0?'+':'') + v + ' min' } }, y: { ticks: { font: { size: 10 } } } } }
-  });
-}
-
-// ===================== KPI VEDENÍ =====================
+// ===== KPI VEDENÍ =====
 function updateVedeni() {
   const data = filtered;
-  const diffs = data.map(r => num(r[COL.diff])).filter(d => !isNaN(d));
-  const late = diffs.filter(d => d > 5).length;
-  const noshow = data.filter(r => r[COL.nedorazil] === 'Ano').length;
-  const cs093 = data.filter(r => r[COL.sklad] === '093').length;
-  const cs095 = data.filter(r => r[COL.sklad] === '095').length;
+  const diffs=data.map(r=>num(r[C.diffMin])).filter(d=>isNum(d));
+  const late=diffs.filter(d=>d>5).length;
+  const noshow=data.filter(r=>r[C.nedorazil]==='Ano').length;
+  const kompletni=data.filter(r=>r[C.stavDat]==='Kompletní');
+  const vOkne=kompletni.filter(r=>r[C.procesne]==='Ano').length;
+  const hodnoceno=kompletni.filter(r=>r[C.procesne]==='Ano'||r[C.procesne].includes('Ne')).length;
 
   document.getElementById('mgmt-kpi').innerHTML = `
     <div class="metric info"><div class="lbl">Celkem rezervací</div><div class="val">${data.length.toLocaleString('cs-CZ')}</div></div>
-    <div class="metric ok"><div class="lbl">Dochvilnost (včas+dříve)</div><div class="val">${diffs.length ? pct(diffs.length-late, diffs.length) : 0}%</div></div>
-    <div class="metric warn"><div class="lbl">Přijelo pozdě</div><div class="val">${diffs.length ? pct(late, diffs.length) : 0}%</div></div>
+    <div class="metric ok"><div class="lbl">Dochvilnost dopravců</div><div class="val">${diffs.length?pct(diffs.length-late,diffs.length):0}%</div></div>
+    <div class="metric warn"><div class="lbl">Přijelo pozdě</div><div class="val">${diffs.length?pct(late,diffs.length):0}%</div></div>
+    <div class="metric ok"><div class="lbl">Odbaveno v okně</div><div class="val">${hodnoceno?pct(vOkne,hodnoceno):0}%</div></div>
     <div class="metric danger"><div class="lbl">Nedorazilo</div><div class="val">${noshow}</div></div>
-    <div class="metric"><div class="lbl">S093 / S095</div><div class="val">${cs093} / ${cs095}</div></div>
   `;
 
-  const byM = groupBy(data, r => {
-    const d = parseDatum(r[COL.datum]);
-    return d ? d.slice(0,7) : '';
-  });
-  const months = Object.keys(byM).sort().filter(m => m.length === 7);
+  const byM=groupBy(data,r=>parseDatum(r[C.datum])?.slice(0,7)||'');
+  const months=Object.keys(byM).sort().filter(m=>m.length===7);
 
-  document.getElementById('mgmt-table').innerHTML = months.map(m => {
-    const rows = byM[m];
-    const d = rows.map(r => num(r[COL.diff])).filter(d => !isNaN(d));
-    const l = d.filter(x => x > 5).length;
-    const e = d.filter(x => x < -5).length;
-    const o = d.filter(x => x >= -5 && x <= 5).length;
-    const pctL = d.length ? pct(l, d.length) : null;
-    const avgD = avg(d);
-    const ns = rows.filter(r => r[COL.nedorazil] === 'Ano').length;
+  document.getElementById('mgmt-table').innerHTML = months.map(m=>{
+    const rows=byM[m];
+    const d=rows.map(r=>num(r[C.diffMin])).filter(d=>isNum(d));
+    const l=d.filter(x=>x>5).length,e=d.filter(x=>x<-5).length,o=d.filter(x=>x>=-5&&x<=5).length;
+    const pL=d.length?pct(l,d.length):null;
+    const avgD=avg(d);
+    const ns=rows.filter(r=>r[C.nedorazil]==='Ano').length;
+    const komp=rows.filter(r=>r[C.stavDat]==='Kompletní');
+    const vO=komp.filter(r=>r[C.procesne]==='Ano').length;
+    const hod=komp.filter(r=>r[C.procesne]==='Ano'||r[C.procesne].includes('Ne')).length;
     return `<tr>
-      <td><strong>${m}</strong></td>
-      <td>${rows.length}</td>
-      <td style="color:${(pctL||0)>40?'#A32D2D':'inherit'}">${l}</td>
-      <td style="color:${(pctL||0)>40?'#A32D2D':'inherit'};font-weight:${(pctL||0)>40?600:400}">${pctL !== null ? pctL+'%' : '—'}</td>
+      <td><strong>${m}</strong></td><td>${rows.length}</td>
+      <td style="color:${(pL||0)>40?'#A32D2D':'inherit'}">${l}</td>
+      <td style="color:${(pL||0)>40?'#A32D2D':'inherit'};font-weight:${(pL||0)>40?600:400}">${pL!==null?pL+'%':'—'}</td>
       <td>${e}</td><td>${o}</td><td>${ns}</td>
-      <td>${avgD !== null ? (avgD>0?'+':'') + avgD + ' min' : '—'}</td>
+      <td>${avgD!==null?(avgD>0?'+':'')+avgD+' min':'—'}</td>
+      <td style="color:${hod&&pct(vO,hod)<70?'#A32D2D':'#3B6D11'};font-weight:500">${hod?pct(vO,hod)+'%':'—'}</td>
     </tr>`;
-  }).join('') || '<tr><td colspan="8" class="empty">Žádná data</td></tr>';
+  }).join('') || '<tr><td colspan="9" class="empty">Žádná data</td></tr>';
 
   destroyChart('c-mgmt-trend');
   charts['c-mgmt-trend'] = new Chart(document.getElementById('c-mgmt-trend'), {
-    type: 'line',
-    data: { labels: months, datasets: [
-      { label: 'Celkem', data: months.map(m => byM[m].length), borderColor: '#378ADD', backgroundColor: 'rgba(55,138,221,0.08)', tension: 0.3, fill: true, pointRadius: 4 },
-      { label: 'Pozdě', data: months.map(m => { const d=byM[m].map(r=>num(r[COL.diff])).filter(d=>!isNaN(d)); return d.filter(x=>x>5).length; }), borderColor: '#E24B4A', backgroundColor: 'rgba(226,75,74,0.08)', tension: 0.3, fill: true, pointRadius: 4 },
-      { label: 'Včas+dříve', data: months.map(m => { const d=byM[m].map(r=>num(r[COL.diff])).filter(d=>!isNaN(d)); return d.filter(x=>x<=5).length; }), borderColor: '#639922', backgroundColor: 'rgba(99,153,34,0.08)', tension: 0.3, fill: true, pointRadius: 4 }
+    type:'line',
+    data:{labels:months,datasets:[
+      {label:'Celkem',data:months.map(m=>byM[m].length),borderColor:'#378ADD',backgroundColor:'rgba(55,138,221,0.08)',tension:0.3,fill:true,pointRadius:3},
+      {label:'Pozdě',data:months.map(m=>{const d=byM[m].map(r=>num(r[C.diffMin])).filter(d=>isNum(d));return d.filter(x=>x>5).length;}),borderColor:'#E24B4A',backgroundColor:'rgba(226,75,74,0.08)',tension:0.3,fill:true,pointRadius:3},
+      {label:'Včas+dříve',data:months.map(m=>{const d=byM[m].map(r=>num(r[C.diffMin])).filter(d=>isNum(d));return d.filter(x=>x<=5).length;}),borderColor:'#639922',backgroundColor:'rgba(99,153,34,0.08)',tension:0.3,fill:true,pointRadius:3}
     ]},
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { autoSkip: false, font: { size: 10 } } }, y: {} } }
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{autoSkip:false,font:{size:9}}},y:{}}}
   });
 
-  destroyChart('c-sklady');
-  const s093 = data.filter(r => r[COL.sklad] === '093');
-  const s095 = data.filter(r => r[COL.sklad] === '095');
-  function radarStat(arr) {
-    const d = arr.map(r => num(r[COL.diff])).filter(d => !isNaN(d));
-    return d.length ? pct(d.filter(x => x <= 5).length, d.length) : 0;
-  }
-  charts['c-sklady'] = new Chart(document.getElementById('c-sklady'), {
-    type: 'radar',
-    data: { labels: ['Dochvilnost %','Nakládek %','Vykládek %','Bez nedorazilů %','Podíl celku %'],
-      datasets: [
-        { label: 'S093', data: [radarStat(s093), pct(s093.filter(r=>r[COL.typ]==='Nakládka').length, s093.length||1), pct(s093.filter(r=>r[COL.typ]==='Vykládka').length, s093.length||1), 100-pct(s093.filter(r=>r[COL.nedorazil]==='Ano').length, s093.length||1), pct(s093.length, data.length||1)], backgroundColor: 'rgba(127,119,221,0.15)', borderColor: '#7F77DD', pointBackgroundColor: '#7F77DD' },
-        { label: 'S095', data: [radarStat(s095), pct(s095.filter(r=>r[COL.typ]==='Nakládka').length, s095.length||1), pct(s095.filter(r=>r[COL.typ]==='Vykládka').length, s095.length||1), 100-pct(s095.filter(r=>r[COL.nedorazil]==='Ano').length, s095.length||1), pct(s095.length, data.length||1)], backgroundColor: 'rgba(29,158,117,0.15)', borderColor: '#1D9E75', pointBackgroundColor: '#1D9E75' }
-      ]
-    },
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { font: { size: 11 } } } }, scales: { r: { min: 0, max: 100, ticks: { display: false } } } }
+  destroyChart('c-sklady-radar');
+  const s093=data.filter(r=>r[C.sklad]==='093'),s095=data.filter(r=>r[C.sklad]==='095');
+  function rStat(arr){const d=arr.map(r=>num(r[C.diffMin])).filter(d=>isNum(d));return d.length?pct(d.filter(x=>x<=5).length,d.length):0;}
+  charts['c-sklady-radar'] = new Chart(document.getElementById('c-sklady-radar'), {
+    type:'radar',
+    data:{labels:['Dochvilnost %','Nakládek %','Vykládek %','Bez nedorazilů %','Podíl celku %'],
+      datasets:[
+        {label:'S093',data:[rStat(s093),pct(s093.filter(r=>r[C.typ].includes('Nakládka')).length,s093.length||1),pct(s093.filter(r=>r[C.typ].includes('Vykládka')).length,s093.length||1),100-pct(s093.filter(r=>r[C.nedorazil]==='Ano').length,s093.length||1),pct(s093.length,data.length||1)],backgroundColor:'rgba(127,119,221,0.15)',borderColor:'#7F77DD',pointBackgroundColor:'#7F77DD'},
+        {label:'S095',data:[rStat(s095),pct(s095.filter(r=>r[C.typ].includes('Nakládka')).length,s095.length||1),pct(s095.filter(r=>r[C.typ].includes('Vykládka')).length,s095.length||1),100-pct(s095.filter(r=>r[C.nedorazil]==='Ano').length,s095.length||1),pct(s095.length,data.length||1)],backgroundColor:'rgba(29,158,117,0.15)',borderColor:'#1D9E75',pointBackgroundColor:'#1D9E75'}
+      ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:11}}}},scales:{r:{min:0,max:100,ticks:{display:false}}}}
   });
 }
 
-// ===================== TABS =====================
+// ===== TABS =====
 function showTab(name, btn) {
-  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.getElementById('tab-' + name).classList.add('active');
-  if (btn) btn.classList.add('active');
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  if(btn) btn.classList.add('active');
+  // Trigger specific builds
+  if(name==='dispecer') buildDispTable();
+  if(name==='logistik') buildLogistik();
 }
 
-// ===================== START =====================
+// ===== START =====
 loadFromSheets();
 </script>
 </body>
