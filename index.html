@@ -664,7 +664,6 @@ function buildDispTable() {
     <div class="metric warn"><div class="lbl">Přijelo pozdě</div><div class="val">${diffs.length?pct(late,diffs.length):0}%</div><div class="sub">${late} vozidel</div></div>
     <div class="metric ok"><div class="lbl">Včas / dříve</div><div class="val">${diffs.length?pct(ontime,diffs.length):0}%</div></div>
     <div class="metric danger"><div class="lbl">Nedorazilo</div><div class="val">${noshow}</div></div>
-    <div class="metric"><div class="lbl">CS1 Prostějov / CS1 Úžice / CS2</div><div class="val" style="font-size:14px">${cs093} / ${cs095} / ${cs096_m}</div></div>
   `;
 
   const tbody = document.getElementById('disp-tbody');
@@ -992,7 +991,6 @@ function updateVedeni() {
     <div class="metric warn"><div class="lbl">Přijelo pozdě</div><div class="val">${diffs.length?pct(late,diffs.length):0}%</div></div>
     <div class="metric ok"><div class="lbl">Odbaveno v okně</div><div class="val">${hodnoceno?pct(vOkne,hodnoceno):0}%</div></div>
     <div class="metric danger"><div class="lbl">Nedorazilo</div><div class="val">${noshow}</div></div>
-    <div class="metric"><div class="lbl">CS1 Prostějov / CS1 Úžice / CS2</div><div class="val" style="font-size:14px">${cs093} / ${cs095} / ${cs096_m}</div></div>
   `;
 
   const byM=groupBy(data,r=>parseDatum(r[C.datum])?.slice(0,7)||'');
