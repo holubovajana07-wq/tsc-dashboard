@@ -148,6 +148,7 @@ tr:hover td{background:#fafaf7}
     <button class="tab" onclick="showTab('logistik',this)">🏭 Logistik CS</button>
     <button class="tab" onclick="showTab('rampy',this)">📍 Rampy</button>
     <button class="tab" onclick="showTab('vedeni',this)">📈 KPI vedení</button>
+    <button class="tab" onclick="showTab('m3',this)">📦 m3 analýza</button>
   </div>
 
   <div class="content">
@@ -414,6 +415,99 @@ tr:hover td{background:#fafaf7}
       </div>
     </div>
 
+    <!-- M3 ANALÝZA -->
+    <div id="tab-m3" class="view">
+      <div class="section-title">m3 analýza — S095 Úžice vs S093 Prostějov</div>
+
+      <div class="filters">
+        <div class="fg"><label>Datum od</label><input type="date" id="m3-from"></div>
+        <div class="fg"><label>Datum do</label><input type="date" id="m3-to"></div>
+        <div class="fg"><label>Sklad</label>
+          <select id="m3-cs">
+            <option value="">Oba sklady</option>
+            <option value="095">CS1 Úžice (S095)</option>
+            <option value="093">CS1 Prostějov (S093)</option>
+          </select>
+        </div>
+        <button class="btn" onclick="buildM3()">↻ Zobrazit</button>
+      </div>
+
+      <!-- KPI -->
+      <div class="metrics m4" id="m3-kpi"></div>
+
+      <!-- Porovnání skladů -->
+      <div class="grid2">
+        <div class="card">
+          <h3>Celkem vstup m3 vs odjelo m3 — po měsících</h3>
+          <div class="legend">
+            <span><span class="ld" style="background:#185FA5"></span>Vstup m3 (plán)</span>
+            <span><span class="ld" style="background:#1D9E75"></span>Odjelo m3</span>
+            <span><span class="ld" style="background:#E24B4A"></span>Zbytkové m3</span>
+          </div>
+          <div style="position:relative;height:230px"><canvas id="c-m3-trend" role="img" aria-label="M3 trend"></canvas></div>
+        </div>
+        <div class="card">
+          <h3>S095 Úžice vs S093 Prostějov — odjelo m3</h3>
+          <div class="legend">
+            <span><span class="ld" style="background:#7F77DD"></span>CS1 Prostějov</span>
+            <span><span class="ld" style="background:#1D9E75"></span>CS1 Úžice</span>
+          </div>
+          <div style="position:relative;height:230px"><canvas id="c-m3-sklady" role="img" aria-label="M3 sklady"></canvas></div>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="card">
+          <h3>% zbytkových závozu — dle pobočky</h3>
+          <div style="position:relative;height:260px"><canvas id="c-m3-zbytky" role="img" aria-label="Zbytkové"></canvas></div>
+        </div>
+        <div class="card">
+          <h3>Vytíženost dle dne v týdnu (průměr m3/den)</h3>
+          <div class="legend">
+            <span><span class="ld" style="background:#7F77DD"></span>CS1 Prostějov</span>
+            <span><span class="ld" style="background:#1D9E75"></span>CS1 Úžice</span>
+          </div>
+          <div style="position:relative;height:260px"><canvas id="c-m3-dny" role="img" aria-label="M3 dle dne"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Detail po pobočkách -->
+      <div class="card">
+        <h3>Detail po pobočkách — TOP 20 dle objemu</h3>
+        <div style="overflow-x:auto"><table>
+          <thead><tr>
+            <th>Pobočka</th>
+            <th style="width:60px">Sklad</th>
+            <th style="width:60px">Závozy</th>
+            <th style="width:90px">Vstup m3 (plán)</th>
+            <th style="width:90px">Odjelo m3</th>
+            <th style="width:90px">Zbytkové m3</th>
+            <th style="width:80px">% zbytkové</th>
+            <th style="width:80px">Převozy</th>
+            <th style="width:70px">Zrušeno</th>
+          </tr></thead>
+          <tbody id="m3-table"></tbody>
+        </table></div>
+      </div>
+
+      <!-- Propojení s TSC rezervacemi -->
+      <div class="card">
+        <h3>Propojení s TSC — počet rezervací vs. závozy dle pobočky</h3>
+        <div style="overflow-x:auto"><table>
+          <thead><tr>
+            <th>Pobočka</th>
+            <th style="width:60px">Sklad</th>
+            <th style="width:90px">Závozy (m3 data)</th>
+            <th style="width:90px">Rezervace (TSC)</th>
+            <th style="width:90px">Odjelo m3</th>
+            <th style="width:90px">Zbytkové m3</th>
+            <th style="width:80px">% zbytkové</th>
+          </tr></thead>
+          <tbody id="m3-tsctable"></tbody>
+        </table></div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -460,6 +554,7 @@ async function loadFromSheets() {
     loadInfo();
     setDefaults();
     applyFilters();
+    await loadM3Data();
     document.getElementById('loading-screen').style.display = 'none';
     document.getElementById('app').style.display = 'block';
   } catch(e) {
@@ -493,6 +588,11 @@ function setDefaults() {
   ['f-from','l-from'].forEach(id => { const el=document.getElementById(id); if(el) el.value=fmt(from); });
   ['f-to','l-to'].forEach(id => { const el=document.getElementById(id); if(el) el.value=fmt(today); });
   document.getElementById('d-datum').value = fmt(today);
+  // M3 defaults
+  const m3from = document.getElementById('m3-from');
+  const m3to = document.getElementById('m3-to');
+  if (m3from) m3from.value = fmt(from);
+  if (m3to) m3to.value = fmt(today);
 }
 
 // ===== HELPERS =====
@@ -1050,6 +1150,191 @@ function showTab(name, btn) {
   // Trigger specific builds
   if(name==='dispecer') buildDispTable();
   if(name==='logistik') buildLogistik();
+  if(name==='m3') buildM3();
+}
+
+// ===== M3 DATA =====
+const M3_SHEET_ID_DASH = '1ZHcTr58rhftY_4cZiNr0tJb0wwLXsHsIQrpNEiZUtrE';
+let m3Data = [];
+
+async function loadM3Data() {
+  try {
+    const url = `https://docs.google.com/spreadsheets/d/${M3_SHEET_ID_DASH}/gviz/tq?tqx=out:json&sheet=M3_DATA`;
+    const resp = await fetch(url);
+    const text = await resp.text();
+    const json = JSON.parse(text.substring(47, text.length - 2));
+    const rows = json.table.rows;
+    m3Data = rows.map(row => row.c.map(cell => cell ? (cell.f || cell.v || '') : ''));
+    if (m3Data.length > 0 && m3Data[0][0] === 'Datum') m3Data = m3Data.slice(1);
+    console.log('M3 dat načteno:', m3Data.length);
+  } catch(e) {
+    console.log('M3 data nedostupná:', e.message);
+  }
+}
+
+// M3 column indices
+const M3 = {
+  datum:0, sklad:1, pobockaRaw:2, pobockaKod:3,
+  lkw:4, pravidelna:5,
+  vstupM3:6, celkemVstupM3:7, zaznamuPL:8,
+  odjeloM3:9, odjeloCelkem:10, odjeloPL:11,
+  prevoz:12, zbytkove:13,
+  vse:14, zruseno:15, nakladal:16
+};
+
+function m3num(v) { return parseFloat(String(v||'').replace(',','.')) || 0; }
+
+function buildM3() {
+  if (m3Data.length === 0) { alert('M3 data nejsou načtena. Spusť stahniM3Data() v Apps Scriptu.'); return; }
+
+  const from = document.getElementById('m3-from').value;
+  const to = document.getElementById('m3-to').value;
+  const cs = document.getElementById('m3-cs').value;
+
+  const data = m3Data.filter(r => {
+    const d = parseDatum(r[M3.datum]);
+    if (from && d && d < from) return false;
+    if (to && d && d > to) return false;
+    if (cs && r[M3.sklad] !== cs) return false;
+    return true;
+  });
+
+  if (data.length === 0) { document.getElementById('m3-kpi').innerHTML = '<div class="empty">Žádná data pro vybrané filtry</div>'; return; }
+
+  const totalVstup = data.reduce((a,r)=>a+m3num(r[M3.celkemVstupM3]),0);
+  const totalOdjelo = data.reduce((a,r)=>a+m3num(r[M3.odjeloCelkem]),0);
+  const totalZbytky = data.reduce((a,r)=>a+m3num(r[M3.zbytkove]),0);
+  const totalPrevoz = data.reduce((a,r)=>a+m3num(r[M3.prevoz]),0);
+  const pctZbytky = totalOdjelo > 0 ? Math.round(totalZbytky/(totalOdjelo+totalZbytky)*100) : 0;
+
+  document.getElementById('m3-kpi').innerHTML = `
+    <div class="metric info"><div class="lbl">Závozy celkem</div><div class="val">${data.length.toLocaleString('cs-CZ')}</div></div>
+    <div class="metric"><div class="lbl">Vstup m3 (plán)</div><div class="val">${Math.round(totalVstup).toLocaleString('cs-CZ')}</div><div class="sub">m3</div></div>
+    <div class="metric ok"><div class="lbl">Odjelo m3</div><div class="val">${Math.round(totalOdjelo).toLocaleString('cs-CZ')}</div><div class="sub">m3</div></div>
+    <div class="metric warn"><div class="lbl">Zbytkové m3</div><div class="val">${Math.round(totalZbytky).toLocaleString('cs-CZ')}</div><div class="sub">${pctZbytky}% z celku</div></div>
+  `;
+
+  // M3 trend po měsících
+  const byM = groupBy(data, r => parseDatum(r[M3.datum])?.slice(0,7) || '');
+  const months = Object.keys(byM).sort().filter(m=>m.length===7);
+  destroyChart('c-m3-trend');
+  charts['c-m3-trend'] = new Chart(document.getElementById('c-m3-trend'), {
+    type:'bar',
+    data:{labels:months,datasets:[
+      {label:'Vstup m3',data:months.map(m=>Math.round(byM[m].reduce((a,r)=>a+m3num(r[M3.celkemVstupM3]),0))),backgroundColor:'rgba(24,95,165,0.3)',borderRadius:3},
+      {label:'Odjelo m3',data:months.map(m=>Math.round(byM[m].reduce((a,r)=>a+m3num(r[M3.odjeloCelkem]),0))),backgroundColor:'#1D9E75',borderRadius:3},
+      {label:'Zbytkové',data:months.map(m=>Math.round(byM[m].reduce((a,r)=>a+m3num(r[M3.zbytkove]),0))),backgroundColor:'#E24B4A',borderRadius:3}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{autoSkip:false,font:{size:9}}},y:{ticks:{callback:v=>v+' m3'}}}}
+  });
+
+  // S095 vs S093 po měsících
+  destroyChart('c-m3-sklady');
+  const s093m = groupBy(data.filter(r=>r[M3.sklad]==='093'), r=>parseDatum(r[M3.datum])?.slice(0,7)||'');
+  const s095m = groupBy(data.filter(r=>r[M3.sklad]==='095'), r=>parseDatum(r[M3.datum])?.slice(0,7)||'');
+  charts['c-m3-sklady'] = new Chart(document.getElementById('c-m3-sklady'), {
+    type:'bar',
+    data:{labels:months,datasets:[
+      {label:'CS1 Prostějov',data:months.map(m=>Math.round((s093m[m]||[]).reduce((a,r)=>a+m3num(r[M3.odjeloCelkem]),0))),backgroundColor:'#7F77DD',borderRadius:3},
+      {label:'CS1 Úžice',data:months.map(m=>Math.round((s095m[m]||[]).reduce((a,r)=>a+m3num(r[M3.odjeloCelkem]),0))),backgroundColor:'#1D9E75',borderRadius:3}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{autoSkip:false,font:{size:9}}},y:{ticks:{callback:v=>v+' m3'}}}}
+  });
+
+  // % zbytkových dle pobočky
+  const byPob = groupBy(data.filter(r=>m3num(r[M3.zbytkove])>0), r=>r[M3.pobockaKod]);
+  const topZbytky = Object.entries(byPob).map(([kod,rows])=>({
+    kod, zbytky:rows.reduce((a,r)=>a+m3num(r[M3.zbytkove]),0),
+    odjelo:rows.reduce((a,r)=>a+m3num(r[M3.odjeloCelkem]),0)
+  })).sort((a,b)=>b.zbytky-a.zbytky).slice(0,10);
+
+  destroyChart('c-m3-zbytky');
+  charts['c-m3-zbytky'] = new Chart(document.getElementById('c-m3-zbytky'), {
+    type:'bar',
+    data:{labels:topZbytky.map(r=>r.kod),datasets:[{
+      label:'Zbytkové m3',data:topZbytky.map(r=>Math.round(r.zbytky)),
+      backgroundColor:'#E24B4A',borderRadius:4
+    }]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{callback:v=>v+' m3'}},y:{ticks:{font:{size:10}}}}}
+  });
+
+  // M3 dle dne v týdnu
+  const DNY=['Po','Út','St','Čt','Pá','So','Ne'];
+  const dayMap={'Po':0,'Út':1,'St':2,'Čt':3,'Pá':4,'So':5,'Ne':6};
+  // Get day from date
+  function getDen(dateStr) {
+    const d = parseDatum(dateStr);
+    if (!d) return '';
+    const day = new Date(d).getDay();
+    return DNY[day===0?6:day-1];
+  }
+  const s093days=new Array(7).fill(0), s095days=new Array(7).fill(0);
+  const s093cnt=new Array(7).fill(0), s095cnt=new Array(7).fill(0);
+  data.forEach(r=>{
+    const den=getDen(r[M3.datum]);
+    const di=dayMap[den];
+    if(di===undefined) return;
+    const m3=m3num(r[M3.odjeloCelkem]);
+    if(r[M3.sklad]==='093'){s093days[di]+=m3;s093cnt[di]++;}
+    else{s095days[di]+=m3;s095cnt[di]++;}
+  });
+  destroyChart('c-m3-dny');
+  charts['c-m3-dny'] = new Chart(document.getElementById('c-m3-dny'), {
+    type:'bar',
+    data:{labels:DNY,datasets:[
+      {label:'CS1 Prostějov',data:s093days.map((v,i)=>s093cnt[i]?Math.round(v/s093cnt[i]):0),backgroundColor:'#7F77DD',borderRadius:3},
+      {label:'CS1 Úžice',data:s095days.map((v,i)=>s095cnt[i]?Math.round(v/s095cnt[i]):0),backgroundColor:'#1D9E75',borderRadius:3}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{autoSkip:false}},y:{ticks:{callback:v=>v+' m3'}}}}
+  });
+
+  // Detail po pobočkách
+  const byPobAll = groupBy(data, r=>r[M3.pobockaKod]);
+  const pobocky = Object.entries(byPobAll).map(([kod,rows])=>({
+    kod,
+    sklad:rows[0]?.[M3.sklad]||'',
+    n:rows.length,
+    vstup:rows.reduce((a,r)=>a+m3num(r[M3.celkemVstupM3]),0),
+    odjelo:rows.reduce((a,r)=>a+m3num(r[M3.odjeloCelkem]),0),
+    zbytky:rows.reduce((a,r)=>a+m3num(r[M3.zbytkove]),0),
+    prevoz:rows.reduce((a,r)=>a+m3num(r[M3.prevoz]),0),
+    zruseno:rows.filter(r=>r[M3.zruseno]==='ZRUŠENO'||r[M3.zruseno]==='X').length
+  })).sort((a,b)=>b.odjelo-a.odjelo).slice(0,20);
+
+  document.getElementById('m3-table').innerHTML = pobocky.map(p=>{
+    const pctZ=p.odjelo+p.zbytky>0?Math.round(p.zbytky/(p.odjelo+p.zbytky)*100):0;
+    return `<tr>
+      <td><strong>${p.kod}</strong></td>
+      <td>${skladNazev(p.sklad)}</td>
+      <td style="text-align:center">${p.n}</td>
+      <td style="text-align:right">${Math.round(p.vstup).toLocaleString('cs-CZ')} m3</td>
+      <td style="text-align:right">${Math.round(p.odjelo).toLocaleString('cs-CZ')} m3</td>
+      <td style="text-align:right;color:${pctZ>20?'#A32D2D':'inherit'}">${Math.round(p.zbytky).toLocaleString('cs-CZ')} m3</td>
+      <td style="text-align:center;color:${pctZ>20?'#A32D2D':'#3B6D11'};font-weight:600">${pctZ}%</td>
+      <td style="text-align:right">${Math.round(p.prevoz).toLocaleString('cs-CZ')} m3</td>
+      <td style="text-align:center">${p.zruseno}</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="9" class="empty">Žádná data</td></tr>';
+
+  // Propojení s TSC
+  const tscByPob = groupBy(filtered, r => {
+    const no = r[C.no] || '';
+    const kod = no.split(/[|\s+]/)[0].trim().toUpperCase();
+    return kod;
+  });
+  document.getElementById('m3-tsctable').innerHTML = pobocky.map(p=>{
+    const tscRows = tscByPob[p.kod] || tscByPob['P'+p.kod] || [];
+    const pctZ=p.odjelo+p.zbytky>0?Math.round(p.zbytky/(p.odjelo+p.zbytky)*100):0;
+    return `<tr>
+      <td><strong>${p.kod}</strong></td>
+      <td>${skladNazev(p.sklad)}</td>
+      <td style="text-align:center">${p.n}</td>
+      <td style="text-align:center${tscRows.length===0?';color:#aaa':''}">${tscRows.length||'—'}</td>
+      <td style="text-align:right">${Math.round(p.odjelo).toLocaleString('cs-CZ')} m3</td>
+      <td style="text-align:right;color:${pctZ>20?'#A32D2D':'inherit'}">${Math.round(p.zbytky).toLocaleString('cs-CZ')} m3</td>
+      <td style="text-align:center;color:${pctZ>20?'#A32D2D':'#3B6D11'};font-weight:600">${pctZ}%</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="7" class="empty">Žádná data</td></tr>';
 }
 
 // ===== GLOBAL FILTER =====
