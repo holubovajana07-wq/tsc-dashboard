@@ -392,10 +392,28 @@ async function loadInfo() {
     const json = JSON.parse(text.substring(47, text.length - 2));
     const rows = json.table.rows;
     if (rows && rows[0]) {
-      const cas = rows[0].c[1] ? rows[0].c[1].v || '' : '';
+      const raw = rows[0].c[1] ? (rows[0].c[1].f || rows[0].c[1].v || '') : '';
+      const cas = fmtGvizDateTime(raw.toString());
       document.getElementById('last-update').textContent = 'Aktualizováno: ' + cas;
     }
   } catch(e) {}
+}
+
+function fmtGvizDateTime(val) {
+  if (!val) return '—';
+  const s = val.toString().trim();
+  if (s.startsWith('Date(')) {
+    const p = s.replace('Date(','').replace(')','').split(',');
+    if (p.length >= 5) {
+      const d = String(p[2]).padStart(2,'0');
+      const m = String(parseInt(p[1])+1).padStart(2,'0');
+      const y = p[0];
+      const h = String(p[3]||0).padStart(2,'0');
+      const min = String(p[4]||0).padStart(2,'0');
+      return d+'.'+m+'.'+y+' '+h+':'+min;
+    }
+  }
+  return s;
 }
 
 function setLoading(msg, sub) {
@@ -404,6 +422,26 @@ function setLoading(msg, sub) {
 }
 
 // ===================== FILTERS =====================
+function fmtGvizTime(val) {
+  if (!val) return '—';
+  const s = val.toString().trim();
+  // gviz Date object: Date(2026,5,18,6,15,0)
+  if (s.startsWith('Date(')) {
+    const parts = s.replace('Date(','').replace(')','').split(',');
+    if (parts.length >= 5) {
+      return String(parts[3]).padStart(2,'0') + ':' + String(parts[4]).padStart(2,'0');
+    }
+    return '—';
+  }
+  // ISO string: 2026-06-18T06:15:00
+  const tMatch = s.match(/T(\d{2}):(\d{2})/);
+  if (tMatch) return tMatch[1] + ':' + tMatch[2];
+  // dd.MM.yyyy HH:mm
+  const spMatch = s.match(/(\d{1,2}):(\d{2})$/);
+  if (spMatch) return spMatch[0];
+  return s.slice(0,5) || '—';
+}
+
 function parseDatum(val) {
   if (!val) return null;
   // Handle dd.MM.yyyy format from Sheets
