@@ -360,6 +360,7 @@ tr:hover td{background:var(--color-background-secondary,#fafaf7)}
         </div>
         <div class="card">
           <h3>Odbavení v okně</h3>
+          <p class="card-desc">Sklad dokončil zpracování do konce plánovaného okna. Hodnotí se POUZE při včasném příjezdu dopravce.</p>
           <p class="card-desc">Sklad dokončil zpracování (RealVehicleDeparture) do konce plánovaného okna. Hodnotí se POUZE při včasném příjezdu dopravce.</p>
           <div style="position:relative;height:200px"><canvas id="c-okno" role="img" aria-label="Okno"></canvas></div>
         </div>
@@ -367,7 +368,8 @@ tr:hover td{background:var(--color-background-secondary,#fafaf7)}
 
       <!-- Nevyplněná data -->
       <div class="card">
-        <h3>Stav dat — nevyplněné záznamy <span id="nevypl-count" style="font-size:11px;color:#A32D2D;font-weight:400"></span></h3>
+        <h3>Nevyplněná data <span id="nevypl-count" style="font-size:11px;color:#A32D2D;font-weight:400"></span></h3>
+        <p class="card-desc">Rezervace kde chybí časy příjezdu, zahájení nebo dokončení zpracování. Tato data je třeba doplnit v TSC systému.</p>
         <div style="overflow-x:auto"><table>
           <thead><tr><th style="width:90px">Číslo rez.</th><th style="width:75px">Datum</th><th style="width:50px">Sklad</th><th style="width:75px">Rampa</th><th style="width:55px">Začátek</th><th>Dopravce</th><th style="width:110px">Stav dat</th></tr></thead>
           <tbody id="nevypl-table"></tbody>
@@ -376,7 +378,8 @@ tr:hover td{background:var(--color-background-secondary,#fafaf7)}
 
       <!-- KPI skladníků -->
       <div class="card">
-        <h3>KPI skladníků — počet odbavení a průměrná doba</h3>
+        <h3>KPI skladníků</h3>
+        <p class="card-desc">Kdo zahájil a dokončil zpracování — data z TSC. Průměrná doba = od zahájení do dokončení. % v okně = kolikrát sklad dokončil v plánovaném čase.</p>
         <table>
           <thead><tr><th>Skladník</th><th style="width:70px">Zahájil</th><th style="width:70px">Dokončil</th><th style="width:90px">Průměr. doba</th><th style="width:90px">V okně</th><th style="width:90px">% v okně</th></tr></thead>
           <tbody id="skladnici-table"></tbody>
@@ -391,7 +394,8 @@ tr:hover td{background:var(--color-background-secondary,#fafaf7)}
 
       <!-- Provozní hodiny skladu -->
       <div class="card">
-        <h3>Provozní doba skladu — nastavení</h3>
+        <h3>Provozní doba skladu</h3>
+          <p class="card-desc">Nastavte provozní dobu pro výpočet vytíženosti kapacity. Vytíženost = čas odbavení / provozní doba × 100%.</p>
         <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-end">
           <div class="fg"><label>Sklad</label>
             <select id="r-sklad-sel" onchange="updateRampyView()">
@@ -413,30 +417,35 @@ tr:hover td{background:var(--color-background-secondary,#fafaf7)}
 
       <div class="grid2">
         <div class="card">
-          <h3>Počet rezervací dle hodiny — CS1 Prostějov vs CS1 Úžice</h3>
+          <h3>Počet rezervací dle hodiny</h3>
+          <p class="card-desc">Rozložení příjezdů vozidel v průběhu dne. Identifikuje přetížená časová pásma.</p>
           <div class="legend"><span><span class="ld" style="background:#7F77DD"></span>CS1 Prostějov</span><span><span class="ld" style="background:#1D9E75"></span>CS1 Úžice</span><span><span class="ld" style="background:#D85A30"></span>CS2 Úžice</span></div>
           <div style="position:relative;height:230px"><canvas id="c-rampy-h" role="img" aria-label="Rampy hodiny"></canvas></div>
         </div>
         <div class="card">
           <h3>Tepelná mapa — den × hodina</h3>
+          <p class="card-desc">Počet rezervací dle dne a hodiny. Tmavší = více vozidel. Plánování směn.</p>
           <div class="hm-wrap"><div id="heatmap"></div></div>
         </div>
       </div>
 
       <div class="grid2">
         <div class="card">
-          <h3>Průměrná doba odbavení dle hodiny (min)</h3>
+          <h3>Průměrná doba odbavení dle hodiny</h3>
+          <p class="card-desc">Jak dlouho trvá odbavení vozidla v závislosti na hodině příjezdu.</p>
           <div style="position:relative;height:220px"><canvas id="c-odb-hodina" role="img" aria-label="Odbavení dle hodiny"></canvas></div>
         </div>
         <div class="card">
           <h3>Doba odbavení — distribuce</h3>
+          <p class="card-desc">Kolik vozidel bylo odbaveno do 15 min, 15–30 min nebo nad 30 min.</p>
           <div class="legend"><span><span class="ld" style="background:#639922"></span>&lt;15 min</span><span><span class="ld" style="background:#EF9F27"></span>15–30</span><span><span class="ld" style="background:#E24B4A"></span>&gt;30 min</span></div>
           <div style="position:relative;height:220px"><canvas id="c-odb-dist" role="img" aria-label="Distribuce odbavení"></canvas></div>
         </div>
       </div>
 
       <div class="card">
-        <h3>Přehled ramp — detailní statistiky</h3>
+        <h3>Přehled ramp</h3>
+        <p class="card-desc">Statistiky každé rampy — počty, dochvilnost, průměrná doba a % odbavení v okně.</p>
         <div style="overflow-x:auto"><table>
           <thead><tr>
             <th>Rampa</th>
@@ -470,13 +479,15 @@ tr:hover td{background:var(--color-background-secondary,#fafaf7)}
           <div style="position:relative;height:220px"><canvas id="c-mgmt-trend" role="img" aria-label="Trend"></canvas></div>
         </div>
         <div class="card">
-          <h3>S093 vs S095 — porovnání</h3>
+          <h3>CS1 Prostějov vs CS1 Úžice</h3>
+          <p class="card-desc">Porovnání obou skladů: dochvilnost, nakládky, vykládky, bez nedorazilých, podíl na celku.</p>
           <div style="position:relative;height:220px"><canvas id="c-sklady-radar" role="img" aria-label="Sklady"></canvas></div>
         </div>
       </div>
       <!-- Aktuální měsíc po týdnech -->
       <div class="card">
         <h3>Aktuální měsíc — po týdnech <span id="aktual-mesic" style="font-size:11px;color:#888;font-weight:400"></span></h3>
+        <p class="card-desc">Výkonnost aktuálního měsíce po KT týdnech. Neucelený = probíhající týden.</p>
         <table><thead><tr>
           <th style="width:80px">Týden</th>
           <th style="width:65px">Celkem</th>
@@ -543,7 +554,8 @@ tr:hover td{background:var(--color-background-secondary,#fafaf7)}
 
       <!-- Sekce 1: Příjezdy -->
       <div class="card">
-        <h3>1. Příjezdy a odjezdy — dochvilnost</h3>
+        <h3>1. Dochvilnost příjezdů</h3>
+        <p class="card-desc">Koše dochvilnosti: ±10 min = včas, 10–30 min, nad 30 min zpoždění. Příjezd = CustomAction3 nebo CustomAction1.</p>
         <div class="metrics m4" id="r-prijezdy-kpi"></div>
         <div class="grid2" style="margin-top:12px">
           <div>
@@ -559,7 +571,8 @@ tr:hover td{background:var(--color-background-secondary,#fafaf7)}
 
       <!-- Sekce 2: % nakládek a vykládek -->
       <div class="card">
-        <h3>2. % vykládek a nakládek dle pásma dochvilnosti</h3>
+        <h3>2. Dochvilnost dle typu</h3>
+        <p class="card-desc">Nakládky vs. vykládky — pásma ≤15 min, 15–30 min, nad 15 min pozdě.</p>
         <div class="metrics m4" id="r-pasma-kpi"></div>
         <div style="position:relative;height:220px;margin-top:12px"><canvas id="c-r-pasma" role="img" aria-label="Pásma dochvilnosti"></canvas></div>
       </div>
@@ -567,12 +580,14 @@ tr:hover td{background:var(--color-background-secondary,#fafaf7)}
       <!-- Sekce 3+4: Naplánovaní + unikátní dopravci -->
       <div class="grid2">
         <div class="card">
-          <h3>3. % naplánovaných vozidel</h3>
+          <h3>3. Naplánovaná vozidla</h3>
+          <p class="card-desc">Kolik vozidel mělo rezervaci v TSC vs. přijelo bez rezervace. Cíl: 100% s rezervací.</p>
           <div class="metrics m3" id="r-plan-kpi"></div>
           <div style="position:relative;height:180px;margin-top:10px"><canvas id="c-r-plan" role="img" aria-label="Naplánovaní"></canvas></div>
         </div>
         <div class="card">
-          <h3>4. Unikátní dopravci a dodavatelé</h3>
+          <h3>4. Dopravci a dodavatelé</h3>
+          <p class="card-desc">Kolik unikátních dopravců a dodavatelů využívá systém za vybrané období.</p>
           <div class="metrics m3" id="r-unikatni-kpi"></div>
           <div id="r-unikatni-list" style="margin-top:10px;font-size:12px"></div>
         </div>
@@ -581,12 +596,14 @@ tr:hover td{background:var(--color-background-secondary,#fafaf7)}
       <!-- Sekce 5+6: Časy čekání a v areálu -->
       <div class="grid2">
         <div class="card">
-          <h3>5. Průměrný čas čekání (příjezd → zahájení)</h3>
+          <h3>5. Čas čekání</h3>
+          <p class="card-desc">Od příjezdu do podniku do zahájení zpracování. Jak dlouho vozidlo čeká na rampě.</p>
           <div class="metrics m3" id="r-cekani-kpi"></div>
           <div style="position:relative;height:190px;margin-top:10px"><canvas id="c-r-cekani" role="img" aria-label="Čekání"></canvas></div>
         </div>
         <div class="card">
-          <h3>6. Celkový čas v areálu (příjezd → odjezd)</h3>
+          <h3>6. Čas v areálu</h3>
+          <p class="card-desc">Od příjezdu do podniku do odjezdu. Celkový čas strávený v areálu skladu.</p>
           <div class="metrics m3" id="r-areal-kpi"></div>
           <div style="position:relative;height:190px;margin-top:10px"><canvas id="c-r-areal" role="img" aria-label="Čas v areálu"></canvas></div>
         </div>
@@ -594,7 +611,8 @@ tr:hover td{background:var(--color-background-secondary,#fafaf7)}
 
       <!-- Sekce 7: Splnění plánu odjezdu -->
       <div class="card">
-        <h3>7. % splnění plánu odjezdu vozidel</h3>
+        <h3>7. Splnění plánu odjezdu</h3>
+        <p class="card-desc">Skutečný odjezd vs. plánovaný konec okna. Včas = do ±10 min od konce okna.</p>
         <div class="metrics m4" id="r-odjezd-kpi"></div>
         <div style="position:relative;height:220px;margin-top:12px"><canvas id="c-r-odjezd" role="img" aria-label="Plán odjezdu"></canvas></div>
       </div>
@@ -631,7 +649,8 @@ tr:hover td{background:var(--color-background-secondary,#fafaf7)}
       <!-- Porovnání skladů -->
       <div class="grid2">
         <div class="card">
-          <h3>Celkem vstup m3 vs odjelo m3 — po měsících</h3>
+          <h3>Vstup m3 vs odjelo m3 — po měsících</h3>
+          <p class="card-desc">Modrá = plán, zelená = skutečnost, červená = zbytkové. Trend plnění plánu.</p>
           <div class="legend">
             <span><span class="ld" style="background:#185FA5"></span>Vstup m3 (plán)</span>
             <span><span class="ld" style="background:#1D9E75"></span>Odjelo m3</span>
@@ -640,7 +659,8 @@ tr:hover td{background:var(--color-background-secondary,#fafaf7)}
           <div style="position:relative;height:230px"><canvas id="c-m3-trend" role="img" aria-label="M3 trend"></canvas></div>
         </div>
         <div class="card">
-          <h3>S095 Úžice vs S093 Prostějov — odjelo m3</h3>
+          <h3>CS1 Úžice vs CS1 Prostějov — odjelo m3</h3>
+          <p class="card-desc">Porovnání skutečně naloženého objemu mezi sklady po měsících.</p>
           <div class="legend">
             <span><span class="ld" style="background:#7F77DD"></span>CS1 Prostějov</span>
             <span><span class="ld" style="background:#1D9E75"></span>CS1 Úžice</span>
@@ -651,11 +671,13 @@ tr:hover td{background:var(--color-background-secondary,#fafaf7)}
 
       <div class="grid2">
         <div class="card">
-          <h3>% zbytkových závozu — dle pobočky</h3>
+          <h3>Zbytkové — TOP pobočky</h3>
+          <p class="card-desc">Pobočky s nejvyšším zbytkovým objemem — kde kapacita vozidel neodpovídá zásilce.</p>
           <div style="position:relative;height:260px"><canvas id="c-m3-zbytky" role="img" aria-label="Zbytkové"></canvas></div>
         </div>
         <div class="card">
-          <h3>Vytíženost dle dne v týdnu (průměr m3/den)</h3>
+          <h3>Průměr m3 dle dne v týdnu</h3>
+          <p class="card-desc">Průměrný objem nakládky na den. Plánování kapacit na vytížené dny.</p>
           <div class="legend">
             <span><span class="ld" style="background:#7F77DD"></span>CS1 Prostějov</span>
             <span><span class="ld" style="background:#1D9E75"></span>CS1 Úžice</span>
@@ -686,7 +708,8 @@ tr:hover td{background:var(--color-background-secondary,#fafaf7)}
 
       <!-- Propojení s TSC rezervacemi -->
       <div class="card">
-        <h3>Propojení s TSC — počet rezervací vs. závozy dle pobočky</h3>
+        <h3>Propojení s TSC rezervacemi</h3>
+        <p class="card-desc">Závozy z m3 tabulky vs. TSC rezervace pro stejnou pobočku. Identifikuje nesoulady.</p>
         <div style="overflow-x:auto"><table>
           <thead><tr>
             <th>Pobočka</th>
@@ -1656,7 +1679,8 @@ function buildM3() {
 
   document.getElementById('m3-kpi').innerHTML = `
     <div class="card" style="margin-bottom:12px">
-      <h3>📊 Plnění plánu</h3>
+      <h3>Plnění plánu</h3>
+      <p class="card-desc">Celkem vstup m3 = plán, Odjelo m3 = skutečnost. BEZ crossdocku. Převozy jsou zvlášť.</p>
       <div class="gauges-row">${gP1}${gP2}${gP3}</div>
       <div style="text-align:center;font-size:11px;color:#888;margin-top:8px">
         + Převozy: <strong style="color:#185FA5">${Math.round(prevoz093+prevoz095).toLocaleString('cs-CZ')} m3</strong>
@@ -1665,7 +1689,8 @@ function buildM3() {
       </div>
     </div>
     <div class="card" style="margin-bottom:12px">
-      <h3>🔄 Zbytkové závozy</h3>
+      <h3>Zbytkové závozy — pobočky</h3>
+      <p class="card-desc">Zbytkové m3 které se nevešly na vozidlo. BEZ crossdocku — ten je níže zvlášť.</p>
       <div class="gauges-row">${gZ1}${gZ2}</div>
       <div style="margin-top:8px;text-align:center;font-size:11px;color:#888">
         Celkem zbytkové: <strong>${Math.round(zbytky093+zbytky095).toLocaleString('cs-CZ')} m3</strong>
@@ -1677,7 +1702,8 @@ function buildM3() {
       </div>
     </div>
     <div class="card" style="margin-bottom:12px">
-      <h3>⚖️ Rozložení m3 mezi CS</h3>
+      <h3>Rozložení m3 mezi CS</h3>
+      <p class="card-desc">Podíl objemu CS1 Prostějov vs. CS1 Úžice. BEZ crossdocku.</p>
       <div class="gauges-row">${gR1}${gR2}</div>
     </div>
   `;
