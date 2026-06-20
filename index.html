@@ -187,7 +187,8 @@ tr:hover td{background:var(--color-background-secondary,#fafaf7)}
         <button class="btn" onclick="applyFilters()">↻ Použít</button>
       </div>
 
-      <div class="metrics m5">
+      <p style="font-size:12px;color:#888;margin:0 0 10px;line-height:1.6">Dochvilnost = příjezd dopravce na parkoviště nebo mimo areál vs. plánovaný začátek rezervace.</p>
+        <div class="metrics m5">
         <div class="metric info"><div class="lbl">Celkem rezervací</div><div class="val" id="k-total">—</div><div class="sub" id="k-period">—</div></div>
         <div class="metric warn"><div class="lbl">Přijelo pozdě</div><div class="val" id="k-late">—</div><div class="sub" id="k-late-n">—</div></div>
         <div class="metric ok"><div class="lbl">Včas / dříve</div><div class="val" id="k-ontime">—</div><div class="sub" id="k-ontime-n">—</div></div>
@@ -198,11 +199,13 @@ tr:hover td{background:var(--color-background-secondary,#fafaf7)}
       <div class="grid2">
         <div class="card">
           <h3>Rezervace podle dne v týdnu</h3>
+          <p class="card-desc">Nakládky a vykládky dle dne v týdnu — identifikuje vytížené dny.</p>
           <div class="legend"><span><span class="ld" style="background:#378ADD"></span>Nakládka</span><span><span class="ld" style="background:#1D9E75"></span>Vykládka</span></div>
           <div style="position:relative;height:210px"><canvas id="c-dny" role="img" aria-label="Rezervace dle dne"></canvas></div>
         </div>
         <div class="card">
           <h3>Dochvilnost — trend po měsících</h3>
+          <p class="card-desc">Podíl pozdě / na čas / před časem po měsících. Pozdě = příjezd více než 5 min po plánu.</p>
           <div class="legend"><span><span class="ld" style="background:#E24B4A"></span>Pozdě</span><span><span class="ld" style="background:#639922"></span>Na čas</span><span><span class="ld" style="background:#378ADD"></span>Před časem</span></div>
           <div style="position:relative;height:210px"><canvas id="c-trend" role="img" aria-label="Trend dochvilnosti"></canvas></div>
         </div>
@@ -211,6 +214,7 @@ tr:hover td{background:var(--color-background-secondary,#fafaf7)}
       <div class="grid2">
         <div class="card">
           <h3>CS1 Prostějov (S093) — složení vozidel</h3>
+          <p class="card-desc">DEK doprava vs. vozidla dodavatelů za vybrané období.</p>
           <div class="legend">
             <span><span class="ld" style="background:#185FA5"></span>DEK doprava</span>
             <span><span class="ld" style="background:#1D9E75"></span>Dodavatelé</span>
@@ -222,6 +226,7 @@ tr:hover td{background:var(--color-background-secondary,#fafaf7)}
         </div>
         <div class="card">
           <h3>CS1 Úžice (S095) — složení vozidel</h3>
+          <p class="card-desc">DEK doprava vs. vozidla dodavatelů za vybrané období.</p>
           <div class="legend">
             <span><span class="ld" style="background:#185FA5"></span>DEK doprava</span>
             <span><span class="ld" style="background:#1D9E75"></span>Dodavatelé</span>
@@ -235,6 +240,7 @@ tr:hover td{background:var(--color-background-secondary,#fafaf7)}
 
       <div class="card">
         <h3>Posledních 20 rezervací</h3>
+        <p class="card-desc">Nejnovější rezervace — modrá = před časem, zelená = na čas, oranžová = po čase.</p>
         <div style="overflow-x:auto"><table>
           <thead><tr><th style="width:90px">Číslo</th><th style="width:75px">Datum</th><th style="width:50px">Sklad</th><th style="width:80px">Rampa</th><th style="width:55px">Začátek</th><th>Dopravce</th><th style="width:70px">Typ</th><th style="width:85px">Dochvilnost</th><th style="width:50px">Min</th></tr></thead>
           <tbody id="recent-table"></tbody>
@@ -259,8 +265,10 @@ tr:hover td{background:var(--color-background-secondary,#fafaf7)}
         </div>
         <button class="btn" onclick="buildDispTable()">↻ Zobrazit</button>
       </div>
+      <p style="font-size:12px;color:#888;margin:0 0 10px;line-height:1.6">Statistiky za vybraný den — celkem vozidel, dochvilnost, nedorazila.</p>
       <div id="disp-stats" class="metrics m4" style="margin-bottom:14px"></div>
       <div style="overflow-x:auto">
+        <p style="font-size:12px;color:#888;margin:0 0 8px;line-height:1.6">Výpis rezervací seřazený podle začátku. Příjezd = CustomAction3 (mimo areál) nebo CustomAction1 (parkoviště). Zkopírujte tlačítkem výše a vložte do Excelu.</p>
         <table class="dispatcher-table" id="disp-table">
           <thead><tr>
             <th style="width:75px">Datum</th>
@@ -294,6 +302,7 @@ tr:hover td{background:var(--color-background-secondary,#fafaf7)}
       <!-- DEK doprava sekce -->
       <div class="card">
         <h3>DEK DOPRAVA — C.S.CARGO vs. Autodoprava Siegl vs. Ostatní</h3>
+        <p class="card-desc">Vozidla DEK dopravy = Dodavatel obsahuje DEK-nakládka nebo DEK-vykládka. Porovnání tří skupin vítězů VŘ. % pozdě = příjezd více než 5 min po plánu.</p>
         <div class="grid3" id="dek-kpi" style="margin-bottom:12px"></div>
         <div class="grid2">
           <div>
@@ -307,6 +316,7 @@ tr:hover td{background:var(--color-background-secondary,#fafaf7)}
       <!-- Dodavatelé sekce -->
       <div class="card">
         <h3>DODAVATELÉ — dochvilnost podle dopravce</h3>
+        <p class="card-desc">Dopravci dodavatelů seřazeni podle počtu jízd (min. 2). Hodnocení: výborné &lt;20%, dobré &lt;35%, průměrné &lt;50%, špatné ≥50% pozdě.</p>
         <div class="metrics m4" id="dod-kpi" style="margin-bottom:12px"></div>
         <div style="overflow-x:auto"><table>
           <thead><tr><th>Dopravce dodavatele</th><th style="width:70px">Jízd</th><th style="width:80px">Před časem</th><th style="width:70px">Na čas</th><th style="width:70px">Pozdě</th><th style="width:75px">% pozdě</th><th style="width:90px">Hodnocení</th></tr></thead>
@@ -316,7 +326,8 @@ tr:hover td{background:var(--color-background-secondary,#fafaf7)}
 
       <!-- Všichni dopravci žebříček -->
       <div class="card">
-        <h3>Žebříček dochvilnosti — všichni dopravci (min. 5 jízd)</h3>
+        <h3>Žebříček dochvilnosti — všichni dopravci</h3>
+        <p class="card-desc">Seřazeno od nejlepší dochvilnosti. Zobrazeni dopravci s min. 5 jízdami za vybrané období.</p>
         <div class="grid2">
           <div id="all-rank"></div>
           <div style="position:relative;height:300px"><canvas id="c-all-dopravci" role="img" aria-label="Všichni dopravci"></canvas></div>
@@ -338,15 +349,18 @@ tr:hover td{background:var(--color-background-secondary,#fafaf7)}
       </div>
 
       <!-- KPI boxes -->
+      <p style="font-size:12px;color:#888;margin:0 0 10px;line-height:1.6">Výkonnost skladu — natažení vozidel a odbavení v plánovaném okně. Hodnotí se pouze pokud dopravce přijel včas nebo dříve.</p>
       <div class="metrics m4" id="log-kpi" style="margin-bottom:14px"></div>
 
       <div class="grid2">
         <div class="card">
           <h3>Dochvilnost natažení na plac</h3>
+          <p class="card-desc">Kdy přijelo vozidlo na rampu (RealGateVehicleArrival) vs. plánovaný začátek. Data z TSC.</p>
           <div style="position:relative;height:200px"><canvas id="c-natazeni" role="img" aria-label="Natažení"></canvas></div>
         </div>
         <div class="card">
           <h3>Odbavení v okně</h3>
+          <p class="card-desc">Sklad dokončil zpracování (RealVehicleDeparture) do konce plánovaného okna. Hodnotí se POUZE při včasném příjezdu dopravce.</p>
           <div style="position:relative;height:200px"><canvas id="c-okno" role="img" aria-label="Okno"></canvas></div>
         </div>
       </div>
@@ -446,10 +460,12 @@ tr:hover td{background:var(--color-background-secondary,#fafaf7)}
     <div id="tab-vedeni" class="view">
       <div class="section-title">KPI vedení</div>
       <p class="section-desc">Měsíční a týdenní přehled klíčových ukazatelů — dochvilnost dopravců, odbavení v okně, nedorazivší vozidla. Aktuální měsíc je rozdělen po kalendářních týdnech.</p>
+      <p style="font-size:12px;color:#888;margin:0 0 10px;line-height:1.6">Klíčové ukazatele pro vedení — dochvilnost, odbavení v okně, nedorazivší vozidla a rozložení mezi sklady.</p>
       <div class="metrics m5" id="mgmt-kpi"></div>
       <div class="grid2">
         <div class="card">
           <h3>Měsíční trend</h3>
+          <p class="card-desc">Vývoj počtu rezervací a dochvilnosti po měsících. Identifikuje sezonní vzorce nebo změny výkonnosti.</p>
           <div class="legend"><span><span class="ld" style="background:#378ADD"></span>Celkem</span><span><span class="ld" style="background:#E24B4A"></span>Pozdě</span><span><span class="ld" style="background:#639922"></span>Včas+dříve</span></div>
           <div style="position:relative;height:220px"><canvas id="c-mgmt-trend" role="img" aria-label="Trend"></canvas></div>
         </div>
@@ -477,6 +493,7 @@ tr:hover td{background:var(--color-background-secondary,#fafaf7)}
 
       <div class="card">
         <h3>Měsíční souhrn KPI</h3>
+        <p class="card-desc">Přehled všech měsíců — dochvilnost dopravců, odbavení v okně skladu a průměrná odchylka příjezdu.</p>
         <table><thead><tr><th>Měsíc</th><th style="width:75px">Celkem</th><th style="width:75px">Pozdě</th><th style="width:70px">% pozdě</th><th style="width:80px">Před časem</th><th style="width:75px">Na čas</th><th style="width:80px">Nedorazilo</th><th style="width:100px">Prům. odch.</th><th style="width:110px">V okně %</th></tr></thead><tbody id="mgmt-table"></tbody></table>
       </div>
     </div>
@@ -600,6 +617,7 @@ tr:hover td{background:var(--color-background-secondary,#fafaf7)}
         <button class="btn" onclick="buildM3()">↻ Zobrazit</button>
       </div>
 
+      <p style="font-size:12px;color:#888;margin:0 0 14px;line-height:1.6">Data z tabulky Vytížení aut. Vstup m3 = plán, Odjelo m3 = skutečnost. Převozy se nepočítají do plnění plánu.</p>
       <!-- Upozornění na chybné buňky -->
       <div id="m3-chyby-banner" style="display:none;background:#FCEBEB;border:1px solid #E24B4A;border-radius:8px;padding:12px 16px;margin-bottom:14px;font-size:12px">
         <strong style="color:#A32D2D">⚠️ Upozornění na chybný formát v tabulce Vytížení aut:</strong>
@@ -648,7 +666,8 @@ tr:hover td{background:var(--color-background-secondary,#fafaf7)}
 
       <!-- Detail po pobočkách -->
       <div class="card">
-        <h3>Detail po pobočkách — TOP 20 dle objemu</h3>
+        <h3>Detail po pobočkách — TOP 20</h3>
+        <p class="card-desc">Pobočky seřazeny podle odjelo m3. Červeně = více než 20% zbytkového. % zbytkové = zbytkové / (odjelo + zbytkové).</p>
         <div style="overflow-x:auto"><table>
           <thead><tr>
             <th>Pobočka</th>
@@ -1475,13 +1494,15 @@ function makeGauge(pct, label, sub, color) {
 }
 
 function makeBigGauge(pct, label, value, unit, color) {
-  // Styl B — karta s levým pruhem místo budíku
+  // Styl B — karta s levým pruhem
   const col = color || (pct >= 80 ? '#3B6D11' : pct >= 60 ? '#EF9F27' : '#E24B4A');
-  return `<div style="background:var(--color-background-secondary,#f8f7f2);border-radius:8px;padding:14px 16px;border-left:3px solid ${col}">
-    <div style="font-size:28px;font-weight:500;color:${col};line-height:1">${pct}%</div>
-    <div style="font-size:12px;font-weight:500;color:var(--color-text-primary,#1a1a18);margin:6px 0 3px">${label}</div>
-    <div style="font-size:11px;color:#888">${value} ${unit}</div>
-  </div>`;
+  const displayPct = typeof pct === 'number' && pct > 100 ? pct : pct; // allow absolute values too
+  const pctStr = (unit === '' && value.includes('m3')) ? pct + '%' : pct + '%';
+  return '<div style="background:var(--color-background-secondary,#f8f7f2);border-radius:8px;padding:14px 16px;border-left:3px solid ' + col + '">' +
+    '<div style="font-size:28px;font-weight:500;color:' + col + ';line-height:1">' + pctStr + '</div>' +
+    '<div style="font-size:12px;font-weight:500;color:var(--color-text-primary,#1a1a18);margin:6px 0 3px">' + label + '</div>' +
+    '<div style="font-size:11px;color:#888">' + value + (unit ? ' ' + unit : '') + '</div>' +
+    '</div>';
 }
 
 // ===== M3 DATA =====
@@ -1546,46 +1567,70 @@ function buildM3() {
   const totalPrevoz = data.reduce((a,r)=>a+m3num(r[M3.prevoz]),0);
   const pctZbytky = totalOdjelo > 0 ? Math.round(totalZbytky/(totalOdjelo+totalZbytky)*100) : 0;
 
-  // Výpočty pro S095 a S093
+  // ============================================================
+  // CROSSDOCK ODDĚLENÍ:
+  // Úžice (S095): řádky kde Pobočka = 'S093' jsou crossdock
+  // Prostějov (S093): řádky kde Pobočka = 'S095' jsou crossdock
+  // ============================================================
   const d095 = data.filter(r=>r[M3.sklad]==='095');
   const d093 = data.filter(r=>r[M3.sklad]==='093');
-  
-  // Vstup (plán)
-  const vstup095 = d095.reduce((a,r)=>a+m3num(r[M3.celkemVstupM3]),0);
-  const vstup093 = d093.reduce((a,r)=>a+m3num(r[M3.celkemVstupM3]),0);
-  
-  // Odjelo (skutečnost — BEZ převozu!)
-  const odjelo095 = d095.reduce((a,r)=>a+m3num(r[M3.odjeloCelkem]),0);
-  const odjelo093 = d093.reduce((a,r)=>a+m3num(r[M3.odjeloCelkem]),0);
-  
-  // Převozy (zvlášť, nepočítáme do splnění plánu)
+
+  // Crossdock řádky
+  const cross095 = d095.filter(r=>r[M3.pobockaKod]==='S093');
+  const cross093 = d093.filter(r=>r[M3.pobockaKod]==='S095');
+
+  // Pobočkové řádky (bez crossdocku)
+  const pob095 = d095.filter(r=>r[M3.pobockaKod]!=='S093');
+  const pob093 = d093.filter(r=>r[M3.pobockaKod]!=='S095');
+
+  // Vstup (plán) — BEZ crossdocku
+  const vstup095 = pob095.reduce((a,r)=>a+m3num(r[M3.celkemVstupM3]),0);
+  const vstup093 = pob093.reduce((a,r)=>a+m3num(r[M3.celkemVstupM3]),0);
+
+  // Odjelo — BEZ crossdocku
+  const odjelo095 = pob095.reduce((a,r)=>a+m3num(r[M3.odjeloCelkem]),0);
+  const odjelo093 = pob093.reduce((a,r)=>a+m3num(r[M3.odjeloCelkem]),0);
+
+  // Převozy (zvlášť)
   const prevoz095 = d095.reduce((a,r)=>a+m3num(r[M3.prevoz]),0);
   const prevoz093 = d093.reduce((a,r)=>a+m3num(r[M3.prevoz]),0);
-  
-  // Zbytkové celkem
-  const zbytky095 = d095.reduce((a,r)=>a+m3num(r[M3.zbytkove]),0);
-  const zbytky093 = d093.reduce((a,r)=>a+m3num(r[M3.zbytkove]),0);
-  
-  // Zbytkové odvezené tentýž den
-  const zbytkyOdv095 = d095.reduce((a,r)=>a+m3num(r[M3.zbytkovOdv]),0);
-  const zbytkyOdv093 = d093.reduce((a,r)=>a+m3num(r[M3.zbytkovOdv]),0);
-  
-  // Výpočty %
+
+  // Zbytkové POBOČKY (bez crossdocku)
+  const zbytky095 = pob095.reduce((a,r)=>a+m3num(r[M3.zbytkove]),0);
+  const zbytky093 = pob093.reduce((a,r)=>a+m3num(r[M3.zbytkove]),0);
+  const zbytkyOdv095 = pob095.reduce((a,r)=>a+m3num(r[M3.zbytkovOdv]),0);
+  const zbytkyOdv093 = pob093.reduce((a,r)=>a+m3num(r[M3.zbytkovOdv]),0);
+
+  // Zbytkové CROSSDOCK (zvlášť — nepočítá se do celku)
+  const zbytkyCross095 = cross095.reduce((a,r)=>a+m3num(r[M3.zbytkove]),0);
+  const zbytkyCross093 = cross093.reduce((a,r)=>a+m3num(r[M3.zbytkove]),0);
+  const zbytkyOdvCross095 = cross095.reduce((a,r)=>a+m3num(r[M3.zbytkovOdv]),0);
+  const zbytkyOdvCross093 = cross093.reduce((a,r)=>a+m3num(r[M3.zbytkovOdv]),0);
+  const zbytkyCrossTotal = zbytkyCross095 + zbytkyCross093;
+  const zbytkyOdvCrossTotal = zbytkyOdvCross095 + zbytkyOdvCross093;
+
+  // % výpočty
   const totalAll = odjelo095 + odjelo093;
   const pct095 = totalAll > 0 ? Math.round(odjelo095/totalAll*100) : 0;
   const pct093 = totalAll > 0 ? Math.round(odjelo093/totalAll*100) : 0;
   const pctOdjelo = totalVstup > 0 ? Math.round(totalOdjelo/totalVstup*100) : 0;
   const pctOdjelo095 = vstup095 > 0 ? Math.round(odjelo095/vstup095*100) : 0;
   const pctOdjelo093 = vstup093 > 0 ? Math.round(odjelo093/vstup093*100) : 0;
-  
-  // % zbytkových
-  const pctZbytky095 = zbytky095 > 0 ? Math.round(zbytky095/(odjelo095+zbytky095)*100) : 0;
-  const pctZbytky093 = zbytky095 > 0 ? Math.round(zbytky093/(odjelo093+zbytky093)*100) : 0;
-  
-  // % úspěšnosti odvozu zbytků tentýž den
+
+  // % zbytkové POBOČKY
+  const pctZbytky095 = (odjelo095+zbytky095) > 0 ? Math.round(zbytky095/(odjelo095+zbytky095)*100) : 0;
+  const pctZbytky093 = (odjelo093+zbytky093) > 0 ? Math.round(zbytky093/(odjelo093+zbytky093)*100) : 0;
+  const zbytkyTotal = zbytky095 + zbytky093;
+  const odjeloTotal = odjelo095 + odjelo093;
+  const pctZbytkyTotal = (odjeloTotal+zbytkyTotal) > 0 ? Math.round(zbytkyTotal/(odjeloTotal+zbytkyTotal)*100) : 0;
+
+  // % odvozu zbytků tentýž den — POBOČKY
   const pctZbytkyOdv095 = zbytky095 > 0 ? Math.round(zbytkyOdv095/zbytky095*100) : 0;
   const pctZbytkyOdv093 = zbytky093 > 0 ? Math.round(zbytkyOdv093/zbytky093*100) : 0;
-  const pctZbytkyOdvCelkem = (zbytky095+zbytky093) > 0 ? Math.round((zbytkyOdv095+zbytkyOdv093)/(zbytky095+zbytky093)*100) : 0;
+  const pctZbytkyOdvCelkem = zbytkyTotal > 0 ? Math.round((zbytkyOdv095+zbytkyOdv093)/zbytkyTotal*100) : 0;
+
+  // % crossdock zbytkové
+  const pctZbytkyOdvCross = zbytkyCrossTotal > 0 ? Math.round(zbytkyOdvCrossTotal/zbytkyCrossTotal*100) : 0;
 
   // Pre-compute colors
   const colPlan = pctOdjelo >= 90 ? '#3B6D11' : pctOdjelo >= 75 ? '#EF9F27' : '#E24B4A';
@@ -1639,15 +1684,7 @@ function buildM3() {
 
   // KPI řádek pod budíky
   // Update celkem zbytkove card dynamically
-  const totZbytkyM3 = Math.round(zbytky093 + zbytky095);
-  const totOdjM3 = Math.round(totalOdjelo);
-  const pctZbytkyTotal = totOdjM3 > 0 ? Math.round(totZbytkyM3/(totOdjM3+totZbytkyM3)*100) : 0;
-  const elM3 = document.getElementById('kpi-zbytky-m3');
-  const elPct = document.getElementById('kpi-zbytky-pct');
-  const elSub = document.getElementById('kpi-zbytky-sub');
-  if(elM3) elM3.textContent = totZbytkyM3.toLocaleString('cs-CZ') + ' m3';
-  if(elPct) { elPct.textContent = pctZbytkyTotal + '%'; elPct.style.color = pctZbytkyTotal > 15 ? '#E24B4A' : '#888'; }
-  if(elSub) elSub.textContent = 'S093: ' + Math.round(zbytky093).toLocaleString('cs-CZ') + ' + S095: ' + Math.round(zbytky095).toLocaleString('cs-CZ') + ' m3';
+  // Celkem zbytkove card is now part of gauges row above
 
   document.getElementById('m3-kpi2').innerHTML = `
     <div class="metric info"><div class="lbl">Závozy celkem</div><div class="val">${data.length.toLocaleString('cs-CZ')}</div></div>
