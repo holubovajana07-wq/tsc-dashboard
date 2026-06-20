@@ -586,6 +586,12 @@ tr:hover td{background:#fafaf7}
         <button class="btn" onclick="buildM3()">↻ Zobrazit</button>
       </div>
 
+      <!-- Upozornění na chybné buňky -->
+      <div id="m3-chyby-banner" style="display:none;background:#FCEBEB;border:1px solid #E24B4A;border-radius:8px;padding:12px 16px;margin-bottom:14px;font-size:12px">
+        <strong style="color:#A32D2D">⚠️ Upozornění na chybný formát v tabulce Vytížení aut:</strong>
+        <div id="m3-chyby-list" style="margin-top:8px;color:#501313;line-height:1.8"></div>
+      </div>
+
       <!-- KPI -->
       <div id="m3-kpi"></div>
       <div class="metrics m5" id="m3-kpi2" style="margin-bottom:14px"></div>
@@ -727,6 +733,23 @@ async function loadInfo() {
     const rows = json.table.rows;
     if (rows && rows[0] && rows[0].c[1]) {
       document.getElementById('last-update').textContent = 'Aktualizováno: ' + (rows[0].c[1].f || rows[0].c[1].v || '');
+    }
+    // Zkontroluj chybné buňky v M3 datech (řádek 5 = A5/B5)
+    if (rows && rows[4] && rows[4].c[1]) {
+      const chybyStr = (rows[4].c[1].v || '').toString();
+      const pocetChyb = rows[5] ? parseInt((rows[5].c[1] || {}).v || '0') : 0;
+      if (chybyStr && pocetChyb > 0) {
+        const chyby = chybyStr.split(';;').map(c => {
+          const parts = c.split('|');
+          return `<div>📋 <strong>${parts[0]}</strong> — buňka <strong>${parts[1]}</strong>: "${parts[2]}"</div>`;
+        }).join('');
+        const banner = document.getElementById('m3-chyby-banner');
+        const list = document.getElementById('m3-chyby-list');
+        if (banner && list) {
+          list.innerHTML = chyby + (pocetChyb > 10 ? `<div style="margin-top:4px;color:#888">...a dalších ${pocetChyb - 10} chybných buněk</div>` : '');
+          banner.style.display = 'block';
+        }
+      }
     }
   } catch(e) {}
 }
@@ -1491,14 +1514,16 @@ async function loadM3Data() {
   }
 }
 
-// M3 column indices
+// M3 column indices (nová struktura s ZbytkovOdv a KT)
 const M3 = {
   datum:0, sklad:1, pobockaRaw:2, pobockaKod:3,
-  lkw:4, pravidelna:5,
-  vstupM3:6, celkemVstupM3:7, zaznamuPL:8,
-  odjeloM3:9, odjeloCelkem:10, odjeloPL:11,
-  prevoz:12, zbytkove:13,
-  vse:14, zruseno:15, nakladal:16
+  lkw:4, pravidelna:5, kt:6,
+  vstupM3:7, celkemVstupM3:8, zaznamuPL:9,
+  odjeloM3:10, odjeloCelkem:11, odjeloPL:12,
+  prevoz:13,
+  zbytkovOdv:14,  // Zbytkové ODVEZENÉ tentýž den
+  zbytkove:15,    // Zbytkové celkem
+  vse:16, zruseno:17, nakladal:18
 };
 
 function m3num(v) { return parseFloat(String(v||'').replace(',','.')) || 0; }
@@ -1529,34 +1554,91 @@ function buildM3() {
   // Výpočty pro S095 a S093
   const d095 = data.filter(r=>r[M3.sklad]==='095');
   const d093 = data.filter(r=>r[M3.sklad]==='093');
+  
+  // Vstup (plán)
   const vstup095 = d095.reduce((a,r)=>a+m3num(r[M3.celkemVstupM3]),0);
   const vstup093 = d093.reduce((a,r)=>a+m3num(r[M3.celkemVstupM3]),0);
+  
+  // Odjelo (skutečnost — BEZ převozu!)
   const odjelo095 = d095.reduce((a,r)=>a+m3num(r[M3.odjeloCelkem]),0);
   const odjelo093 = d093.reduce((a,r)=>a+m3num(r[M3.odjeloCelkem]),0);
+  
+  // Převozy (zvlášť, nepočítáme do splnění plánu)
+  const prevoz095 = d095.reduce((a,r)=>a+m3num(r[M3.prevoz]),0);
+  const prevoz093 = d093.reduce((a,r)=>a+m3num(r[M3.prevoz]),0);
+  
+  // Zbytkové celkem
   const zbytky095 = d095.reduce((a,r)=>a+m3num(r[M3.zbytkove]),0);
   const zbytky093 = d093.reduce((a,r)=>a+m3num(r[M3.zbytkove]),0);
+  
+  // Zbytkové odvezené tentýž den
+  const zbytkyOdv095 = d095.reduce((a,r)=>a+m3num(r[M3.zbytkovOdv]),0);
+  const zbytkyOdv093 = d093.reduce((a,r)=>a+m3num(r[M3.zbytkovOdv]),0);
+  
+  // Výpočty %
   const totalAll = odjelo095 + odjelo093;
   const pct095 = totalAll > 0 ? Math.round(odjelo095/totalAll*100) : 0;
   const pct093 = totalAll > 0 ? Math.round(odjelo093/totalAll*100) : 0;
-  const pctZbytky095 = (odjelo095+zbytky095) > 0 ? Math.round(zbytky095/(odjelo095+zbytky095)*100) : 0;
-  const pctZbytky093 = (odjelo093+zbytky093) > 0 ? Math.round(zbytky093/(odjelo093+zbytky093)*100) : 0;
   const pctOdjelo = totalVstup > 0 ? Math.round(totalOdjelo/totalVstup*100) : 0;
+  const pctOdjelo095 = vstup095 > 0 ? Math.round(odjelo095/vstup095*100) : 0;
+  const pctOdjelo093 = vstup093 > 0 ? Math.round(odjelo093/vstup093*100) : 0;
+  
+  // % zbytkových
+  const pctZbytky095 = zbytky095 > 0 ? Math.round(zbytky095/(odjelo095+zbytky095)*100) : 0;
+  const pctZbytky093 = zbytky095 > 0 ? Math.round(zbytky093/(odjelo093+zbytky093)*100) : 0;
+  
+  // % úspěšnosti odvozu zbytků tentýž den
+  const pctZbytkyOdv095 = zbytky095 > 0 ? Math.round(zbytkyOdv095/zbytky095*100) : 0;
+  const pctZbytkyOdv093 = zbytky093 > 0 ? Math.round(zbytkyOdv093/zbytky093*100) : 0;
+  const pctZbytkyOdvCelkem = (zbytky095+zbytky093) > 0 ? Math.round((zbytkyOdv095+zbytkyOdv093)/(zbytky095+zbytky093)*100) : 0;
 
-  // Pre-compute colors (cannot use ternary with quotes inside template literal)
-  const colZbytky095 = pctZbytky095 > 20 ? '#E24B4A' : '#EF9F27';
-  const colZbytky093 = pctZbytky093 > 20 ? '#E24B4A' : '#EF9F27';
-  const g1 = makeBigGauge(pctOdjelo, 'Splnění plánu celkem', Math.round(totalOdjelo).toLocaleString('cs-CZ'), 'm3', '#185FA5');
-  const g2 = makeBigGauge(pct095, 'Podíl CS1 Úžice (S095)', Math.round(odjelo095).toLocaleString('cs-CZ'), 'm3', '#1D9E75');
-  const g3 = makeBigGauge(pct093, 'Podíl CS1 Prostějov (S093)', Math.round(odjelo093).toLocaleString('cs-CZ'), 'm3', '#7F77DD');
-  const g4 = makeBigGauge(pctZbytky095, 'Zbytkové S095', Math.round(zbytky095).toLocaleString('cs-CZ'), 'm3', colZbytky095);
-  const g5 = makeBigGauge(pctZbytky093, 'Zbytkové S093', Math.round(zbytky093).toLocaleString('cs-CZ'), 'm3', colZbytky093);
+  // Pre-compute colors
+  const colPlan = pctOdjelo >= 90 ? '#3B6D11' : pctOdjelo >= 75 ? '#EF9F27' : '#E24B4A';
+  const colPlan095 = pctOdjelo095 >= 90 ? '#3B6D11' : pctOdjelo095 >= 75 ? '#EF9F27' : '#E24B4A';
+  const colPlan093 = pctOdjelo093 >= 90 ? '#3B6D11' : pctOdjelo093 >= 75 ? '#EF9F27' : '#E24B4A';
+  const colZb095 = pctZbytky095 > 20 ? '#E24B4A' : pctZbytky095 > 10 ? '#EF9F27' : '#3B6D11';
+  const colZb093 = pctZbytky093 > 20 ? '#E24B4A' : pctZbytky093 > 10 ? '#EF9F27' : '#3B6D11';
+  const colZbOdv = pctZbytkyOdvCelkem >= 70 ? '#3B6D11' : pctZbytkyOdvCelkem >= 40 ? '#EF9F27' : '#E24B4A';
+  const colZbOdv095 = pctZbytkyOdv095 >= 70 ? '#3B6D11' : pctZbytkyOdv095 >= 40 ? '#EF9F27' : '#E24B4A';
+  const colZbOdv093 = pctZbytkyOdv093 >= 70 ? '#3B6D11' : pctZbytkyOdv093 >= 40 ? '#EF9F27' : '#E24B4A';
+
+  // Gauges
+  const gP1 = makeBigGauge(pctOdjelo, 'Splnění plánu celkem', Math.round(totalOdjelo).toLocaleString('cs-CZ'), 'm3', colPlan);
+  const gP2 = makeBigGauge(pctOdjelo093, 'Splnění plánu S093', Math.round(odjelo093).toLocaleString('cs-CZ'), 'm3', colPlan093);
+  const gP3 = makeBigGauge(pctOdjelo095, 'Splnění plánu S095', Math.round(odjelo095).toLocaleString('cs-CZ'), 'm3', colPlan095);
+  const gZ1 = makeBigGauge(pctZbytky093, 'Zbytkové S093', Math.round(zbytky093).toLocaleString('cs-CZ'), 'm3', colZb093);
+  const gZ2 = makeBigGauge(pctZbytky095, 'Zbytkové S095', Math.round(zbytky095).toLocaleString('cs-CZ'), 'm3', colZb095);
+  const gZ3 = makeBigGauge(pctZbytkyOdvCelkem, 'Odvezeno zbytk. celkem', Math.round(zbytkyOdv095+zbytkyOdv093).toLocaleString('cs-CZ'), 'm3', colZbOdv);
+  const gZ4 = makeBigGauge(pctZbytkyOdv093, 'Odvezeno zbytk. S093', Math.round(zbytkyOdv093).toLocaleString('cs-CZ'), 'm3', colZbOdv093);
+  const gZ5 = makeBigGauge(pctZbytkyOdv095, 'Odvezeno zbytk. S095', Math.round(zbytkyOdv095).toLocaleString('cs-CZ'), 'm3', colZbOdv095);
+  const gR1 = makeBigGauge(pct093, 'Podíl m3 S093', Math.round(odjelo093).toLocaleString('cs-CZ'), 'm3', '#7F77DD');
+  const gR2 = makeBigGauge(pct095, 'Podíl m3 S095', Math.round(odjelo095).toLocaleString('cs-CZ'), 'm3', '#1D9E75');
 
   document.getElementById('m3-kpi').innerHTML = `
-    <div class="card" style="margin-bottom:14px;grid-column:1/-1">
-      <h3>Přehled vytíženosti — budíky</h3>
-      <div class="gauges-row">
-        ${g1}${g2}${g3}${g4}${g5}
+    <div class="card" style="margin-bottom:12px">
+      <h3>📊 Plnění plánu</h3>
+      <div class="gauges-row">${gP1}${gP2}${gP3}</div>
+      <div style="text-align:center;font-size:11px;color:#888;margin-top:8px">
+        + Převozy: <strong style="color:#185FA5">${Math.round(prevoz093+prevoz095).toLocaleString('cs-CZ')} m3</strong>
+        &nbsp;|&nbsp; S093: <strong>${Math.round(prevoz093).toLocaleString('cs-CZ')} m3</strong>
+        &nbsp;|&nbsp; S095: <strong>${Math.round(prevoz095).toLocaleString('cs-CZ')} m3</strong>
       </div>
+    </div>
+    <div class="card" style="margin-bottom:12px">
+      <h3>🔄 Zbytkové závozy</h3>
+      <div class="gauges-row">${gZ1}${gZ2}</div>
+      <div style="margin-top:8px;text-align:center;font-size:11px;color:#888">
+        Celkem zbytkové: <strong>${Math.round(zbytky093+zbytky095).toLocaleString('cs-CZ')} m3</strong>
+        &nbsp;(S093: ${Math.round(zbytky093).toLocaleString('cs-CZ')} + S095: ${Math.round(zbytky095).toLocaleString('cs-CZ')})
+      </div>
+      <div style="margin-top:12px;border-top:1px solid #e8e7e2;padding-top:12px">
+        <div style="font-size:11px;font-weight:600;color:#888;margin-bottom:8px;text-transform:uppercase">Odvezeno zbytků tentýž den</div>
+        <div class="gauges-row">${gZ3}${gZ4}${gZ5}</div>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:12px">
+      <h3>⚖️ Rozložení m3 mezi CS</h3>
+      <div class="gauges-row">${gR1}${gR2}</div>
     </div>
   `;
 
