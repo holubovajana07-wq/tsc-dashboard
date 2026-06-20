@@ -90,20 +90,20 @@ tr:hover td{background:var(--color-background-secondary,#fafaf7)}
 .gauge-val{font-size:22px;font-weight:700;text-anchor:middle;dominant-baseline:middle}
 .gauge-lbl{font-size:11px;color:#888;text-align:center;font-weight:500}
 .gauge-sub{font-size:11px;color:#aaa;text-align:center}
-.gauges-row{display:flex;gap:20px;justify-content:center;flex-wrap:wrap;padding:10px 0}
-.gauge-box{background:#f8f7f2;border:1px solid #e8e7e2;border-radius:10px;padding:14px 18px;text-align:center;min-width:140px}
+.gauges-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;padding:4px 0}
+.gauge-box{background:var(--color-background-secondary,#f8f7f2);border:0.5px solid var(--color-border-tertiary,#e8e7e2);border-radius:10px;padding:14px 18px;text-align:center;min-width:140px}
 /* Dispečer */
 .dispatcher-table{font-size:12px}
 .dispatcher-table th{background:#185FA5;color:#fff;font-size:11px}
 .dispatcher-table tr.header-row td{background:#E6F1FB;font-weight:600;color:#185FA5;font-size:11px}
-/* KPI boxes */
-.kpi-box{background:#f8f7f2;border-radius:8px;padding:10px 12px;border:1px solid #e8e7e2;text-align:center}
-.kpi-box .kv{font-size:20px;font-weight:700}
+/* KPI boxes - styl B */
+.kpi-box{background:var(--color-background-secondary,#f8f7f2);border-radius:8px;padding:10px 12px;border-left:3px solid #ddd;text-align:left}
+.kpi-box .kv{font-size:20px;font-weight:500}
 .kpi-box .kl{font-size:10px;color:#888;margin-top:2px}
-.kpi-box.ok .kv{color:#3B6D11}
-.kpi-box.warn .kv{color:#BA7517}
-.kpi-box.danger .kv{color:#A32D2D}
-.kpi-box.info .kv{color:#185FA5}
+.kpi-box.ok{border-left-color:#1D9E75}.kpi-box.ok .kv{color:#3B6D11}
+.kpi-box.warn{border-left-color:#EF9F27}.kpi-box.warn .kv{color:#BA7517}
+.kpi-box.danger{border-left-color:#E24B4A}.kpi-box.danger .kv{color:#A32D2D}
+.kpi-box.info{border-left-color:#185FA5}.kpi-box.info .kv{color:#185FA5}
 </style>
 </head>
 <body>
@@ -1475,31 +1475,12 @@ function makeGauge(pct, label, sub, color) {
 }
 
 function makeBigGauge(pct, label, value, unit, color) {
-  const r = 70, cx = 90, cy = 90;
-  const totalDeg = 240;
-  const fillDeg = Math.min(pct / 100 * totalDeg, totalDeg);
-  const startAngle = -210, endAngle = 30;
-  
-  function polar(cx, cy, r, deg) {
-    const rad = (deg - 90) * Math.PI / 180;
-    return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
-  }
-  const s = polar(cx, cy, r, startAngle);
-  const trackEnd = polar(cx, cy, r, endAngle);
-  const fillEnd = polar(cx, cy, r, startAngle + fillDeg);
-  const largeArcFill = fillDeg > 180 ? 1 : 0;
+  // Styl B — karta s levým pruhem místo budíku
   const col = color || (pct >= 80 ? '#3B6D11' : pct >= 60 ? '#EF9F27' : '#E24B4A');
-  
-  return `<div class="gauge-wrap">
-    <svg class="gauge-svg" width="180" height="120" viewBox="0 0 180 120">
-      <path d="M ${s.x} ${s.y} A ${r} ${r} 0 1 1 ${trackEnd.x} ${trackEnd.y}"
-        fill="none" stroke="#e8e7e2" stroke-width="12" stroke-linecap="round"/>
-      ${fillDeg > 0 ? `<path d="M ${s.x} ${s.y} A ${r} ${r} 0 ${largeArcFill} 1 ${fillEnd.x} ${fillEnd.y}"
-        fill="none" stroke="${col}" stroke-width="12" stroke-linecap="round"/>` : ''}
-      <text x="${cx}" y="${cy - 8}" text-anchor="middle" font-size="26" font-weight="700" fill="${col}">${pct}%</text>
-      <text x="${cx}" y="${cy + 16}" text-anchor="middle" font-size="12" fill="#888">${value} ${unit}</text>
-    </svg>
-    <div class="gauge-lbl">${label}</div>
+  return `<div style="background:var(--color-background-secondary,#f8f7f2);border-radius:8px;padding:14px 16px;border-left:3px solid ${col}">
+    <div style="font-size:28px;font-weight:500;color:${col};line-height:1">${pct}%</div>
+    <div style="font-size:12px;font-weight:500;color:var(--color-text-primary,#1a1a18);margin:6px 0 3px">${label}</div>
+    <div style="font-size:11px;color:#888">${value} ${unit}</div>
   </div>`;
 }
 
