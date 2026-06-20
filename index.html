@@ -7,8 +7,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:system-ui,-apple-system,sans-serif;background:#f0efea;color:#1a1a18;font-size:14px}
-.topbar{background:#fff;border-bottom:1px solid #ddd;padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:52px;position:sticky;top:0;z-index:100}
+body{font-family:var(--font-sans,system-ui,-apple-system,sans-serif);background:var(--color-background-secondary,#f8f7f2);color:var(--color-text-primary,#1a1a18);font-size:14px}
+.topbar{background:var(--color-background-primary,#fff);border-bottom:0.5px solid var(--color-border-tertiary,#e8e7e2);padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:48px;position:sticky;top:0;z-index:100}
 .topbar-left{display:flex;align-items:center;gap:12px}
 .logo{font-size:16px;font-weight:700;color:#1a1a18}.logo span{color:#185FA5}
 .badge{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:500}
@@ -18,17 +18,17 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#f0efea;color:#1a
 .last-update{font-size:11px;color:#aaa}
 .btn-refresh{font-size:12px;padding:5px 12px;border:1px solid #ddd;border-radius:6px;cursor:pointer;background:#fff}
 .btn-refresh:hover{background:#f0efea}
-.tabs{display:flex;gap:2px;background:#f0efea;padding:12px 20px 0;flex-wrap:wrap}
-.tab{padding:8px 16px;border-radius:8px 8px 0 0;cursor:pointer;font-size:12px;font-weight:500;color:#888;background:#e4e3de;border:none}
-.tab.active{background:#fff;color:#1a1a18;border-bottom:2px solid #185FA5}
-.tab:hover:not(.active){background:#dad9d4}
-.content{background:#fff;min-height:calc(100vh - 116px);padding:20px}
+.tabs{display:flex;gap:0;background:var(--color-background-secondary,#f8f7f2);padding:0 20px;flex-wrap:wrap;border-bottom:0.5px solid var(--color-border-tertiary,#e8e7e2)}
+.tab{padding:10px 16px;border-radius:0;cursor:pointer;font-size:12px;font-weight:400;color:#888;background:transparent;border:none;border-bottom:2px solid transparent}
+.tab.active{color:var(--color-text-primary,#1a1a18);border-bottom:2px solid #185FA5;font-weight:500}
+.tab:hover:not(.active){color:var(--color-text-primary,#1a1a18);background:var(--color-background-primary,#fff)}
+.content{background:var(--color-background-primary,#fff);min-height:calc(100vh - 100px);padding:20px}
 .view{display:none}.view.active{display:block}
 .loading-screen{position:fixed;inset:0;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:200}
 .spinner{width:40px;height:40px;border:3px solid #e0e0e0;border-top-color:#185FA5;border-radius:50%;animation:spin 0.8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .loading-msg{font-size:13px;color:#888}
-.filters{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px;padding:12px 14px;background:#f8f7f2;border-radius:8px;border:1px solid #e8e7e2}
+.filters{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px;padding:10px 14px;background:var(--color-background-secondary,#f8f7f2);border-radius:8px;border:0.5px solid var(--color-border-tertiary,#e8e7e2)}
 .fg{display:flex;flex-direction:column;gap:4px}
 .fg label{font-size:11px;color:#888;font-weight:500}
 .fg select,.fg input{font-size:12px;padding:5px 8px;border:1px solid #ddd;border-radius:6px;background:#fff;min-width:110px}
@@ -37,32 +37,39 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#f0efea;color:#1a
 .btn-copy{padding:6px 14px;font-size:12px;cursor:pointer;border:1px solid #185FA5;border-radius:6px;background:#fff;color:#185FA5;font-weight:500}
 .btn-copy:hover{background:#E6F1FB}
 .metrics{display:grid;gap:10px;margin-bottom:16px}
-.m5{grid-template-columns:repeat(5,1fr)}.m4{grid-template-columns:repeat(4,1fr)}.m3{grid-template-columns:repeat(3,1fr)}
-.metric{background:#f8f7f2;border-radius:8px;padding:12px 14px;border:1px solid #e8e7e2}
+.m5{grid-template-columns:repeat(5,1fr)}.m4{grid-template-columns:repeat(4,1fr)}.m3{grid-template-columns:repeat(3,1fr)}.m2{grid-template-columns:repeat(2,1fr)}
+.metric{background:var(--color-background-secondary,#f8f7f2);border-radius:8px;padding:14px 16px;border-left:3px solid #ddd}
 .metric .lbl{font-size:11px;color:#888;font-weight:500;margin-bottom:4px}
-.metric .val{font-size:22px;font-weight:700;line-height:1.1}
-.metric .sub{font-size:11px;color:#aaa;margin-top:3px}
-.metric.warn .val{color:#BA7517}.metric.ok .val{color:#3B6D11}
-.metric.danger .val{color:#A32D2D}.metric.info .val{color:#185FA5}
+.metric .val{font-size:26px;font-weight:500;line-height:1.1;color:var(--color-text-primary,#1a1a18)}
+.metric .sub{font-size:11px;color:#aaa;margin-top:4px}
+.metric.warn{border-left-color:#EF9F27}.metric.warn .val{color:#BA7517}
+.metric.ok{border-left-color:#1D9E75}.metric.ok .val{color:#3B6D11}
+.metric.danger{border-left-color:#E24B4A}.metric.danger .val{color:#A32D2D}
+.metric.info{border-left-color:#185FA5}.metric.info .val{color:#185FA5}
+.metric.neutral{border-left-color:#888}.metric.neutral .val{color:#555}
+.metric.purple{border-left-color:#7F77DD}.metric.purple .val{color:#534AB7}
+/* Section descriptions */
+.section-desc{font-size:12px;color:#888;margin:-10px 0 14px;line-height:1.6}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
 .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px}
-.card{background:#fff;border:1px solid #e8e7e2;border-radius:10px;padding:16px;margin-bottom:14px}
-.card h3{font-size:12px;font-weight:600;color:#888;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.4px;display:flex;align-items:center;justify-content:space-between}
+.card{background:var(--color-background-primary,#fff);border:0.5px solid var(--color-border-tertiary,#e8e7e2);border-radius:10px;padding:16px;margin-bottom:14px}
+.card h3{font-size:12px;font-weight:500;color:#888;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.4px;display:flex;align-items:center;justify-content:space-between}
+.card .card-desc{font-size:11px;color:#aaa;margin-bottom:12px;line-height:1.5;font-weight:400;text-transform:none;letter-spacing:0}
 .legend{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px;font-size:11px;color:#888}
 .legend span{display:flex;align-items:center;gap:4px}
 .ld{width:10px;height:10px;border-radius:2px;flex-shrink:0}
 table{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed}
-th{text-align:left;color:#888;font-weight:600;padding:6px 8px;border-bottom:1px solid #e8e7e2;font-size:11px;text-transform:uppercase;letter-spacing:0.3px;white-space:nowrap;background:#f8f7f2}
-td{padding:6px 8px;border-bottom:1px solid #f5f4ef;color:#1a1a18;vertical-align:middle;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+th{text-align:left;color:#888;font-weight:500;padding:8px 10px;border-bottom:0.5px solid var(--color-border-tertiary,#e8e7e2);font-size:11px;text-transform:uppercase;letter-spacing:0.3px;white-space:nowrap;background:var(--color-background-secondary,#f8f7f2)}
+td{padding:7px 10px;border-bottom:0.5px solid var(--color-border-tertiary,#f5f4ef);color:var(--color-text-primary,#1a1a18);vertical-align:middle;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 tr:last-child td{border-bottom:none}
-tr:hover td{background:#fafaf7}
+tr:hover td{background:var(--color-background-secondary,#fafaf7)}
 .pill{display:inline-block;font-size:10px;padding:2px 8px;border-radius:20px;font-weight:500}
 .pill-late{background:#FAEEDA;color:#633806}
 .pill-ok{background:#EAF3DE;color:#27500A}
 .pill-early{background:#E6F1FB;color:#185FA5}
 .pill-bad{background:#FCEBEB;color:#501313}
 .pill-nd{background:#f0efea;color:#888}
-.section-title{font-size:15px;font-weight:600;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid #e8e7e2;display:flex;align-items:center;justify-content:space-between}
+.section-title{font-size:15px;font-weight:500;margin-bottom:4px;display:flex;align-items:center;justify-content:space-between}
 .rank-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid #f5f4ef}
 .rank-row:last-child{border-bottom:none}
 .rank-num{font-size:12px;font-weight:700;color:#ddd;width:18px;text-align:center}
@@ -164,6 +171,7 @@ tr:hover td{background:#fafaf7}
 
     <!-- PŘEHLED -->
     <div id="tab-prehled" class="view active">
+      <p class="section-desc">Celkový pohled na dochvilnost dopravců a vytíženost skladů. Dochvilnost = příjezd na parkoviště nebo mimo areál vs. plánovaný začátek rezervace.</p>
       <div class="filters">
         <div class="fg"><label>Datum od</label><input type="date" id="f-from"></div>
         <div class="fg"><label>Datum do</label><input type="date" id="f-to"></div>
@@ -240,6 +248,7 @@ tr:hover td{background:#fafaf7}
         <span>Denní report pro dispečera</span>
         <button class="btn-copy" onclick="copyDispTable()">📋 Kopírovat tabulku</button>
       </div>
+      <p class="section-desc">Denní výpis rezervací pro dispečera — přehled příjezdů, dochvilnosti a doby odbavení. Tabulku lze zkopírovat a vložit do Excelu nebo emailu.</p>
       <div class="filters">
         <div class="fg"><label>Datum</label><input type="date" id="d-datum"></div>
         <div class="fg"><label>Sklad</label>
@@ -280,6 +289,7 @@ tr:hover td{background:#fafaf7}
     <!-- DOPRAVCI -->
     <div id="tab-dopravci" class="view">
       <div class="section-title">Výkonnost dopravců</div>
+      <p class="section-desc">Porovnání dochvilnosti dopravců — DEK doprava (C.S.CARGO, Siegl, ostatní) vs. dodavatelé. % pozdě = příjezd více než 5 minut po plánovaném začátku.</p>
 
       <!-- DEK doprava sekce -->
       <div class="card">
@@ -316,7 +326,8 @@ tr:hover td{background:#fafaf7}
 
     <!-- LOGISTIK CS -->
     <div id="tab-logistik" class="view">
-      <div class="section-title">Logistik CS — dochvilnost natažení + odbavení v okně</div>
+      <div class="section-title">Logistik CS</div>
+      <p class="section-desc">Dochvilnost natažení vozidel na rampu + odbavení v okně. Odbavení v okně = sklad zahájil i dokončil zpracování v rámci plánovaného časového okna rezervace. Hodnotí se pouze pokud dopravce přijel včas nebo dříve.</p>
       <div class="filters">
         <div class="fg"><label>Datum od</label><input type="date" id="l-from"></div>
         <div class="fg"><label>Datum do</label><input type="date" id="l-to"></div>
@@ -361,7 +372,8 @@ tr:hover td{background:#fafaf7}
 
     <!-- RAMPY -->
     <div id="tab-rampy" class="view">
-      <div class="section-title">Vytíženost ramp a provozní statistiky</div>
+      <div class="section-title">Rampy</div>
+      <p class="section-desc">Vytíženost jednotlivých ramp, provozní hodiny a průměrné doby odbavení. Nastavte provozní dobu skladu pro výpočet vytíženosti kapacity.</p>
 
       <!-- Provozní hodiny skladu -->
       <div class="card">
@@ -432,7 +444,8 @@ tr:hover td{background:#fafaf7}
 
     <!-- KPI VEDENÍ -->
     <div id="tab-vedeni" class="view">
-      <div class="section-title">KPI přehled pro vedení</div>
+      <div class="section-title">KPI vedení</div>
+      <p class="section-desc">Měsíční a týdenní přehled klíčových ukazatelů — dochvilnost dopravců, odbavení v okně, nedorazivší vozidla. Aktuální měsíc je rozdělen po kalendářních týdnech.</p>
       <div class="metrics m5" id="mgmt-kpi"></div>
       <div class="grid2">
         <div class="card">
@@ -470,7 +483,8 @@ tr:hover td{background:#fafaf7}
 
     <!-- ŘEDITELKA CS -->
     <div id="tab-reditelka" class="view">
-      <div class="section-title">Přehled pro ředitelku CS</div>
+      <div class="section-title">Přehled pro vedení CS</div>
+      <p class="section-desc">Komplexní pohled na výkonnost logistiky — dochvilnost příjezdů a odjezdů, časy čekání v areálu, % naplánovaných vozidel a plnění časových oken. Data z TSC systému.</p>
 
       <div class="filters">
         <div class="fg"><label>Datum od</label><input type="date" id="r-from"></div>
@@ -1643,6 +1657,17 @@ function buildM3() {
   `;
 
   // KPI řádek pod budíky
+  // Update celkem zbytkove card dynamically
+  const totZbytkyM3 = Math.round(zbytky093 + zbytky095);
+  const totOdjM3 = Math.round(totalOdjelo);
+  const pctZbytkyTotal = totOdjM3 > 0 ? Math.round(totZbytkyM3/(totOdjM3+totZbytkyM3)*100) : 0;
+  const elM3 = document.getElementById('kpi-zbytky-m3');
+  const elPct = document.getElementById('kpi-zbytky-pct');
+  const elSub = document.getElementById('kpi-zbytky-sub');
+  if(elM3) elM3.textContent = totZbytkyM3.toLocaleString('cs-CZ') + ' m3';
+  if(elPct) { elPct.textContent = pctZbytkyTotal + '%'; elPct.style.color = pctZbytkyTotal > 15 ? '#E24B4A' : '#888'; }
+  if(elSub) elSub.textContent = 'S093: ' + Math.round(zbytky093).toLocaleString('cs-CZ') + ' + S095: ' + Math.round(zbytky095).toLocaleString('cs-CZ') + ' m3';
+
   document.getElementById('m3-kpi2').innerHTML = `
     <div class="metric info"><div class="lbl">Závozy celkem</div><div class="val">${data.length.toLocaleString('cs-CZ')}</div></div>
     <div class="metric"><div class="lbl">Vstup m3 (plán)</div><div class="val">${Math.round(totalVstup).toLocaleString('cs-CZ')}</div><div class="sub">m3</div></div>
