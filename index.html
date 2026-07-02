@@ -780,16 +780,40 @@ let allData = [], filtered = [], charts = {};
 async function loadFromSheets() {
   setLoading('Načítám data ze Sheets...');
   try {
-    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_NAME)}`;
-    const resp = await fetch(url);
-    const text = await resp.text();
-    const json = JSON.parse(text.substring(47, text.length - 2));
-    const rows = json.table.rows;
-    allData = rows.map(row => row.c.map(cell => cell ? (cell.f || cell.v || '') : ''));
+    // gviz API má limit na velikost odpovědi — načítáme po stránkách po 2000 řádcích
+    allData = [];
+    let offset = 0;
+    const pageSize = 2000;
+    let page = 1;
+
+    while (true) {
+      const tq = encodeURIComponent(`select * limit ${pageSize} offset ${offset}`);
+      const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_NAME)}&tq=${tq}`;
+      setLoading(`Načítám data ze Sheets... (stránka ${page})`);
+
+      const resp = await fetch(url);
+      const text = await resp.text();
+      const json = JSON.parse(text.substring(47, text.length - 2));
+      const rows = json.table.rows || [];
+
+      if (rows.length === 0) break;
+
+      const batch = rows.map(row => row.c.map(cell => cell ? (cell.f || cell.v || '') : ''));
+      allData = allData.concat(batch);
+
+      console.log(`Stránka ${page}: +${rows.length} = ${allData.length} řádků`);
+
+      if (rows.length < pageSize) break; // poslední stránka
+      offset += pageSize;
+      page++;
+    }
+
     // Skip header if first row has text in numeric column
     if (allData.length > 0 && isNaN(parseFloat(allData[0][C.diffMin])) && allData[0][C.diffMin] !== '') {
       allData = allData.slice(1);
     }
+
+    console.log('Celkem načteno řádků:', allData.length);
     loadInfo();
     setDefaults();
     applyFilters();
