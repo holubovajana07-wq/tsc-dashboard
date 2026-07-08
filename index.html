@@ -777,19 +777,17 @@ const C = {
 let allData = [], filtered = [], charts = {};
 
 // ===== LOAD =====
+const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR6v4JqVuRKQV0GvUguWt1zsxNY39A3ArbKjRXJqhq73gHsP-2T1aIPBJ4efGNQVHIXBB359hd-f3ZC/pub?gid=516917274&single=true&output=csv';
+
 async function loadFromSheets() {
   setLoading('Načítám data ze Sheets...');
   try {
-    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&gid=516917274`;
-    const resp = await fetch(url);
+    const resp = await fetch(CSV_URL);
     const text = await resp.text();
-    const json = JSON.parse(text.substring(47, text.length - 2));
-    const rows = json.table.rows;
-    allData = rows.map(row => row.c.map(cell => cell ? (cell.f || cell.v || '') : ''));
-    if (allData.length > 0 && isNaN(parseFloat(allData[0][C.diffMin])) && allData[0][C.diffMin] !== '') {
-      allData = allData.slice(1);
-    }
-    console.log('Načteno řádků:', allData.length);
+    const rows = parseCSV(text);
+    // První řádek je záhlaví — přeskočit
+    allData = rows.slice(1).filter(r => r.length > 1 && r[0]);
+    console.log('Načteno řádků (CSV):', allData.length);
     loadInfo();
     setDefaults();
     applyFilters();
@@ -799,6 +797,30 @@ async function loadFromSheets() {
   } catch(e) {
     setLoading('Chyba: ' + e.message);
   }
+}
+
+function parseCSV(text) {
+  const rows = [];
+  let row = [], cell = '', inQuotes = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i], next = text[i+1];
+    if (inQuotes) {
+      if (ch === '"' && next === '"') { cell += '"'; i++; }
+      else if (ch === '"') { inQuotes = false; }
+      else { cell += ch; }
+    } else {
+      if (ch === '"') { inQuotes = true; }
+      else if (ch === ',') { row.push(cell); cell = ''; }
+      else if (ch === '\n' || (ch === '\r' && next === '\n')) {
+        row.push(cell); cell = '';
+        if (row.some(c => c !== '')) rows.push(row);
+        row = [];
+        if (ch === '\r') i++;
+      } else { cell += ch; }
+    }
+  }
+  if (cell || row.length) { row.push(cell); if (row.some(c => c !== '')) rows.push(row); }
+  return rows;
 }
 
 async function loadInfo() {
