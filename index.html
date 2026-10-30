@@ -10,8 +10,9 @@
 body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;background:#f8f7f2;color:#1a1a18;font-size:14px}
 .topbar{background:#fff;border-bottom:0.5px solid #e8e7e2;padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:48px;position:sticky;top:0;z-index:100}
 .topbar-left{display:flex;align-items:center;gap:12px}
-/* Logo DEK se načítá ze souboru logo-dek.svg vedle index.html. Dokud tam
-   není, onerror ho i s oddělovačem schová — dashboard se tím nerozbije. */
+/* Logo DEK se načítá ze souboru logo-dek.png vedle index.html (261×88 px,
+   průhledné pozadí — zobrazuje se na 22 px, takže má rezervu pro retinu).
+   Kdyby soubor chyběl, onerror ho i s oddělovačem schová a nic se nerozbije. */
 .logo-dek{height:22px;width:auto;display:block}
 .delic{width:1px;height:22px;background:#e8e7e2}
 .nazev{font-size:15px;font-weight:700;letter-spacing:-.2px;line-height:1.15}
@@ -129,7 +130,7 @@ tr:hover td{background:#fafaf7}
 <div id="app" style="display:none">
   <div class="topbar">
     <div class="topbar-left">
-      <img class="logo-dek" src="logo-dek.svg" alt="DEK"
+      <img class="logo-dek" src="logo-dek.png" alt="DEK"
            onerror="this.style.display='none'; this.nextElementSibling.style.display='none'">
       <div class="delic"></div>
       <div class="nazev">Time Slot Control <span class="zkr">(TSC)</span><span class="pod">reporting · centrální sklad</span></div>
