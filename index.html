@@ -473,8 +473,15 @@ tr:hover td{background:#fafaf7}
       </div>
       <div class="card"><h3>Detail po pobočkách — TOP 20</h3><div class="card-desc">Podle odjelo m3. Červeně = více než 20 % zbytkového. % zbytkové = zbytkové / (odjelo + zbytkové).</div>
         <div class="tw"><table><thead><tr><th>Pobočka</th><th>Sklad</th><th>Závozy</th><th>Vstup m3</th><th>Odjelo m3</th><th>Zbytkové m3</th><th>% zbytk.</th><th>Převozy</th><th>Zrušeno</th></tr></thead><tbody id="m3-table"></tbody></table></div></div>
-      <div class="card"><h3>Propojení s TSC rezervacemi</h3><div class="card-desc">Závozy z m3 tabulky vs. TSC rezervace pro stejnou pobočku, za <b>stejné období a sklad</b>. Zbytek hlavního filtru (typ akce, skupina dopravy, den v týdnu) se tady <b>vědomě neuplatňuje</b> — m3 tabulka tyhle rozměry nemá a sloupce by se pak porovnávaly každý za jinou množinu.</div>
-        <div class="tw"><table><thead><tr><th>Pobočka</th><th>Sklad</th><th>Závozy (m3)</th><th>Rezervace (TSC)</th><th>Odjelo m3</th><th>Zbytkové m3</th><th>% zbytk.</th></tr></thead><tbody id="m3-tsctable"></tbody></table></div></div>
+      <div class="card"><h3>Propojení s TSC rezervacemi</h3>
+        <div class="card-desc">⚠ <strong>Každý sloupec počítá něco jiného, nejsou to dvě strany téže mince.</strong>
+        <em>Závozů (m3)</em> je počet řádků v tabulce Vytížení aut — to je zhruba <strong>jeden plánovaný závoz na pobočku a den</strong>.
+        <em>Vozidel (TSC)</em> je počet rezervací, tedy <strong>jednotlivých aut na rampě</strong>. Když pobočku obslouží dvě auta, je to
+        jeden řádek m3 a dvě rezervace — proto u velkých poboček vychází <strong>TSC víc a je to správně</strong>.
+        Sloupec <em>Aut na závoz</em> ten poměr ukazuje přímo.<br>
+        Z hlavního filtru platí <b>období a sklad</b>; typ akce, skupina dopravy a den v týdnu se tu vědomě neuplatňují, protože m3 tabulka ty rozměry nemá.</div>
+        <div class="note" style="background:#FAEEDA;color:#633806" id="m3-shoda"></div>
+        <div class="tw"><table><thead><tr><th>Pobočka</th><th>Sklad</th><th>Závozů (m3)</th><th>Vozidel (TSC)</th><th>Aut na závoz</th><th>Odjelo m3</th><th>Zbytkové m3</th><th>% zbytk.</th></tr></thead><tbody id="m3-tsctable"></tbody></table></div></div>
       </div>
     </div>
 
@@ -2046,9 +2053,24 @@ function rM3(){
   // dopravy a den v týdnu, které m3 tabulka nemá — sloupce by se pak
   // porovnávaly každý za jinou množinu a nikdo by to nepoznal.
   const tscProM3 = filt(ALL, {from:f.from, to:f.to, cs:f.cs, dop:'', typ:'', den:''}, false);
-  const tscBy = groupBy(tscProM3, o=>(o.no||'').split(/[|\s+]/)[0].trim().toUpperCase());
+  // Hledají se VŠECHNY kódy poboček v poli „Číslo NO / Zakázka", ne jen první
+  // token: jedna jízda běžně obsluhuje víc poboček („P110 + P235") a dřív se
+  // počítala jen té první. Zlepší to napárování z 36 % na 52 % rezervací.
+  const kodyPobocek = o => { const m = String(o.no||'').toUpperCase().match(/P\d{3,4}/g); return m ? [...new Set(m)] : []; };
+  const tscBy = {};
+  let naparovano = 0;
+  tscProM3.forEach(o=>{ const k = kodyPobocek(o); if (k.length) naparovano++;
+    k.forEach(x=>(tscBy[x] || (tscBy[x] = [])).push(o)); });
+  $('m3-shoda').innerHTML = `Na pobočku se podařilo napojit <strong>${fmtN(naparovano)} z ${fmtN(tscProM3.length)}</strong>
+    rezervací (${pct(naparovano, tscProM3.length)} %). U zbytku je v poli <em>Číslo NO / Zakázka</em> něco, z čeho se pobočka
+    vyčíst nedá — nejčastěji <code>X</code>, <code>XXX</code>, <code>1111</code>, název dopravce nebo „více NO".
+    <strong>U těch poboček proto vyjde méně vozidel, než ve skutečnosti přijelo</strong>, a tabulka se nedá číst jako přesná bilance.`;
   $('m3-tsctable').innerHTML = pobocky.slice(0,15).map(p=>{ const tr = tscBy[p.kod] || tscBy['P'+p.kod] || []; const pz=pP(p.zb,p.odjelo+p.zb); const col=pz>20?'#A32D2D':(pz>10?'#BA7517':'inherit');
-    return `<tr><td><strong>${esc(p.kod)}</strong></td><td>${SK[p.sklad]||p.sklad}</td><td style="text-align:center">${p.n}</td><td style="text-align:center;color:${tr.length?'inherit':'#aaa'}">${tr.length||'—'}</td><td style="text-align:right">${R(p.odjelo)}</td><td style="text-align:right;color:${col}">${R(p.zb)}</td><td style="text-align:center;color:${col};font-weight:500">${pz}%</td></tr>`; }).join('') || '<tr><td colspan="7" class="empty">Žádná data</td></tr>';
+    const pomer = p.n ? (tr.length / p.n) : null;
+    return `<tr><td><strong>${esc(p.kod)}</strong></td><td>${SK[p.sklad]||p.sklad}</td><td style="text-align:center">${p.n}</td>
+      <td style="text-align:center;color:${tr.length?'inherit':'#aaa'}">${tr.length||'—'}</td>
+      <td style="text-align:center;color:#888">${pomer?pomer.toFixed(1).replace('.',','):'—'}</td>
+      <td style="text-align:right">${R(p.odjelo)}</td><td style="text-align:right;color:${col}">${R(p.zb)}</td><td style="text-align:center;color:${col};font-weight:500">${pz}%</td></tr>`; }).join('') || '<tr><td colspan="8" class="empty">Žádná data</td></tr>';
 }
 
 // ============================================================
