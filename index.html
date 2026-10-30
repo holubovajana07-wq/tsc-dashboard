@@ -188,6 +188,7 @@ tr:hover td{background:#fafaf7}
     <button class="tab" onclick="showTab('dopravci',this)">🚛 Dopravci</button>
     <button class="tab" onclick="showTab('logistik',this)">🏭 Logistik CS</button>
     <button class="tab" onclick="showTab('analyza',this)">📍 Analýza CS</button>
+    <button class="tab" onclick="showTab('pauzy',this)">⏸ Pauzy CS z TSC</button>
     <button class="tab" onclick="showTab('vedeni',this)">📈 KPI vedení</button>
     <button class="tab" onclick="showTab('m3',this)">📦 m3 analýza</button>
     <button class="tab" onclick="showTab('reditelka',this)">👔 Ředitelka CS</button>
@@ -411,7 +412,7 @@ tr:hover td{background:#fafaf7}
       <div class="card"><h3>Přehled ramp</h3>
         <div class="card-desc" id="an-rampy-desc"></div>
         <div class="metrics m4" id="an-rampy-kpi"></div>
-        <div class="tw"><table><thead><tr><th>Rampa</th><th>Sklad</th><th>Celkem</th><th>Nakládka</th><th>Vykládka</th><th>Dochvilnost</th><th>Medián zprac.</th><th>&lt;15 min</th><th>15–30</th><th>&gt;30 min</th><th>V okně %</th><th>Obsazeno Ø/den</th></tr></thead><tbody id="ramp-table"></tbody></table></div></div>
+        <div class="tw"><table><thead><tr><th>Rampa</th><th>Sklad</th><th>Celkem</th><th>Nakládka</th><th>Vykládka</th><th>Dochvilnost</th><th>Medián zprac.</th><th>&lt;15 min</th><th>15–30</th><th>&gt;30 min</th><th>V okně %</th><th>Vytíženost</th></tr></thead><tbody id="ramp-table"></tbody></table></div></div>
     </div>
 
     <!-- KPI VEDENÍ -->
@@ -465,6 +466,23 @@ tr:hover td{background:#fafaf7}
         <div class="card-desc">Odjezd z podniku vs. plánovaný konec okna. Včas = ±5 min. Níže odbavení v okně (dokončení zpracování ≤ konec + 5 min).</div>
         <div class="metrics m5" id="r-odjezd-kpi"></div>
         <div class="cbox" style="height:220px;margin-top:12px"><canvas id="c-r-odjezd"></canvas></div></div>
+    </div>
+
+    <!-- PAUZY CS Z TSC -->
+    <div id="tab-pauzy" class="view">
+      <div class="section-title">Pauzy CS z TSC</div>
+      <p class="section-desc">Kontrolní zrcadlo: <strong>co o provozní době a přestávkách říká TSC</strong>. Z těchhle čísel se počítá vytíženost ramp. Záložka <strong>neposlouchá hlavní filtr</strong> — je to konfigurace, ne data za období, a je jen pro čtení.</p>
+      <div class="note" id="pauzy-vyzva"></div>
+      <div id="pauzy-upozorneni"></div>
+      <div class="metrics m4" id="pauzy-kpi"></div>
+
+      <div class="card"><h3>Přestávky a uzavření — pravidla z TSC</h3>
+        <div class="card-desc">Pravidla typu <em>Daily</em> jsou denní přestávky, ostatní jednorázová nebo roční uzavření. Sloupec Rampy se dopočítává z instancí pravidla — když je prázdný, pravidlo instance nemá a <strong>nevíme, kterých ramp se týká</strong>.</div>
+        <div class="tw"><table><thead><tr><th>Název</th><th>Opakování</th><th>Od</th><th>Do</th><th>Délka</th><th>Platí od</th><th>Platí do</th><th>Rampy</th><th>Pozn.</th></tr></thead><tbody id="pauzy-tab"></tbody></table></div></div>
+
+      <div class="card"><h3>Otevírací doba a čistá provozní doba po rampách</h3>
+        <div class="card-desc">Otevírací doba je <strong>na rampě, ne na skladě</strong> — každá rampa může mít jinou. Čistá provozní doba = otevírací doba mínus denní přestávky, které se té rampy týkají; z ní se počítá jmenovatel vytíženosti.</div>
+        <div class="tw"><table><thead><tr><th>Rampa</th><th>Sklad</th><th>Po</th><th>Út</th><th>St</th><th>Čt</th><th>Pá</th><th>So</th><th>Ne</th><th>Přestávky/den</th><th>Čistá doba Po–Pá</th></tr></thead><tbody id="pauzy-rampy"></tbody></table></div></div>
     </div>
 
     <!-- M3 -->
@@ -600,6 +618,7 @@ function pasmaCounts(rows){
   return c;
 }
 
+let PROVOZ = null;       // nastavení provozu z TSC: {rampy:[[…]], pauzy:[[…]], zmeneno, kontrola}
 let ALL = [];            // zpracované rezervace (bez „Nedorazilo“ a „Bez rezervace“)
 let EXC = [];            // vyřazené řádky: Nedorazilo + Bez rezervace (do statistik se nepočítají)
 let exF = [];            // EXC podle hlavního filtru
@@ -828,6 +847,15 @@ async function loadAll(){
   HIST = h;
   setLoading('Načítám posledních 15 dní a dnešek…');
   await fetchLive();
+  // Nastavení provozu — dvě malé tabulky, stahují se jednou při načtení.
+  // `umi` říká, jestli to nasazená verze web appky umí; bez něj se neptáme,
+  // protože starší nasazení by na neznámý mode vrátilo celý list DATA.
+  if (ver.umi && ver.umi.indexOf('provoz') >= 0) {
+    try {
+      const p = await getJson(API + '?mode=provoz', 60000);
+      if (!p.error) PROVOZ = p;
+    } catch(e){ console.warn('Nastavení provozu se nepodařilo načíst', e); }
+  }
 }
 async function fetchLive(){
   const [rec, dnes] = await Promise.all([
@@ -907,7 +935,7 @@ function showTab(name, btn){
   renderActive();
 }
 function renderActive(){
-  const f = {prehled:rPrehled, dispecer:rDispecer, dopravci:rDopravci, logistik:rLogistik, analyza:rAnalyza, vedeni:rVedeni, m3:rM3, reditelka:rReditelka}[ACTIVE];
+  const f = {prehled:rPrehled, dispecer:rDispecer, dopravci:rDopravci, logistik:rLogistik, analyza:rAnalyza, pauzy:rPauzy, vedeni:rVedeni, m3:rM3, reditelka:rReditelka}[ACTIVE];
   try { f(); } catch(e){ console.error(ACTIVE, e); }
 }
 
@@ -1716,38 +1744,210 @@ function rAnalyza(){
     metric('info','Medián doby příjmu', (()=>{const m=med(prijem); return m!=null?Math.round(m)+' min':'—';})(), 'z '+fmtN(prijem.length)+' vykládek') +
     metric('','Příjem nad 60 min', fmtN(prijem.filter(x=>x>60).length), prijem.length?pct(prijem.filter(x=>x>60).length,prijem.length)+' % vykládek':'');
 
-  // --- 11. přehled ramp ---
-  // Vytíženost v procentech se tu vědomě nepočítá: jmenovatel je provozní doba
-  // rampy z TSC (03_metriky/tsc-dochvilnost, bod 8) a ta zatím v dashboardu není
-  // — je v listech PROVOZ_RAMPY / PROVOZ_PAUZY a přivede ji záložka Pauzy CS.
-  // Ručně zadaná provozní doba v localStorage byla zrušena, protože to byl odhad.
-  const dnySkl = {}; d.forEach(o=>{ if (o.proc != null) (dnySkl[o.sklad] || (dnySkl[o.sklad] = new Set())).add(o.date); });
+  // --- 11. přehled ramp a vytíženost ---
+  // Jmenovatel je ČISTÁ PROVOZNÍ DOBA Z TSC (03_metriky/tsc-dochvilnost, bod 8),
+  // počítaná pro každý den zvlášť podle dne v týdnu a pravidel platných k tomu
+  // datu — proto se sčítá po dnech, ne průměrem. Ručně zadaná provozní doba
+  // v localStorage byla zrušena, byl to odhad. Když nastavení z TSC chybí
+  // (staré nasazení web appky), ukazují se jen obsazené minuty.
+  const dnyRampy = {};   // rampa → set dnů, kdy se na ní něco dělo
+  const obsRampy = {};   // rampa → obsazené minuty celkem
+  d.forEach(o=>{ if (o.proc == null || !o.rampa) return;
+    const k = o.sklad+'|'+o.rampa;
+    (dnyRampy[k] || (dnyRampy[k] = new Set())).add(o.date);
+    obsRampy[k] = (obsRampy[k] || 0) + o.proc; });
+  const maProvoz = !!(PROVOZ && provozTab('rampy').length);
+  // dostupné minuty rampy = součet čisté provozní doby přes dny, kdy se na ní jelo
+  const dostupneMin = (key, name) => {
+    const radek = rampaRadek(name); if (!radek || !dnyRampy[key]) return null;
+    let soucet = 0;
+    dnyRampy[key].forEach(den=>{
+      const i = (new Date(den+'T00:00:00Z').getUTCDay() + 6) % 7;
+      soucet += cistaDoba(radek, i, den); });
+    return soucet || null;
+  };
   const byRamp = groupBy(d.filter(o=>o.rampa), o=>o.sklad+'|'+o.rampa);
   const ramps = Object.keys(byRamp).map(key=>{
     const [sk,name] = key.split('|'), rs = byRamp[key], s = stats(rs), ww = winStats(rs);
     const procs = rs.map(o=>o.proc).filter(x=>x!=null);
-    const obsazeno = procs.reduce((a,b)=>a+b,0);
-    const dnu = dnySkl[sk] ? dnySkl[sk].size : 0;
+    const dnu = dnyRampy[key] ? dnyRampy[key].size : 0;
+    const dost = maProvoz ? dostupneMin(key, name) : null;
     return {sk, name, n:rs.length, load:rs.filter(o=>o.isLoad).length, unl:rs.filter(o=>o.isUnload).length,
       dochv:s.ev?pct(s.punct,s.ev):null, med:med(procs),
       a:procs.filter(x=>x<15).length, b:procs.filter(x=>x>=15&&x<=30).length, c:procs.filter(x=>x>30).length,
-      w:ww.eval?ww.pct:null, obs:dnu?Math.round(obsazeno/dnu):null};
+      w:ww.eval?ww.pct:null, obs:dnu?Math.round((obsRampy[key]||0)/dnu):null,
+      util:dost ? Math.round(100*(obsRampy[key]||0)/dost) : null};
   }).sort((a,b)=>b.n-a.n);
-  const nej = ramps.filter(r=>r.obs!=null).sort((a,b)=>b.obs-a.obs)[0];
-  $('an-rampy-desc').innerHTML = `<strong>Obsazeno Ø/den</strong> = minuty zpracování (zahájení → dokončení) na rampě dělené počtem dnů s provozem.
-    Je to <strong>čitatel vytíženosti, ne procento</strong> — jmenovatel je provozní doba rampy z TSC a ta se do dashboardu dostane až se záložkou Pauzy CS.
-    Ručně zadávaná provozní doba byla zrušená, byl to odhad, ne skutečnost.`;
+  const sUtil = ramps.filter(r=>r.util != null);
+  const nej = (sUtil.length ? sUtil.slice().sort((a,b)=>b.util-a.util) : ramps.filter(r=>r.obs!=null).sort((a,b)=>b.obs-a.obs))[0];
+  const bezProvozu = ramps.filter(r=>r.util == null).length;
+  $('an-rampy-desc').innerHTML = maProvoz
+    ? `<strong>Vytíženost</strong> = minuty zpracování (zahájení → dokončení) ÷ čistá provozní doba rampy z TSC,
+       sečtená přes dny, kdy se na rampě jelo. Přestávky i otevírací doba se berou <strong>pro každý den zvlášť</strong>
+       podle pravidel platných k tomu datu — kdo v létě přidal přestávku, nemá tím zkreslené jaro.
+       Nastavení je vidět v záložce <strong>Pauzy CS z TSC</strong>; opravuje se tam, ne tady.
+       ${bezProvozu ? '<br>⚠ U '+bezProvozu+' ramp se vytíženost spočítat nedá — chybí jim v TSC otevírací doba nebo nejsou v seznamu ramp.' : ''}`
+    : `<strong>Obsazeno Ø/den</strong> = minuty zpracování na rampě dělené počtem dnů s provozem. Je to
+       <strong>čitatel vytíženosti, ne procento</strong> — jmenovatel (čistá provozní doba z TSC) se zatím nenačetl,
+       viz záložka Pauzy CS z TSC.`;
   $('an-rampy-kpi').innerHTML =
     metric('info','Aktivních ramp', fmtN(ramps.length), f.cs ? SK[f.cs] : 'všechny sklady') +
-    metric('warn','Nejobsazenější rampa', nej?esc(nej.name):'—', nej?nej.obs+' min/den':'') +
-    metric('','Dnů s provozem', fmtN(Object.keys(dnySkl).reduce((m,k)=>Math.max(m, dnySkl[k].size), 0)), 've vybraném období') +
+    (maProvoz
+      ? metric('ok','Ø vytíženost ramp', sUtil.length?Math.round(avg(sUtil.map(r=>r.util)))+' %':'—', 'z '+fmtN(sUtil.length)+' ramp s provozní dobou')
+      : metric('','Ø vytíženost ramp', '—', 'čeká na nastavení z TSC')) +
+    metric('warn','Nejvytíženější rampa', nej?esc(nej.name):'—', nej?(nej.util!=null?nej.util+' %':nej.obs+' min/den'):'') +
     metric('','Medián zpracování', mm(med(d.map(o=>o.proc))), 'přes všechny rampy');
   $('ramp-table').innerHTML = ramps.map(r=>`<tr><td><strong>${esc(r.name)}</strong></td><td>${SK[r.sk]||r.sk}</td>
     <td>${fmtN(r.n)}</td><td>${fmtN(r.load)}</td><td>${fmtN(r.unl)}</td>
     <td style="font-weight:600;color:${r.dochv==null?'#aaa':rankColor(100-r.dochv)}">${r.dochv!=null?r.dochv+' %':'—'}</td>
     <td style="text-align:center">${mm(r.med)}</td><td>${fmtN(r.a)}</td><td>${fmtN(r.b)}</td><td>${fmtN(r.c)}</td>
-    <td>${r.w!=null?r.w+' %':'—'}</td><td style="font-weight:600">${r.obs!=null?r.obs+' min':'—'}</td></tr>`).join('')
+    <td>${r.w!=null?r.w+' %':'—'}</td>
+    <td style="font-weight:600">${r.util!=null
+        ? r.util+' % <span style="color:#888;font-size:11px;font-weight:400">'+r.obs+' min/den</span>'
+        : (r.obs!=null ? r.obs+' min/den' : '—')}</td></tr>`).join('')
     || '<tr><td colspan="12" class="empty">Žádná data</td></tr>';
+}
+
+// ============================================================
+// PAUZY CS Z TSC
+// ============================================================
+// Nastavení provozu je jediný zdroj pravdy pro jmenovatel vytíženosti
+// (03_metriky/tsc-dochvilnost, bod 8). Ruční zadávání v dashboardu
+// vědomě neexistuje — nesrovnalost se opravuje v TSC.
+const PR_SL = {rampa:0, sklad:1, virt:2, minRez:3};   // PROVOZ_RAMPY
+const PA_SL = {nazev:0, opak:1, od:2, do:3, delka:4, platiOd:5, platiDo:6, rampy:7, pozn:8};
+const DEN_SL = i => 4 + i*3;    // Po od / Po do / Po minut, pak Út…
+const MAIL_SPRAVCE = 'jana.prochazkova@dek-cz.com';
+
+function provozTab(klic){ return (PROVOZ && PROVOZ[klic] && PROVOZ[klic].length > 1) ? PROVOZ[klic].slice(1) : []; }
+function datumCZ(s){ const m = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(String(s||'')); return m ? m[3]+'-'+m[2]+'-'+m[1] : null; }
+
+// Denní přestávky, které se té rampy týkají, v minutách za den.
+// Pravidlo bez uvedených ramp se NEPŘIPOČÍTÁVÁ — nevíme, kam patří,
+// a tichý odhad by jmenovatel zkreslil (zalozka-pauzy-cs.md).
+function pauzyRampy(nazevRampy, datumISO){
+  let min = 0; const seznam = [];
+  provozTab('pauzy').forEach(p=>{
+    if (String(p[PA_SL.opak]) !== 'Daily') return;
+    const rampy = String(p[PA_SL.rampy]||'').split(',').map(s=>s.trim()).filter(Boolean);
+    if (rampy.indexOf(nazevRampy) < 0) return;
+    if (datumISO){
+      const od = datumCZ(p[PA_SL.platiOd]), doo = datumCZ(p[PA_SL.platiDo]);
+      if (od && datumISO < od) return;
+      if (doo && datumISO > doo) return;
+    }
+    min += (+p[PA_SL.delka] || 0); seznam.push(p);
+  });
+  return {min, seznam};
+}
+// Čistá provozní doba rampy pro den v týdnu (0 = pondělí), v minutách.
+function cistaDoba(radekRampy, denIdx, datumISO){
+  const hrubo = +radekRampy[DEN_SL(denIdx) + 2] || 0;
+  if (!hrubo) return 0;
+  return Math.max(0, hrubo - pauzyRampy(radekRampy[PR_SL.rampa], datumISO).min);
+}
+// Mapa „název rampy → řádek“, aby se v Analýze CS nehledalo v cyklu.
+let PR_MAPA = null;
+function rampaRadek(nazev){
+  if (!PR_MAPA){ PR_MAPA = {}; provozTab('rampy').forEach(r=>PR_MAPA[r[PR_SL.rampa]] = r); }
+  return PR_MAPA[nazev] || null;
+}
+
+function rPauzy(){
+  const rampy = provozTab('rampy'), pauzy = provozTab('pauzy');
+  $('pauzy-vyzva').innerHTML = PROVOZ
+    ? `Tohle je stav <strong>zadaný v TSC</strong>, ze kterého dashboard počítá vytíženost ramp.
+       Pokud neodpovídá skutečnosti, napište na <strong>${MAIL_SPRAVCE}</strong> — <strong>opraví se v TSC</strong>, ne v dashboardu.
+       Načteno z TSC naposledy ${PROVOZ.kontrola ? new Date(PROVOZ.kontrola).toLocaleString('cs-CZ') : '—'};
+       nastavení se naposledy změnilo ${PROVOZ.zmeneno ? new Date(PROVOZ.zmeneno).toLocaleString('cs-CZ') : '—'}.`
+    : `<strong>Nastavení provozu se zatím nenačetlo.</strong> Web appka ho umí poslat až z nového nasazení
+       (režim <code>?mode=provoz</code>). Dokud se nenasadí, je tahle záložka prázdná a vytíženost ramp
+       v Analýze CS se ukazuje jen jako obsazené minuty, ne v procentech.`;
+  if (!PROVOZ){ $('pauzy-upozorneni').innerHTML = ''; $('pauzy-kpi').innerHTML = '';
+    $('pauzy-tab').innerHTML = '<tr><td colspan="9" class="empty">Zatím bez dat</td></tr>';
+    $('pauzy-rampy').innerHTML = '<tr><td colspan="11" class="empty">Zatím bez dat</td></tr>'; return; }
+
+  const denni = pauzy.filter(p=>String(p[PA_SL.opak])==='Daily');
+  const dnesISO = isoToday();
+
+  // --- co má záložka aktivně hlásit (zalozka-pauzy-cs.md, „Co musí být vidět jako problém") ---
+  const potize = [];
+  ['093','095','096'].forEach(k=>{
+    const rs = rampy.filter(r=>String(r[PR_SL.sklad]).indexOf(k) >= 0);
+    if (!rs.length) return;
+    const bez = rs.filter(r=>pauzyRampy(r[PR_SL.rampa], dnesISO).min === 0);
+    if (bez.length === rs.length)
+      potize.push(['danger', `<strong>${SK[k]} nemá zadanou ani jednu přestávku.</strong> Vychází pak vytíženější než sklady, které je zadané mají — rozdíl není v práci, ale v nastavení.`]);
+    else if (bez.length)
+      potize.push(['warn', `${SK[k]}: ${bez.length} z ${rs.length} ramp nemá žádnou přestávku (${bez.map(r=>esc(r[PR_SL.rampa])).join(', ')}).`]);
+  });
+  denni.forEach(p=>{
+    const doo = datumCZ(p[PA_SL.platiDo]);
+    if (!doo) return;
+    const dnu = Math.round((new Date(doo) - new Date(dnesISO)) / 86400000);
+    if (dnu < 0) potize.push(['warn', `Pravidlu <strong>${esc(p[PA_SL.nazev])}</strong> skončila platnost ${esc(p[PA_SL.platiDo])} — od té doby se jeho minuty do čisté provozní doby nepočítají.`]);
+    else if (dnu <= 60) potize.push(['warn', `Pravidlu <strong>${esc(p[PA_SL.nazev])}</strong> končí platnost za ${dnu} dní (${esc(p[PA_SL.platiDo])}). Pokud se neprodlouží, vytíženost od toho dne tiše poskočí nahoru.`]);
+  });
+  const bezRamp = denni.filter(p=>!String(p[PA_SL.rampy]||'').trim());
+  if (bezRamp.length)
+    potize.push(['warn', `${bezRamp.length} denních pravidel nemá dohledatelné rampy (pravidlo nemá instance). <strong>Do čisté provozní doby se nezapočítávají</strong> — raději než je přiřadit odhadem.`]);
+  const spatneHodiny = rampy.filter(r=>{
+    let ok = 0; for (let i = 0; i < 5; i++) if ((+r[DEN_SL(i)+2]||0) > 0) ok++;
+    return ok === 0; });
+  if (spatneHodiny.length)
+    potize.push(['warn', `${spatneHodiny.length} ramp nemá v Po–Pá žádnou otevírací dobu (${spatneHodiny.slice(0,5).map(r=>esc(r[PR_SL.rampa])).join(', ')}${spatneHodiny.length>5?'…':''}). U nich se vytíženost spočítat nedá.`]);
+  // mezera v platnosti denních pravidel
+  const useky = denni.map(p=>[datumCZ(p[PA_SL.platiOd]), datumCZ(p[PA_SL.platiDo])]).filter(x=>x[0]&&x[1]).sort();
+  for (let i = 1; i < useky.length; i++){
+    const konec = useky[i-1][1], zacatek = useky[i][0];
+    if (zacatek > konec){
+      const dnu = Math.round((new Date(zacatek) - new Date(konec)) / 86400000);
+      if (dnu > 1) { potize.push(['warn', `<strong>Mezera v platnosti pravidel ${konec} → ${zacatek}</strong> (${dnu} dní). Za tu dobu se přestávky nepočítají a vytíženost tam vychází vyšší, než ve skutečnosti byla.`]); break; }
+    }
+  }
+  $('pauzy-upozorneni').innerHTML = potize.length
+    ? potize.map(([t,x])=>`<div class="note" style="background:${t==='danger'?'#FCEBEB':'#FAEEDA'};color:${t==='danger'?'#501313':'#633806'}">${t==='danger'?'🔴':'⚠'} ${x}</div>`).join('')
+    : '<div class="note" style="background:#EAF3DE;color:#27500A">✅ Nastavení vypadá v pořádku — všechny sklady mají přestávky, žádnému pravidlu nekončí platnost do dvou měsíců.</div>';
+
+  // --- KPI ---
+  const minPoSkladech = ['093','095','096'].map(k=>{
+    const rs = rampy.filter(r=>String(r[PR_SL.sklad]).indexOf(k) >= 0);
+    return rs.length ? SK[k]+' '+Math.max.apply(null, rs.map(r=>pauzyRampy(r[PR_SL.rampa], dnesISO).min))+' min' : null;
+  }).filter(Boolean).join(' · ');
+  $('pauzy-kpi').innerHTML =
+    metric('info','Ramp v TSC', fmtN(rampy.length), rampy.filter(r=>r[PR_SL.virt]==='Ano').length+' z toho virtuálních') +
+    metric('info','Pravidel celkem', fmtN(pauzy.length), fmtN(denni.length)+' denních přestávek') +
+    metric(potize.some(p=>p[0]==='danger')?'danger':(potize.length?'warn':'ok'),'Nálezů ke kontrole', fmtN(potize.length), potize.length?'vypsané nahoře':'nic k řešení') +
+    metric('','Přestávek za den', minPoSkladech || '—', 'nejvyšší hodnota na skladě');
+
+  // --- tabulka pravidel ---
+  $('pauzy-tab').innerHTML = pauzy.map(p=>{
+    const d = String(p[PA_SL.opak])==='Daily';
+    const doo = datumCZ(p[PA_SL.platiDo]);
+    const konci = doo && doo < dnesISO;
+    return `<tr style="${konci?'opacity:.55':''}">
+      <td><strong>${esc(p[PA_SL.nazev])}</strong></td>
+      <td>${d?'<span class="pill pill-ok">Denní</span>':'<span class="pill pill-nd">'+esc(p[PA_SL.opak]||'—')+'</span>'}</td>
+      <td>${esc(p[PA_SL.od])}</td><td>${esc(p[PA_SL.do])}</td>
+      <td>${p[PA_SL.delka]!==''?esc(p[PA_SL.delka])+' min':'—'}</td>
+      <td>${esc(p[PA_SL.platiOd])}</td>
+      <td style="${konci?'color:#A32D2D;font-weight:600':''}">${esc(p[PA_SL.platiDo])}${konci?' (neplatí)':''}</td>
+      <td style="white-space:normal">${esc(p[PA_SL.rampy])||'<span style="color:#aaa">neznámé</span>'}</td>
+      <td style="white-space:normal;color:#888;font-size:11px">${esc(p[PA_SL.pozn])}</td></tr>`;
+  }).join('') || '<tr><td colspan="9" class="empty">Žádná pravidla</td></tr>';
+
+  // --- tabulka ramp ---
+  $('pauzy-rampy').innerHTML = rampy.map(r=>{
+    const pa = pauzyRampy(r[PR_SL.rampa], dnesISO).min;
+    const bunka = i => { const od = r[DEN_SL(i)], doo = r[DEN_SL(i)+1], m = +r[DEN_SL(i)+2] || 0;
+      return m ? `<td style="font-size:11px">${esc(od)}–${esc(doo)}</td>` : '<td style="color:#ddd">—</td>'; };
+    const cista = [0,1,2,3,4].map(i=>cistaDoba(r, i, dnesISO)).filter(x=>x>0);
+    const prum = cista.length ? Math.round(avg(cista)) : null;
+    return `<tr><td><strong>${esc(r[PR_SL.rampa])}</strong>${r[PR_SL.virt]==='Ano'?' <span class="pill pill-nd">virtuální</span>':''}</td>
+      <td>${esc(r[PR_SL.sklad])}</td>${[0,1,2,3,4,5,6].map(bunka).join('')}
+      <td style="${pa?'':'color:#A32D2D;font-weight:600'}">${pa?pa+' min':'žádné'}</td>
+      <td style="font-weight:600">${prum!=null?(prum/60).toFixed(1).replace('.',',')+' h':'—'}</td></tr>`;
+  }).join('') || '<tr><td colspan="11" class="empty">Žádné rampy</td></tr>';
 }
 
 function buildHeatmap(data, rezim){
