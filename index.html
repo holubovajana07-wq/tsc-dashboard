@@ -220,27 +220,38 @@ tr:hover td{background:#fafaf7}
 
     <!-- DOPRAVCI -->
     <div id="tab-dopravci" class="view">
-      <div class="section-title">Výkonnost dopravců</div>
-      <p class="section-desc">Dochvilnost = příjezd v toleranci ±5 min kolem plánovaného začátku. % pozdě = příjezd později než +5 min, z vozidel s měřenou odchylkou.</p>
-      <div class="card"><h3>DEK doprava — C.S.CARGO vs. Autodoprava Siegl vs. Ostatní</h3>
-        <div class="card-desc">Vozidla DEK dopravy = dodavatel obsahuje DEK-nakládka / DEK-vykládka.</div>
-        <div class="grid3" id="dek-kpi" style="margin-bottom:12px"></div>
-        <div class="grid2">
-          <div><div class="legend"><span><span class="ld" style="background:#E24B4A"></span>Pozdě</span><span><span class="ld" style="background:#639922"></span>Na čas</span><span><span class="ld" style="background:#378ADD"></span>Před časem</span></div>
-            <div class="cbox" style="height:200px"><canvas id="c-dek-skupiny"></canvas></div></div>
-          <div id="dek-rank"></div>
-        </div></div>
-      <div class="card"><h3>Dodavatelé — dochvilnost podle dopravce</h3>
-        <div class="card-desc">Dopravci dodavatelů seřazeni podle počtu jízd (min. 2). Hodnocení: výborné &lt;20 %, dobré &lt;35 %, průměrné &lt;50 %, špatné ≥50 % pozdě.</div>
-        <div class="metrics m4" id="dod-kpi"></div>
-        <div class="tw"><table><thead><tr><th>Dopravce</th><th>Jízd</th><th>Před časem</th><th>Na čas</th><th>Pozdě</th><th>% pozdě</th><th>Hodnocení</th></tr></thead><tbody id="dod-table"></tbody></table></div></div>
-      <div class="card"><h3>Vozidla bez rezervace — samostatně</h3>
-        <div class="card-desc">Příjezdy bez rezervace nejsou součástí žádné statistiky dochvilnosti ani odbavení; sledují se zde zvlášť podle dopravce.</div>
-        <div class="metrics m4" id="bez-kpi"></div>
-        <div class="tw"><table><thead><tr><th>Dopravce</th><th>Počet</th><th>Sklad</th></tr></thead><tbody id="bez-table"></tbody></table></div></div>
+      <div class="section-title">Dopravci</div>
+      <p class="section-desc">Podklad pro jednání s dopravci a pro výběrové řízení 2027. <strong>Dochvilnost</strong> = příjezd nejpozději 5 min po plánovaném začátku, počítáno z hodnocených příjezdů (ne ze všech jízd). Dělení na naši a dodavatelskou dopravu se bere z pole <em>Dodavatel</em> (DEK-nakládka / DEK-vykládka), <strong>ne z názvu dopravce</strong> — tentýž dopravce jezdí pro nás i pro dodavatele a hodnotí se mu jen to, co jsme si objednali my.</p>
+
+      <div class="metrics m4" id="dop-kpi"></div>
+      <div class="card"><h3>⚠ Kvalita dat</h3><div class="card-desc" id="dop-kvalita"></div></div>
+
+      <div class="card"><h3>Smluvní dopravci — C.S.CARGO × Autodoprava Siegl × Ostatní DEK</h3>
+        <div class="card-desc">Jen jízdy, <strong>které jsme objednali my</strong>. Jízdy, kdy tentýž dopravce vezl zásilku pro dodavatele, se do plnění smlouvy nepočítají — jsou uvedené zvlášť jako informace, protože nám rampu zdržují stejně.</div>
+        <div class="grid3" id="dop-smluvni" style="margin-bottom:12px"></div>
+        <div class="cbox" style="height:230px"><canvas id="c-dop-pasma"></canvas></div></div>
+
+      <div class="card"><h3>Dochvilnost v čase</h3>
+        <div class="card-desc" id="dop-trend-desc"></div>
+        <div class="cbox" style="height:260px"><canvas id="c-dop-trend"></canvas></div></div>
+
+      <div class="card"><h3>Ostatní DEK dopravci</h3>
+        <div class="card-desc">Dopravci jezdící pod DEK-nakládkou / DEK-vykládkou, kteří nejsou výherci VŘ — dohromady zhruba 42 % naší dopravy. Min. 3 jízdy, řazeno podle počtu jízd.</div>
+        <div class="tw"><table><thead><tr><th>Dopravce</th><th>Jízd</th><th>Hodnoceno</th><th>Dochvilnost</th><th>Pozdě</th><th>&gt;60 min předem</th><th>Nedorazilo</th></tr></thead><tbody id="dop-ostatni"></tbody></table></div></div>
+
+      <div class="card"><h3>Dodavatelská doprava podle dopravce</h3>
+        <div class="card-desc">Dopravu si objednal dodavatel, ne my — ovlivnit se dá jen přes dodavatele. Min. 3 jízdy, prvních 20 podle počtu jízd.</div>
+        <div class="metrics m4" id="dop-dod-kpi"></div>
+        <div class="tw"><table><thead><tr><th>Dopravce</th><th>Jízd</th><th>Hodnoceno</th><th>Dochvilnost</th><th>Pozdě</th><th>&gt;60 min předem</th><th>Nedorazilo</th></tr></thead><tbody id="dop-dodavatele"></tbody></table></div></div>
+
+      <div class="card"><h3>Vozidla bez rezervace</h3>
+        <div class="card-desc">Přijela neohlášeně. Nemají plánovaný začátek, takže do dochvilnosti ani do odbavení v okně nevstupují — sledují se jen zde.</div>
+        <div class="metrics m4" id="dop-bez-kpi"></div>
+        <div class="tw"><table><thead><tr><th>Dopravce</th><th>Počet</th><th>Sklad</th></tr></thead><tbody id="dop-bez"></tbody></table></div></div>
+
       <div class="card"><h3>Žebříček dochvilnosti — všichni dopravci</h3>
-        <div class="card-desc">Od nejlepší dochvilnosti; dopravci s min. 5 jízdami za vybrané období.</div>
-        <div class="grid2"><div id="all-rank"></div><div class="cbox" style="height:300px"><canvas id="c-all-dopravci"></canvas></div></div></div>
+        <div class="card-desc">Řadí se podle <strong>% pozdě</strong>, od nejlepšího; dopravci s min. 5 hodnocenými příjezdy. Složené skóre se vědomě nepočítá (rozhodnuto 29. 10. 2026) — odůvodnění je v dokumentu <em>zebricek-spolehlivosti</em>.</div>
+        <div class="grid2"><div id="dop-zebricek"></div><div class="cbox" style="height:320px"><canvas id="c-dop-zebricek"></canvas></div></div></div>
     </div>
 
     <!-- LOGISTIK CS -->
@@ -930,54 +941,162 @@ function copyDispTable(){
 // ============================================================
 // DOPRAVCI
 // ============================================================
+// Dopravce není v TSC číselník, ale volné textové pole — prázdné hodnoty
+// normalizuje Apps Script na „(neuvedeno)“, nesmysly na „(neplatný zápis)“.
+// Do žebříčků ani do počtu unikátních dopravců nepatří ani jedno.
+const BEZ_JMENA = n => !n || n === '(neuvedeno)' || n === '(neplatný zápis)' || n === 'Neznámý';
+// Od kolika minut předem je příjezd „moc brzy" (rozhodnuto 29. 10. 2026;
+// zdůvodnění v zebricek-spolehlivosti.md).
+const PRED_H = 60;
+// Kanonické názvy obou výherců VŘ — potřeba, aby se daly najít i jejich
+// jízdy objednané dodavatelem, kde skupina dopravce je „Dodavatel“.
+const SMLUVNI = {'C.S.CARGO':'C.S.CARGO a.s.', 'Autodoprava Siegl':'AUTODOPRAVA SIEGL s.r.o.'};
+
 function carrierRows(rows){
   return Object.entries(groupBy(rows, o=>o.dopravce||'Neznámý')).map(([name,rs])=>{
-    const s = stats(rs); return {name, n:rs.length, ev:s.ev, late:s.late, early:s.early, ontime:s.ontime, pctLate:s.ev?pct(s.late,s.ev):null};
+    const s = stats(rs);
+    return {name, n:s.n, ev:s.ev, late:s.late, early:s.early, ontime:s.ontime, noshow:s.noshow,
+            dochv:   s.ev ? pct(s.punct, s.ev) : null,
+            pctLate: s.ev ? pct(s.late,  s.ev) : null,
+            brzy:    rs.filter(o=>o.state && o.diff != null && o.diff < -PRED_H).length};
   });
 }
 function rankColor(p){ return p<20?'#639922':(p<40?'#EF9F27':'#E24B4A'); }
+// Počet hodnocených jízd je v řádku schválně vidět — bez něj vede žebříček
+// dopravce s pěti jízdami před smluvním s tisícem (zebricek-spolehlivosti, oddíl 2).
 function rankHtml(list){
   return list.map((c,i)=>{ const p=c.pctLate||0; const col=rankColor(p);
-    return `<div class="rank-row"><span class="rank-num">${i+1}</span><span class="rank-name" title="${esc(c.name)}">${esc(c.name.substring(0,28))}</span><div class="bar-bg"><div class="bar-fill" style="width:${Math.min(p,100)}%;background:${col}"></div></div><span class="rank-pct" style="color:${col}">${p}%</span></div>`; }).join('') || '<div class="empty">Nedostatek dat</div>';
+    return `<div class="rank-row"><span class="rank-num">${i+1}</span><span class="rank-name" title="${esc(c.name)}">${esc(c.name.substring(0,26))}</span><div class="bar-bg"><div class="bar-fill" style="width:${Math.min(p,100)}%;background:${col}"></div></div><span style="font-size:10.5px;color:#888;min-width:52px;text-align:right">${fmtN(c.ev)} jízd</span><span class="rank-pct" style="color:${col}">${p}%</span></div>`; }).join('') || '<div class="empty">Nedostatek dat</div>';
 }
+// Řádek tabulky dopravce. Dochvilnost je obarvená, ne „hodnocení“ slovem —
+// slovní známky z dřívějška (výborné/dobré/…) mícházely hranice % pozdě
+// s dochvilností a nikdo nevěděl, co znamenají.
+function dopravceRadek(c){
+  const col = c.dochv == null ? '#aaa' : rankColor(100 - c.dochv);
+  return `<tr><td title="${esc(c.name)}"><strong>${esc(c.name.substring(0,34))}</strong></td>
+    <td>${fmtN(c.n)}</td><td style="color:#888">${fmtN(c.ev)}</td>
+    <td style="font-weight:600;color:${col}">${c.dochv!=null?c.dochv+' %':'—'}</td>
+    <td>${fmtN(c.late)}</td><td>${c.brzy?fmtN(c.brzy):'—'}</td><td>${c.noshow?fmtN(c.noshow):'—'}</td></tr>`;
+}
+
 function rDopravci(){
-  const d = filtered;
+  const d   = filtered;
   const dek = d.filter(o=>o.skDo==='DEK doprava');
-  const grp = {cargo:dek.filter(o=>o.skD==='C.S.CARGO'), siegl:dek.filter(o=>o.skD==='Autodoprava Siegl'), ost:dek.filter(o=>o.skD==='Ostatní')};
-  const st = {cargo:stats(grp.cargo), siegl:stats(grp.siegl), ost:stats(grp.ost)};
-  const names = {cargo:'C.S.CARGO a.s.', siegl:'Autodoprava Siegl', ost:'Ostatní DEK dopravci'};
-  const cls = p => p==null?'info':(p>40?'danger':(p>25?'warn':'ok'));
-  $('dek-kpi').innerHTML = Object.keys(grp).map(k=>{ const s=st[k]; const p=s.ev?pct(s.late,s.ev):null;
-    return `<div class="card" style="margin:0"><div style="font-size:11px;font-weight:600;color:#185FA5;margin-bottom:8px">${names[k]}</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px"><div class="kpi-box info"><div class="kv">${fmtN(s.n)}</div><div class="kl">jízd</div></div><div class="kpi-box ${cls(p)}"><div class="kv">${p!=null?p+'%':'—'}</div><div class="kl">pozdě</div></div></div></div>`; }).join('');
-  const keys = ['cargo','siegl','ost'];
-  mk('c-dek-skupiny', {type:'bar', data:{labels:['C.S.CARGO','Siegl','Ostatní'], datasets:[
-      {label:'Pozdě',data:keys.map(k=>pct(st[k].late,st[k].ev||1)),backgroundColor:'#E24B4A'},
-      {label:'Na čas',data:keys.map(k=>pct(st[k].ontime,st[k].ev||1)),backgroundColor:'#639922'},
-      {label:'Před časem',data:keys.map(k=>pct(st[k].early,st[k].ev||1)),backgroundColor:'#378ADD'}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{stacked:true},y:{stacked:true,max:100,ticks:{callback:v=>v+'%'}}}}});
-  const ostRank = carrierRows(grp.ost).filter(c=>c.n>=3 && c.pctLate!=null).sort((a,b)=>b.pctLate-a.pctLate).slice(0,8);
-  $('dek-rank').innerHTML = '<div style="font-size:11px;font-weight:600;color:#888;margin-bottom:8px;text-transform:uppercase">Ostatní DEK dopravci — nejvíce pozdě</div>' + rankHtml(ostRank);
+  const dod = d.filter(o=>o.skDo==='Dodavatel');
 
-  const dod = d.filter(o=>o.skDo==='Dodavatel'); const exDod = exF.filter(o=>o.skDo==='Dodavatel'); const ds = stats(dod, exDod);
-  $('dod-kpi').innerHTML =
-    metric('info','Dodavatelé celkem',fmtN(dod.length),'') +
-    metric('ok','Včas / dříve',ds.ev?pct(ds.punct,ds.ev)+' %':'—','') +
-    metric('warn','Pozdě',ds.ev?pct(ds.late,ds.ev)+' %':'—','') +
-    metric('danger','Nedorazilo',fmtN(ds.noshow),'');
-  const dodC = carrierRows(dod).filter(c=>c.n>=2).sort((a,b)=>b.n-a.n).slice(0,10);
-  $('dod-table').innerHTML = dodC.map(c=>{ const p=c.pctLate; const pp=p||0;
-    const r = p==null?'<span class="pill pill-nd">—</span>':(pp<20?'<span class="pill pill-ok">Výborné</span>':pp<35?'<span class="pill pill-ok">Dobré</span>':pp<50?'<span class="pill pill-late">Průměrné</span>':'<span class="pill pill-bad">Špatné</span>');
-    return `<tr><td title="${esc(c.name)}"><strong>${esc(c.name.substring(0,32))}</strong></td><td>${c.n}</td><td>${c.early}</td><td>${c.ontime}</td><td style="color:${pp>40?'#A32D2D':'inherit'}">${c.late}</td><td style="font-weight:${pp>40?600:400};color:${pp>40?'#A32D2D':'inherit'}">${p!=null?p+'%':'—'}</td><td>${r}</td></tr>`; }).join('') || '<tr><td colspan="7" class="empty">Žádná data</td></tr>';
+  // --- 1. kdo pro nás jezdí ---
+  const uniq = rows => new Set(rows.map(o=>o.dopravce).filter(n=>!BEZ_JMENA(n))).size;
+  $('dop-kpi').innerHTML =
+    metric('info','DEK dopravci',        fmtN(uniq(dek)), 'unikátních názvů') +
+    metric('info','Dopravci dodavatelů', fmtN(uniq(dod)), 'unikátních názvů') +
+    metric('info','Dodavatelé (firmy)',  fmtN(new Set(dod.map(o=>o.dodavatel).filter(Boolean)).size), 'unikátních') +
+    metric('','Jízd celkem', fmtN(d.length), fmtN(dek.length)+' naše · '+fmtN(dod.length)+' dodavatelská');
 
+  // --- kvalita dat: nevyplněný dopravce (na CS2 je to každá druhá rezervace) ---
+  const chybi = d.filter(o=>BEZ_JMENA(o.dopravce));
+  const poSkladech = ['093','095','096'].map(k=>{
+    const vse = d.filter(o=>o.sklad===k);
+    return vse.length ? SK[k]+' <strong>'+pct(vse.filter(o=>BEZ_JMENA(o.dopravce)).length, vse.length)+' %</strong>' : null;
+  }).filter(Boolean).join(' · ');
+  $('dop-kvalita').innerHTML = chybi.length
+    ? `<strong>${fmtN(chybi.length)} rezervací (${pct(chybi.length,d.length)} %) nemá vyplněného dopravce.</strong> Po skladech: ${poSkladech}.
+       O tyhle jízdy jsou všechny tabulky níž kratší — u skladu s vysokým podílem je žebříček systematicky neúplný a nedá se z něj uzavírat, kdo jezdí hůř.
+       Je to prázdné pole u zdroje, sjednocením názvů se to nevyřeší; opravit to jde jen v zadávání rezervace.`
+    : 'Dopravce je vyplněný u všech rezervací ve vybraném období.';
+
+  // --- 2. smluvní dopravci ---
+  // Skupina se přiřazuje ŘÁDKU, ne dopravci: do plnění smlouvy patří jen to,
+  // co jsme objednali my. Jízdy téhož dopravce pro dodavatele jdou vedle.
+  const skupiny = [
+    {nazev:'C.S.CARGO',            rows:dek.filter(o=>o.skD==='C.S.CARGO'),
+                                   jine:dod.filter(o=>o.dopravce===SMLUVNI['C.S.CARGO'])},
+    {nazev:'Autodoprava Siegl',    rows:dek.filter(o=>o.skD==='Autodoprava Siegl'),
+                                   jine:dod.filter(o=>o.dopravce===SMLUVNI['Autodoprava Siegl'])},
+    {nazev:'Ostatní DEK dopravci', rows:dek.filter(o=>o.skD!=='C.S.CARGO' && o.skD!=='Autodoprava Siegl'),
+                                   jine:null}
+  ];
+  const cls = p => p==null ? 'info' : (p>=85 ? 'ok' : (p>=70 ? 'warn' : 'danger'));
+  $('dop-smluvni').innerHTML = skupiny.map(g=>{
+    const s = stats(g.rows), p = s.ev ? pct(s.punct, s.ev) : null;
+    return `<div class="card" style="margin:0">
+      <div style="font-size:11px;font-weight:600;color:#185FA5;margin-bottom:8px">${g.nazev}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+        <div class="kpi-box info"><div class="kv">${fmtN(s.n)}</div><div class="kl">jízd pro nás</div></div>
+        <div class="kpi-box ${cls(p)}"><div class="kv">${p!=null?p+' %':'—'}</div><div class="kl">dochvilnost</div></div></div>
+      <div style="font-size:11px;color:#888;margin-top:8px">
+        hodnoceno ${fmtN(s.ev)} příjezdů · pozdě ${fmtN(s.late)} · nedorazilo ${fmtN(s.noshow)}
+        ${g.jine ? '<br>+ '+fmtN(g.jine.length)+' jízd objednaných dodavatelem (mimo plnění smlouvy)' : ''}</div></div>`;
+  }).join('');
+
+  mk('c-dop-pasma', {type:'bar', data:{labels:PASMA, datasets:skupiny.map((g,i)=>{
+      const c = pasmaCounts(g.rows), celk = c.reduce((a,b)=>a+b,0) || 1;
+      return {label:g.nazev, data:c.map(x=>Math.round(1000*x/celk)/10),
+              backgroundColor:['#185FA5','#1D9E75','#EF9F27'][i], borderRadius:2};
+    })},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'bottom',labels:{font:{size:11},boxWidth:12}},
+        tooltip:{callbacks:{label:c=>c.dataset.label+': '+c.raw+' % příjezdů'}}},
+      scales:{x:{ticks:{font:{size:9},maxRotation:60,minRotation:45}},y:{ticks:{callback:v=>v+'%'}}}}});
+
+  // --- 3. dochvilnost v čase ---
+  const g = granularita(d);
+  $('dop-trend-desc').textContent = 'Podíl včasných příjezdů ' + GRAN_POPIS[g]
+    + '. Prázdné místo v křivce znamená, že skupina v tom období neměla hodnocený příjezd.';
+  const rady = skupiny.concat([{nazev:'Dodavatelská doprava', rows:dod}]);
+  const klice = [...new Set(d.filter(o=>o.date).map(o=>obdobiKlic(o.date, g)))].sort();
+  mk('c-dop-trend', {type:'line', data:{labels:klice.map(k=>obdobiPopis(k,g)), datasets:rady.map((r,i)=>{
+      const by = groupBy(r.rows.filter(o=>o.date), o=>obdobiKlic(o.date, g));
+      return {label:r.nazev, borderColor:['#185FA5','#1D9E75','#EF9F27','#8A6FB0'][i],
+              backgroundColor:'transparent', tension:.3, spanGaps:true, pointRadius:2,
+              data:klice.map(k=>{ const st = by[k] ? stats(by[k]) : null; return st && st.ev ? pct(st.punct, st.ev) : null; })};
+    })},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'bottom',labels:{font:{size:11},boxWidth:12}},
+        tooltip:{callbacks:{label:c=>c.dataset.label+': '+(c.raw==null?'—':c.raw+' %')}}},
+      scales:{x:{ticks:{autoSkip:true,maxTicksLimit:14,font:{size:9}}},y:{max:100,ticks:{callback:v=>v+'%'}}}}});
+
+  // --- 4. ostatní DEK dopravci ---
+  const ost = carrierRows(skupiny[2].rows).filter(c=>c.n>=3 && !BEZ_JMENA(c.name)).sort((a,b)=>b.n-a.n);
+  $('dop-ostatni').innerHTML = ost.map(dopravceRadek).join('')
+    || '<tr><td colspan="7" class="empty">Žádný další DEK dopravce s min. 3 jízdami</td></tr>';
+
+  // --- 5. dodavatelská doprava ---
+  const ds = stats(dod);
+  $('dop-dod-kpi').innerHTML =
+    metric('info','Jízd',          fmtN(ds.n), 'objednal dodavatel') +
+    metric('ok','Dochvilnost',     ds.ev?pct(ds.punct,ds.ev)+' %':'—', 'z '+fmtN(ds.ev)+' hodnocených') +
+    metric('warn','Pozdě',         ds.ev?pct(ds.late,ds.ev)+' %':'—', fmtN(ds.late)+' příjezdů') +
+    metric(ds.noshow?'danger':'','Nedorazilo', fmtN(ds.noshow), ds.n?pct(ds.noshow,ds.n)+' % jízd':'');
+  const dodC = carrierRows(dod).filter(c=>c.n>=3 && !BEZ_JMENA(c.name)).sort((a,b)=>b.n-a.n).slice(0,20);
+  $('dop-dodavatele').innerHTML = dodC.map(dopravceRadek).join('')
+    || '<tr><td colspan="7" class="empty">Žádná data</td></tr>';
+
+  // --- 6. vozidla bez rezervace ---
   const bz = d.filter(o=>o.bez);
-  const bzBy = Object.entries(groupBy(bz, o=>o.dopravce||'Neznámý')).map(([name,rs])=>({name,n:rs.length,sk:[...new Set(rs.map(o=>SK[o.sklad]||o.sklad))].join(', ')})).sort((a,b)=>b.n-a.n);
-  $('bez-kpi').innerHTML = metric('danger','Bez rezervace',fmtN(bz.length),'ve vybraném období') + metric('info','Dopravců',fmtN(bzBy.length),'') + metric('warn','Nejčastěji',bzBy[0]?esc(bzBy[0].name.substring(0,22)):'—',bzBy[0]?bzBy[0].n+'×':'');
-  $('bez-table').innerHTML = bzBy.slice(0,25).map(c=>`<tr><td>${esc(c.name)}</td><td>${c.n}</td><td>${esc(c.sk)}</td></tr>`).join('') || '<tr><td colspan="3" class="empty">Žádná vozidla bez rezervace</td></tr>';
-  const allRank = carrierRows(d).filter(c=>c.n>=5 && c.pctLate!=null).sort((a,b)=>a.pctLate-b.pctLate).slice(0,12);
-  $('all-rank').innerHTML = rankHtml(allRank);
-  const top = allRank.slice(0,8);
-  mk('c-all-dopravci', {type:'bar', data:{labels:top.map(c=>c.name.substring(0,14)), datasets:[{label:'Pozdě %',data:top.map(c=>c.pctLate),backgroundColor:'#E24B4A'},{label:'Včas %',data:top.map(c=>100-c.pctLate),backgroundColor:'#639922'}]},
-    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{stacked:true,max:100,ticks:{callback:v=>v+'%'}},y:{stacked:true,ticks:{font:{size:10}}}}}});
+  const bzBy = Object.entries(groupBy(bz, o=>o.dopravce||'(neuvedeno)'))
+    .map(([name,rs])=>({name, n:rs.length, sk:[...new Set(rs.map(o=>SK[o.sklad]||o.sklad))].sort().join(', ')}))
+    .sort((a,b)=>b.n-a.n);
+  const bzNeznamy = bz.filter(o=>BEZ_JMENA(o.dopravce)).length;
+  const bzZnamy = bzBy.filter(c=>!BEZ_JMENA(c.name));
+  $('dop-bez-kpi').innerHTML =
+    metric(bz.length?'danger':'','Bez rezervace', fmtN(bz.length), d.length?pct(bz.length,d.length)+' % všech příjezdů':'') +
+    metric(bzNeznamy>bz.length/2?'warn':'','Bez názvu dopravce', fmtN(bzNeznamy), bz.length?pct(bzNeznamy,bz.length)+' % z nich':'') +
+    metric('info','Pojmenovaných dopravců', fmtN(bzZnamy.length), 'dá se u nich zjistit, kdo přijel') +
+    metric('','Nejčastější z pojmenovaných', bzZnamy[0]?esc(bzZnamy[0].name.substring(0,22)):'—', bzZnamy[0]?bzZnamy[0].n+'×':'');
+  $('dop-bez').innerHTML = bzBy.slice(0,25).map(c=>
+      `<tr><td title="${esc(c.name)}">${esc(c.name.substring(0,40))}</td><td>${fmtN(c.n)}</td><td>${esc(c.sk)}</td></tr>`).join('')
+    || '<tr><td colspan="3" class="empty">Žádná vozidla bez rezervace</td></tr>';
+
+  // --- 7. žebříček ---
+  const zeb = carrierRows(d).filter(c=>c.ev>=5 && !BEZ_JMENA(c.name)).sort((a,b)=>a.pctLate-b.pctLate);
+  $('dop-zebricek').innerHTML = rankHtml(zeb.slice(0,15));
+  const top = zeb.slice(0,10);
+  mk('c-dop-zebricek', {type:'bar', data:{labels:top.map(c=>c.name.substring(0,16)), datasets:[
+      {label:'Včas',  data:top.map(c=>100-c.pctLate), backgroundColor:'#639922'},
+      {label:'Pozdě', data:top.map(c=>c.pctLate),     backgroundColor:'#E24B4A'}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.dataset.label+': '+c.raw+' %'}}},
+      scales:{x:{stacked:true,max:100,ticks:{callback:v=>v+'%'}},y:{stacked:true,ticks:{font:{size:10}}}}}});
 }
 
 // ============================================================
