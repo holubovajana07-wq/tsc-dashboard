@@ -167,6 +167,18 @@ tr:hover td{background:#fafaf7}
         <option value="Vykládka">Vykládka</option>
       </select>
     </div>
+    <div class="fg"><label>Den v týdnu</label>
+      <select id="g-den" onchange="onFilter()">
+        <option value="">Vše</option>
+        <option value="Po">Pondělí</option>
+        <option value="Út">Úterý</option>
+        <option value="St">Středa</option>
+        <option value="Čt">Čtvrtek</option>
+        <option value="Pá">Pátek</option>
+        <option value="So">Sobota</option>
+        <option value="Ne">Neděle</option>
+      </select>
+    </div>
     <span style="font-size:11px;color:#888;align-self:center" id="g-count"></span>
   </div>
 
@@ -175,7 +187,7 @@ tr:hover td{background:#fafaf7}
     <button class="tab" onclick="showTab('dispecer',this)">📋 Dispečer</button>
     <button class="tab" onclick="showTab('dopravci',this)">🚛 Dopravci</button>
     <button class="tab" onclick="showTab('logistik',this)">🏭 Logistik CS</button>
-    <button class="tab" onclick="showTab('rampy',this)">📍 Rampy</button>
+    <button class="tab" onclick="showTab('analyza',this)">📍 Analýza CS</button>
     <button class="tab" onclick="showTab('vedeni',this)">📈 KPI vedení</button>
     <button class="tab" onclick="showTab('m3',this)">📦 m3 analýza</button>
     <button class="tab" onclick="showTab('reditelka',this)">👔 Ředitelka CS</button>
@@ -324,35 +336,82 @@ tr:hover td{background:#fafaf7}
         <div class="tw"><table><thead><tr><th>Datum</th><th>Sklad</th><th>Rampa</th><th>Číslo rez.</th><th>Dopravce</th><th>Plán</th><th>Příjezd</th><th>Odchylka</th><th>Zpracování</th><th>V okně</th></tr></thead><tbody id="log-posledni"></tbody></table></div></div>
     </div>
 
-    <!-- RAMPY -->
-    <div id="tab-rampy" class="view">
-      <div class="section-title">Rampy</div>
-      <p class="section-desc">Vytíženost = čas zpracování na rampě (zahájení → dokončení) ÷ provozní doba (bez přestávky) × počet dnů s provozem.</p>
-      <div class="card"><h3>Provozní doba skladu</h3>
-        <div class="card-desc">Nastavení platí pro vybraný sklad a ukládá se v tomto prohlížeči.</div>
-        <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-end">
-          <div class="fg"><label>Sklad</label><select id="r-sklad-sel" onchange="loadProvoz()"><option value="095">CS1 Úžice (S095)</option><option value="093">CS1 Prostějov (S093)</option><option value="096">CS2 Úžice (S096)</option></select></div>
-          <div class="fg"><label>Otevření</label><input type="time" id="r-open" onchange="saveProvoz()"></div>
-          <div class="fg"><label>Zavření</label><input type="time" id="r-close" onchange="saveProvoz()"></div>
-          <div class="fg"><label>Přestávka od</label><input type="time" id="r-break-from" onchange="saveProvoz()"></div>
-          <div class="fg"><label>Přestávka do</label><input type="time" id="r-break-to" onchange="saveProvoz()"></div>
+    <!-- ANALÝZA CS -->
+    <div id="tab-analyza" class="view">
+      <div class="section-title">Analýza CS</div>
+      <p class="section-desc">Měsíční rozbor skladu pro vedoucího skladu a Janu: <strong>jak nám běží provoz</strong>, kde se čas ztrácí a jak jsou vytížené rampy. Operativu řeší Logistik CS, čísla pro vedení Přehled.</p>
+
+      <div class="card" style="padding:12px 16px">
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+          <span style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.3px">Sklad</span>
+          <div class="quick" id="an-prepinac"></div>
+          <span style="font-size:11.5px;color:#888" id="an-hlavicka"></span>
         </div>
-        <div class="metrics m4" style="margin-top:14px" id="ramp-provoz-kpi"></div></div>
-      <div class="metrics m4" id="ramp-kpi"></div>
+        <div class="card-desc" style="margin:8px 0 0">Přepínač nastavuje <strong>hlavní filtr nahoře</strong>, ne vlastní stav — aby si dvě záložky nemohly ukazovat jiný sklad.</div>
+      </div>
+
+      <div class="metrics m4" id="an-kpi"></div>
+
+      <div class="card"><h3>Pět fází času v areálu</h3>
+        <div class="card-desc">Mediány úseků podle <em>03_metriky/tsc-dochvilnost</em>, bod 6. <strong>Doba v areálu se počítá od příjezdu dopravce, ne od brány</strong> — starší čísla z dřívějších verzí dashboardu proto nejsou srovnatelná. Vadné řádky se nepočítají.<br><strong>Fázi 1 nečti podle mediánu.</strong> Značka „Na parkovišti" se kliká prakticky u brány (62 % vozidel do 2 minut), takže medián vychází kolem nuly. Smysl dává až podíl dlouhých čekání, který je vedle.</div>
+        <div class="grid2">
+          <div class="cbox" style="height:230px"><canvas id="c-an-faze"></canvas></div>
+          <div class="tw"><table><thead><tr><th>Úsek</th><th>Celkem</th><th>Nakládka</th><th>Vykládka</th><th>Měřeno</th><th>Nad 30 min</th></tr></thead><tbody id="an-faze"></tbody></table></div>
+        </div></div>
+
+      <div class="card"><h3>Dodržení okna — souhrn a příčiny</h3>
+        <div class="card-desc" id="an-okno-desc"></div>
+        <div class="grid2">
+          <div class="tw"><table><thead><tr><th>Sklad / rampa</th><th>Hodnoceno</th><th>V okně</th><th>Po okně</th><th>Nejčastější příčina</th></tr></thead><tbody id="an-okno"></tbody></table></div>
+          <div><div class="cbox" style="height:230px"><canvas id="c-an-prekroceni"></canvas></div></div>
+        </div></div>
+
+      <div class="card"><h3>Zpožděná vozidla — jak rychle se našlo náhradní okno</h3>
+        <div class="card-desc">Vozidla, která přijela později než plán + 5 min. Dodržení původního okna se u nich nehodnotí, ale platí pravidlo <em>vzít je v nejbližším volném okně nebo v okně vozidla, které nedorazilo</em>. Tahle karta měří plnění toho pravidla — <strong>neříká, že sklad chyboval</strong>. Čas se počítá od příjezdu, ne od chvíle, kdy se rampa uvolnila, takže dlouhé čekání může znamenat plný sklad.</div>
+        <div class="metrics m4" id="an-zpozdene-kpi"></div>
+        <div class="tw"><table><thead><tr><th>Sklad</th><th>Rampa</th><th>Zpožděných</th><th>Medián čekání</th><th>P80</th></tr></thead><tbody id="an-zpozdene"></tbody></table></div></div>
+
+      <div class="card"><h3>Rozpad odchylky podle typu akce</h3>
+        <div class="card-desc">12 pásem zvlášť pro nakládky, vykládky a kombinované. Ukazuje, jestli se nakládky a vykládky chovají jinak.</div>
+        <div class="cbox" style="height:260px"><canvas id="c-an-pasma-typ"></canvas></div></div>
+
       <div class="grid2">
+        <div class="card"><h3>Rezervace podle dne v týdnu</h3><div class="card-desc">Provozní profil skladu. Kliknutím na sloupec se den nastaví do hlavního filtru.</div>
+          <div class="cbox" style="height:230px"><canvas id="c-an-dny"></canvas></div></div>
         <div class="card"><h3>Počet rezervací dle hodiny</h3><div class="card-desc">Podle plánovaného začátku.</div>
           <div class="legend"><span><span class="ld" style="background:#7F77DD"></span>CS1 Prostějov</span><span><span class="ld" style="background:#1D9E75"></span>CS1 Úžice</span><span><span class="ld" style="background:#D85A30"></span>CS2 Úžice</span></div>
           <div class="cbox" style="height:230px"><canvas id="c-rampy-h"></canvas></div></div>
-        <div class="card"><h3>Tepelná mapa — den × hodina</h3><div class="card-desc">Počet rezervací podle plánovaného začátku. Tmavší = více vozidel.</div><div style="overflow-x:auto"><div id="heatmap"></div></div></div>
       </div>
+
+      <div class="card"><h3>Tepelná mapa — den × hodina</h3>
+        <div class="card-desc">Tmavší = více vozidel. Přepínač mění, co se počítá: <strong>plán</strong> ukazuje, jak je sklad naplánovaný, <strong>skutečný příjezd</strong> to, kdy auta opravdu přijela — rozdíl mezi mapami je souběh, na který se neplánovalo.</div>
+        <div class="quick" style="margin-bottom:10px">
+          <button id="an-hm-plan" onclick="prepniMapu('plan')">Podle plánu</button>
+          <button id="an-hm-arr" onclick="prepniMapu('arr')">Podle skutečného příjezdu</button>
+        </div>
+        <div style="overflow-x:auto"><div id="heatmap"></div></div></div>
+
       <div class="grid2">
         <div class="card"><h3>Medián doby zpracování dle hodiny</h3><div class="card-desc">Zahájení → dokončení, podle hodiny zahájení.</div><div class="cbox" style="height:220px"><canvas id="c-odb-hodina"></canvas></div></div>
-        <div class="card"><h3>Doba zpracování — distribuce</h3><div class="card-desc">Kolik vozidel bylo zpracováno do 15 min, 15–30 min a nad 30 min.</div>
-          <div class="legend"><span><span class="ld" style="background:#639922"></span>&lt;15 min</span><span><span class="ld" style="background:#EF9F27"></span>15–30</span><span><span class="ld" style="background:#E24B4A"></span>&gt;30 min</span></div>
+        <div class="card"><h3>Doba zpracování — distribuce</h3><div class="card-desc">Rozložení doby zpracování. Podrobněji, včetně seznamu podezřelých krátkých záznamů, v Logistiku CS.</div>
           <div class="cbox" style="height:220px"><canvas id="c-odb-dist"></canvas></div></div>
       </div>
-      <div class="card"><h3>Přehled ramp</h3><div class="card-desc">Počty, dochvilnost, doba zpracování, odbavení v okně a vytíženost každé rampy.</div>
-        <div class="tw"><table><thead><tr><th>Rampa</th><th>Sklad</th><th>Celkem</th><th>Nakládka</th><th>Vykládka</th><th>% pozdě</th><th>Medián zprac.</th><th>&lt;15 min</th><th>15–30</th><th>&gt;30 min</th><th>V okně %</th><th>Vytíženost</th></tr></thead><tbody id="ramp-table"></tbody></table></div></div>
+
+      <div class="card"><h3>Palety</h3>
+        <div class="card-desc">Počítá se <strong>Realita</strong>, ne plán — u nakládek je plán zástupná jednička. EUR a ostatní jednotky se nesčítají dohromady, nejsou srovnatelné. Průměruje se jen přes vozidla, kde je Realita vyplněná.</div>
+        <div class="grid2">
+          <div class="cbox" style="height:230px"><canvas id="c-an-palety"></canvas></div>
+          <div class="tw"><table><thead><tr><th>Sklad</th><th>Typ</th><th>EUR celkem</th><th>Ø na vozidlo</th><th>Medián</th><th>Ostatní jedn.</th><th>Poškozeno</th></tr></thead><tbody id="an-palety"></tbody></table></div>
+        </div></div>
+
+      <div class="card"><h3>Předstih přípravy a doba příjmu</h3>
+        <div class="card-desc" id="an-priprava-desc"></div>
+        <div class="metrics m4" id="an-priprava"></div></div>
+
+      <div class="card"><h3>Přehled ramp</h3>
+        <div class="card-desc" id="an-rampy-desc"></div>
+        <div class="metrics m4" id="an-rampy-kpi"></div>
+        <div class="tw"><table><thead><tr><th>Rampa</th><th>Sklad</th><th>Celkem</th><th>Nakládka</th><th>Vykládka</th><th>Dochvilnost</th><th>Medián zprac.</th><th>&lt;15 min</th><th>15–30</th><th>&gt;30 min</th><th>V okně %</th><th>Obsazeno Ø/den</th></tr></thead><tbody id="ramp-table"></tbody></table></div></div>
     </div>
 
     <!-- KPI VEDENÍ -->
@@ -602,6 +661,11 @@ function parseRow(r){
   o.waitStart = (o.brana != null && o.zah != null && o.zah >= o.brana) ? o.zah - o.brana : null;      // brána → zahájení
   o.stay = (o.brana != null && o.odj != null && o.odj >= o.brana && o.odj - o.brana < 1440) ? o.odj - o.brana : null; // brána → odjezd
   o.proc = (o.zah != null && o.dok != null && o.dok >= o.zah) ? o.dok - o.zah : null;                  // zahájení → dokončení
+  // Pět fází podle 03_metriky/tsc-dochvilnost, bod 6. Doba v areálu se nově
+  // počítá od PŘÍJEZDU DOPRAVCE, ne od brány — proti starším číslům je delší.
+  o.predBranou = (o.arr != null && o.brana != null && o.brana >= o.arr && o.brana - o.arr < 1440) ? o.brana - o.arr : null;
+  o.poZprac    = (o.dok != null && o.odj != null && o.odj >= o.dok && o.odj - o.dok < 1440) ? o.odj - o.dok : null;
+  o.vArealu    = (o.arr != null && o.odj != null && o.odj >= o.arr && o.odj - o.arr < 1440) ? o.odj - o.arr : null;
   // Kontrola kvality (03_metriky/tsc-dochvilnost, bod 4). U vadného řádku
   // se nepočítá ŽÁDNÁ časová metrika, ale do počtů rezervací vstupuje.
   // Důvod se ukládá, aby šel vypsat v záložce „Vyřazené rezervace — chyby".
@@ -615,7 +679,8 @@ function parseRow(r){
   // Vadný řádek nevstupuje do ŽÁDNÉ časové metriky — tedy ani do odbavení
   // v okně, které stojí na dokončení. Odchylka příjezdu (o.state) se počítá
   // dál: stojí na příjezdu a plánu, kterých se kontroly kvality netýkají.
-  if (o.bad) { o.proc = null; o.stay = null; o.waitStart = null; o.depDiff = null; o.win = 'na'; }
+  if (o.bad) { o.proc = null; o.stay = null; o.waitStart = null; o.depDiff = null; o.win = 'na';
+               o.predBranou = null; o.poZprac = null; o.vArealu = null; }
 
   // datum skutečného příjezdu a příznak „přijel jiný den, než měl plán"
   o.arrDate = o.arr != null ? isoZMinut(o.arr) : null;
@@ -626,6 +691,8 @@ function parseRow(r){
   o.pripraveno = pt(r[C.pripraveno]);
   o.palEurReal = nn(r[C.palEurReal]);   // u nakládek je plán zástupná hodnota,
   o.palOstReal = nn(r[C.palOstReal]);   // počítá se jen realita
+  o.palEurPosk = nn(r[C.palEurPosk]);
+  o.palOstPosk = nn(r[C.palOstPosk]);
   o.isLoad = o.typ.indexOf('Nakládka') >= 0; o.isUnload = o.typ.indexOf('Vykládka') >= 0;
   return o;
 }
@@ -791,7 +858,8 @@ async function refreshLive(manual){
 // ============================================================
 // FILTR
 // ============================================================
-function curFilter(){ return {from:$('g-from').value, to:$('g-to').value, cs:$('g-cs').value, dop:$('g-doprava').value, typ:$('g-typ').value}; }
+function curFilter(){ return {from:$('g-from').value, to:$('g-to').value, cs:$('g-cs').value,
+  dop:$('g-doprava').value, typ:$('g-typ').value, den:$('g-den').value}; }
 // `proZobrazeni` = true vrátí i budoucí rezervace (pro tabulky, kde se
 // ukazují zašedle); do souhrnů budoucnost nepatří.
 function filt(rows, f, noDate, proZobrazeni){
@@ -801,6 +869,7 @@ function filt(rows, f, noDate, proZobrazeni){
     if (f.cs && o.sklad !== f.cs) return false;
     if (f.dop && o.skDo !== f.dop) return false;
     if (f.typ && o.typ.indexOf(f.typ) < 0) return false;
+    if (f.den && o.den !== f.den) return false;
     return true;
   });
 }
@@ -808,7 +877,7 @@ function filt(rows, f, noDate, proZobrazeni){
 // (Srovnání skladů, Plnění dopravců). Je to vědomá výjimka a na kartě
 // musí být napsaná, viz navrh-prehled.md.
 function filtVsechnySklady(rows, f){
-  const bezSkladu = {from:f.from, to:f.to, cs:'', dop:f.dop, typ:f.typ};
+  const bezSkladu = {from:f.from, to:f.to, cs:'', dop:f.dop, typ:f.typ, den:f.den};
   return filt(rows, bezSkladu, false);
 }
 function applyFilter(){
@@ -838,7 +907,7 @@ function showTab(name, btn){
   renderActive();
 }
 function renderActive(){
-  const f = {prehled:rPrehled, dispecer:rDispecer, dopravci:rDopravci, logistik:rLogistik, rampy:rRampy, vedeni:rVedeni, m3:rM3, reditelka:rReditelka}[ACTIVE];
+  const f = {prehled:rPrehled, dispecer:rDispecer, dopravci:rDopravci, logistik:rLogistik, analyza:rAnalyza, vedeni:rVedeni, m3:rM3, reditelka:rReditelka}[ACTIVE];
   try { f(); } catch(e){ console.error(ACTIVE, e); }
 }
 
@@ -1300,7 +1369,8 @@ function rLogistik(){
 
   // --- 2. co mě čeká (ignoruje období ve filtru, ostatní filtr platí) ---
   const budouc = ALL.filter(o=>o.date && o.date >= dnes
-      && (!f.cs || o.sklad===f.cs) && (!f.dop || o.skDo===f.dop) && (!f.typ || o.typ.indexOf(f.typ)>=0))
+      && (!f.cs || o.sklad===f.cs) && (!f.dop || o.skDo===f.dop)
+      && (!f.typ || o.typ.indexOf(f.typ)>=0) && (!f.den || o.den===f.den))
     .sort((a,b)=>(a.date+hhmm(a.start)).localeCompare(b.date+hhmm(b.start)));
   // medián odchylky dopravce za posledních 90 dní — odhad očekávaného příjezdu
   const od90 = isoShift(-90);
@@ -1469,79 +1539,231 @@ function rLogistik(){
 }
 
 // ============================================================
-// RAMPY
+// ANALÝZA CS
 // ============================================================
-function provozKey(){ return 'provoz_' + $('r-sklad-sel').value; }
-function loadProvoz(){
-  let p = null; try { p = JSON.parse(localStorage.getItem(provozKey())); } catch(e){}
-  p = p || {open:'06:00', close:'16:00', bf:'11:30', bt:'12:00'};
-  $('r-open').value = p.open; $('r-close').value = p.close; $('r-break-from').value = p.bf; $('r-break-to').value = p.bt;
-  rRampy();
-}
-function saveProvoz(){
-  try { localStorage.setItem(provozKey(), JSON.stringify({open:$('r-open').value, close:$('r-close').value, bf:$('r-break-from').value, bt:$('r-break-to').value})); } catch(e){}
-  rRampy();
-}
-const tmin = s => { const m=/^(\d{1,2}):(\d{2})/.exec(s||''); return m?(+m[1]*60+ +m[2]):null; };
 const ov = (a1,a2,b1,b2) => Math.max(0, Math.min(a2,b2) - Math.max(a1,b1));
-function rRampy(){
-  const d = filtered;
-  const P = {}; ['095','093','096'].forEach(k=>{ let p=null; try{p=JSON.parse(localStorage.getItem('provoz_'+k));}catch(e){} p=p||{open:'06:00',close:'16:00',bf:'11:30',bt:'12:00'}; P[k]={o:tmin(p.open),c:tmin(p.close),bf:tmin(p.bf),bt:tmin(p.bt)}; });
-  const netMin = k => { const p=P[k]; return Math.max(1, (p.c-p.o) - ov(p.bf,p.bt,p.o,p.c)); };
-  // vytíženost: zpracování zahájení→dokončení zasahující do provozní doby, bez přestávky
-  const daysBySk = {}; d.forEach(o=>{ if(o.proc!=null){ (daysBySk[o.sklad]||(daysBySk[o.sklad]=new Set())).add(o.date); }});
-  const busyRamp = {};
-  d.forEach(o=>{ if(o.proc==null||o.proc>600) return; const p=P[o.sklad]; if(!p) return; const day=Math.floor(o.zah/1440)*1440;
-    const b = ov(o.zah,o.dok,day+p.o,day+p.c) - ov(o.zah,o.dok,day+p.bf,day+p.bt);
-    const key = o.sklad+'|'+o.rampa; busyRamp[key] = (busyRamp[key]||0) + Math.max(0,b); });
-  const utilOf = (sk, ramp) => { const days = daysBySk[sk]?daysBySk[sk].size:0; return days? Math.min(100, Math.round(100*(busyRamp[sk+'|'+ramp]||0)/(days*netMin(sk)))) : null; };
+const p80 = a => { a = a.filter(x=>x!=null).sort((x,y)=>x-y); return a.length ? a[Math.min(a.length-1, Math.floor(a.length*0.8))] : null; };
+let MAPA_REZIM = 'plan';
+function prepniMapu(r){ MAPA_REZIM = r; rAnalyza(); }
+function naDen(d){ $('g-den').value = ($('g-den').value === d ? '' : d); applyFilter(); }
 
-  const sel = $('r-sklad-sel').value;
-  if (!$('r-open').value) loadProvoz2(sel);
-  const rampsSel = [...new Set(d.filter(o=>o.sklad===sel&&o.rampa).map(o=>o.rampa))];
-  const utils = rampsSel.map(r=>({r, u:utilOf(sel,r)})).filter(x=>x.u!=null);
-  const avgU = utils.length? Math.round(avg(utils.map(x=>x.u))) : null;
-  const top = utils.sort((a,b)=>b.u-a.u)[0];
-  $('ramp-provoz-kpi').innerHTML =
-    metric('info','Provozní doba (netto)',(netMin(sel)/60).toFixed(1).replace('.',',')+' h','bez přestávky, na den') +
-    metric('ok','Ø vytíženost ramp',avgU!=null?avgU+' %':'—',SK[sel]) +
-    metric('warn','Nejvytíženější rampa',top?esc(top.r):'—',top?top.u+' %':'') +
-    metric('','Dnů s provozem',daysBySk[sel]?daysBySk[sel].size:0,'ve vybraném období');
-
-  const byRamp = groupBy(d.filter(o=>o.rampa), o=>o.sklad+'|'+o.rampa);
-  const ramps = Object.entries(byRamp).map(([key,rs])=>{
-    const [sk,name] = key.split('|'); const s = stats(rs); const procs = rs.map(o=>o.proc).filter(x=>x!=null); const w = winStats(rs);
-    return {sk,name,n:rs.length,load:rs.filter(o=>o.isLoad).length,unl:rs.filter(o=>o.isUnload).length,pl:s.ev?pct(s.late,s.ev):null,med:med(procs),
-      a:procs.filter(x=>x<15).length,b:procs.filter(x=>x>=15&&x<=30).length,c:procs.filter(x=>x>30).length,w:w.eval?w.pct:null,u:utilOf(sk,name)};
-  }).sort((a,b)=>b.n-a.n);
-  const cnt = k => d.filter(o=>o.sklad===k).length;
-  $('ramp-kpi').innerHTML =
-    metric('info','Aktivní rampy',ramps.length,'') +
-    metric('','CS1 Prostějov (S093)',fmtN(cnt('093')),'rezervací') + metric('','CS1 Úžice (S095)',fmtN(cnt('095')),'rezervací') + metric('','CS2 Úžice (S096)',fmtN(cnt('096')),'rezervací');
-  $('ramp-table').innerHTML = ramps.map(r=>`<tr><td><strong>${esc(r.name)}</strong></td><td>${SK[r.sk]||r.sk}</td><td>${r.n}</td><td>${r.load}</td><td>${r.unl}</td>
-    <td style="color:${(r.pl||0)>40?'#A32D2D':'inherit'}">${r.pl!=null?r.pl+'%':'—'}</td><td style="text-align:center">${r.med!=null?Math.round(r.med)+' min':'—'}</td><td>${r.a}</td><td>${r.b}</td><td>${r.c}</td>
-    <td>${r.w!=null?r.w+'%':'—'}</td><td style="font-weight:600">${r.u!=null?r.u+'%':'—'}</td></tr>`).join('') || '<tr><td colspan="12" class="empty">Žádná data</td></tr>';
-
+function rAnalyza(){
+  const d = filtered, f = curFilter(), w = winStats(d);
   const hours = Array.from({length:15},(_,i)=>i+5);
-  mk('c-rampy-h', {type:'bar', data:{labels:hours.map(h=>h+'h'), datasets:['093','095','096'].map(k=>({label:SK[k],data:hours.map(h=>d.filter(o=>o.sklad===k&&o.hourPlan===h).length),backgroundColor:SKCOL[k],borderRadius:2}))},
+
+  // --- 0. přepínač skladů: nastavuje hlavní filtr, ne vlastní stav ---
+  $('an-prepinac').innerHTML = [['','Vše']].concat(['093','095','096'].map(k=>[k, SK[k]+' (S'+k+')']))
+    .map(([k,t])=>`<button onclick="naSklad('${k}')" style="${f.cs===k?'background:#185FA5;color:#fff;border-color:#185FA5':''}">${t}</button>`).join('');
+  $('an-hlavicka').textContent = (f.cs ? SK[f.cs]+' (S'+f.cs+')' : 'všechny tři sklady dohromady')
+    + ' · ' + fmtN(d.length) + ' rezervací' + (f.den ? ' · jen ' + f.den : '');
+
+  // --- 1. KPI ---
+  const medArealu = med(d.map(o=>o.vArealu));
+  $('an-kpi').innerHTML =
+    metric('info','Rezervací', fmtN(d.length), f.cs ? SK[f.cs] : 'všechny sklady') +
+    metric('ok','Dochvilnost příjezdu', (()=>{const s=stats(d); return s.ev?pct(s.punct,s.ev)+' %':'—';})(), 'z '+fmtN(stats(d).ev)+' hodnocených') +
+    metric(w.eval && w.pct>=80 ? 'ok':'warn','Odbaveno v okně', w.eval?w.pct+' %':'—', 'hodnoceno '+fmtN(w.eval)+' z '+fmtN(d.length)) +
+    metric('','Medián doby v areálu', medArealu!=null?Math.round(medArealu)+' min':'—', 'příjezd → odjezd');
+
+  // --- 2. pět fází ---
+  const FAZE = [['1. Čekání před branou','predBranou'],['2. Od brány k zahájení','waitStart'],
+                ['3. Zpracování','proc'],['4. Po zpracování','poZprac']];
+  const medOf = (rows,k) => med(rows.map(o=>o[k]));
+  const nad30 = k => { const v = d.filter(o=>o[k]!=null); return v.length ? pct(v.filter(o=>o[k]>30).length, v.length)+' %' : '—'; };
+  $('an-faze').innerHTML = FAZE.map(([t,k])=>{
+      const mer = d.filter(o=>o[k]!=null).length;
+      return `<tr><td><strong>${t}</strong></td><td>${mm(medOf(d,k))}</td>
+        <td>${mm(medOf(d.filter(o=>o.isLoad),k))}</td><td>${mm(medOf(d.filter(o=>o.isUnload),k))}</td>
+        <td style="color:#888">${fmtN(mer)}</td><td>${nad30(k)}</td></tr>`; }).join('')
+    + `<tr style="background:#f8f7f2"><td><strong>Doba v areálu celkem</strong></td><td><strong>${mm(medArealu)}</strong></td>
+        <td>${mm(medOf(d.filter(o=>o.isLoad),'vArealu'))}</td><td>${mm(medOf(d.filter(o=>o.isUnload),'vArealu'))}</td>
+        <td style="color:#888">${fmtN(d.filter(o=>o.vArealu!=null).length)}</td><td>${nad30('vArealu')}</td></tr>`;
+  mk('c-an-faze', {type:'bar', data:{labels:['Celkem','Nakládka','Vykládka'], datasets:FAZE.map(([t,k],i)=>({
+      label:t, backgroundColor:['#A7CBEB','#EF9F27','#185FA5','#639922'][i],
+      data:[medOf(d,k), medOf(d.filter(o=>o.isLoad),k), medOf(d.filter(o=>o.isUnload),k)]}))},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10}},
+        tooltip:{callbacks:{label:c=>c.dataset.label+': '+mm(c.raw)}}},
+      scales:{x:{stacked:true},y:{stacked:true,ticks:{callback:v=>v+' min'}}}}});
+
+  // --- 3. dodržení okna po skladech a rampách + příčiny ---
+  const pookne = d.filter(o=>o.win==='over');
+  $('an-okno-desc').innerHTML = `Hodnoceno <strong>${fmtN(w.eval)} z ${fmtN(d.length)}</strong> rezervací (${pct(w.eval,d.length)} %);
+    zbytek přijel později než plán + 5 min nebo nemá časy. Příčiny podle <em>10_doprava/tsc/odbaveni-priciny</em> —
+    jednotlivé případy a časová osa rampy jsou v Logistiku CS.`;
+  const skupRampy = groupBy(d.filter(o=>o.rampa), o=>o.sklad+'|'+o.rampa);
+  const radky = Object.keys(skupRampy).map(key=>{
+    const [sk,name] = key.split('|'), rs = skupRampy[key], ww = winStats(rs);
+    const poc = {}; rs.filter(o=>o.win==='over').forEach(o=>{ const k = urciPricinu(o).k; poc[k]=(poc[k]||0)+1; });
+    const nej = Object.keys(poc).sort((a,b)=>poc[b]-poc[a])[0];
+    return {sk, name, ev:ww.eval, ok:ww.ok, over:ww.over, pct:ww.pct, nej, nejN:nej?poc[nej]:0};
+  }).filter(r=>r.ev >= 10).sort((a,b)=>(a.pct==null?101:a.pct)-(b.pct==null?101:b.pct));
+  $('an-okno').innerHTML = radky.map(r=>`<tr>
+      <td><strong>${esc(r.name)}</strong> <span style="color:#888">${SK[r.sk]||r.sk}</span></td>
+      <td>${fmtN(r.ev)}</td>
+      <td style="font-weight:600;color:${r.pct>=90?'#3B6D11':(r.pct>=75?'#BA7517':'#A32D2D')}">${r.pct} %</td>
+      <td>${fmtN(r.over)}</td>
+      <td>${r.nej ? '<span class="ld" style="display:inline-block;background:'+PRICINA[r.nej].c+';margin-right:6px"></span>'+PRICINA[r.nej].t+' <span style="color:#888">('+r.nejN+')</span>' : '—'}</td></tr>`).join('')
+    || '<tr><td colspan="5" class="empty">Žádná rampa s aspoň 10 hodnocenými příjezdy</td></tr>';
+  const KOSE_PRE = [[5,15],[15,30],[30,60],[60,1e9]];
+  mk('c-an-prekroceni', {type:'bar', data:{labels:KOSE_PRE.map(([a,b])=>b>1e8?'> 60 min':a+'–'+b+' min'), datasets:[{
+      data:KOSE_PRE.map(([a,b])=>pookne.filter(o=>{const x=o.dok-o.end; return x>=a && x<b;}).length),
+      backgroundColor:['#F3C76B','#EF9F27','#D85A30','#E24B4A'], borderRadius:3}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},
+      title:{display:true,text:'O kolik se okno přetáhlo',font:{size:11},color:'#888'},
+      tooltip:{callbacks:{label:c=>fmtN(c.raw)+' vozidel'}}}}});
+
+  // --- 4. zpožděná vozidla (metrika 5c) ---
+  const zpoz = d.filter(o=>o.diff != null && o.diff > TOL && o.zah != null && o.arr != null
+                        && o.zah >= o.arr && o.zah - o.arr < 1440 && !o.bad)
+                .map(o=>({o, cek:o.zah - o.arr}));
+  const mz = med(zpoz.map(x=>x.cek));
+  $('an-zpozdene-kpi').innerHTML =
+    metric('info','Zpožděných vozidel', fmtN(zpoz.length), d.length?pct(zpoz.length,d.length)+' % rezervací':'') +
+    metric('','Medián čekání', mz!=null?Math.round(mz)+' min':'—', 'příjezd → zahájení') +
+    metric('warn','P80', (()=>{const v=p80(zpoz.map(x=>x.cek)); return v!=null?Math.round(v)+' min':'—';})(), 'čtyři z pěti čekají míň') +
+    metric('','Nad 2 hodiny', fmtN(zpoz.filter(x=>x.cek>120).length), 'vozidel');
+  const zpozRampa = groupBy(zpoz.filter(x=>x.o.rampa), x=>x.o.sklad+'|'+x.o.rampa);
+  $('an-zpozdene').innerHTML = Object.keys(zpozRampa).map(key=>{
+      const [sk,name] = key.split('|'), v = zpozRampa[key].map(x=>x.cek);
+      return {sk, name, n:v.length, m:med(v), p:p80(v)}; })
+    .filter(r=>r.n >= 5).sort((a,b)=>b.m-a.m)
+    .map(r=>`<tr><td>${SK[r.sk]||r.sk}</td><td><strong>${esc(r.name)}</strong></td><td>${fmtN(r.n)}</td>
+      <td style="font-weight:600">${mm(r.m)}</td><td style="color:#888">${mm(r.p)}</td></tr>`).join('')
+    || '<tr><td colspan="5" class="empty">Žádná rampa s aspoň 5 zpožděnými vozidly</td></tr>';
+
+  // --- 5. pásma podle typu akce ---
+  const TYPY = [['Nakládka', o=>o.isLoad && !o.isUnload, '#185FA5'],
+                ['Vykládka', o=>o.isUnload && !o.isLoad, '#1D9E75'],
+                ['Nakládka + Vykládka', o=>o.isLoad && o.isUnload, '#EF9F27']];
+  mk('c-an-pasma-typ', {type:'bar', data:{labels:PASMA, datasets:TYPY.map(([t,test,col])=>{
+      const c = pasmaCounts(d.filter(test)), celk = c.reduce((a,b)=>a+b,0) || 1;
+      return {label:t, data:c.map(x=>Math.round(1000*x/celk)/10), backgroundColor:col, borderRadius:2}; })},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'bottom',labels:{font:{size:11},boxWidth:12}},
+        tooltip:{callbacks:{label:c=>c.dataset.label+': '+c.raw+' % příjezdů'}}},
+      scales:{x:{ticks:{font:{size:9},maxRotation:60,minRotation:45}},y:{ticks:{callback:v=>v+'%'}}}}});
+
+  // --- 6. provozní profil ---
+  mk('c-an-dny', {type:'bar', data:{labels:DNY, datasets:['093','095','096'].map(k=>({
+      label:SK[k], backgroundColor:SKCOL[k], borderRadius:2,
+      data:DNY.map(dd=>d.filter(o=>o.den===dd && o.sklad===k).length)}))},
+    options:{responsive:true,maintainAspectRatio:false,
+      onClick:(e,el)=>{ if (el.length) naDen(DNY[el[0].index]); },
+      plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10}}},
+      scales:{x:{stacked:true},y:{stacked:true}}}});
+  mk('c-rampy-h', {type:'bar', data:{labels:hours.map(h=>h+'h'), datasets:['093','095','096'].map(k=>({
+      label:SK[k], data:hours.map(h=>d.filter(o=>o.sklad===k && o.hourPlan===h).length), backgroundColor:SKCOL[k], borderRadius:2}))},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{autoSkip:false,font:{size:9}}}}}});
-  buildHeatmap(d);
-  const byH = groupBy(d.filter(o=>o.proc!=null&&o.proc<=600), o=>hourOf(o.zah));
-  mk('c-odb-hodina', {type:'bar', data:{labels:hours.map(h=>h+'h'), datasets:[{label:'Medián min',data:hours.map(h=>byH[h]?Math.round(med(byH[h].map(o=>o.proc))):0),backgroundColor:'#185FA5',borderRadius:3}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{autoSkip:false,font:{size:9}}},y:{ticks:{callback:v=>v+' min'}}}}});
+
+  // --- 7. tepelná mapa s přepínačem plán / skutečný příjezd ---
+  ['plan','arr'].forEach(r=>{ const b = $('an-hm-'+(r==='plan'?'plan':'arr'));
+    if (b) b.style.cssText = MAPA_REZIM===r ? 'background:#185FA5;color:#fff;border-color:#185FA5' : ''; });
+  buildHeatmap(d, MAPA_REZIM);
+
+  // --- 8. doba zpracování ---
+  const byH = groupBy(d.filter(o=>o.proc != null), o=>hourOf(o.zah));
+  mk('c-odb-hodina', {type:'bar', data:{labels:hours.map(h=>h+'h'), datasets:[{
+      data:hours.map(h=>byH[h]?Math.round(med(byH[h].map(o=>o.proc))):null), backgroundColor:'#185FA5', borderRadius:3}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},
+      tooltip:{callbacks:{label:c=>'medián '+(c.raw==null?'—':c.raw+' min')+' · '+fmtN(byH[hours[c.dataIndex]]?byH[hours[c.dataIndex]].length:0)+' vozidel'}}},
+      scales:{x:{ticks:{autoSkip:false,font:{size:9}}},y:{ticks:{callback:v=>v+' min'}}}}});
   const pr = d.map(o=>o.proc).filter(x=>x!=null);
-  mk('c-odb-dist', {type:'doughnut', data:{labels:['< 15 min','15–30 min','> 30 min'], datasets:[{data:[pr.filter(x=>x<15).length,pr.filter(x=>x>=15&&x<=30).length,pr.filter(x=>x>30).length],backgroundColor:['#639922','#EF9F27','#E24B4A'],borderWidth:2,borderColor:'#fff'}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:11}}}}}});
+  const KOSE_P = [[1,5],[5,15],[15,30],[30,60],[60,1e9]];
+  mk('c-odb-dist', {type:'bar', data:{labels:KOSE_P.map(([a,b])=>b>1e8?'60+ min':a+'–'+b+' min'), datasets:[{
+      data:KOSE_P.map(([a,b])=>pr.filter(x=>x>=a && x<b).length),
+      backgroundColor:['#E24B4A','#EF9F27','#639922','#1D9E75','#378ADD'], borderRadius:3}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},
+      tooltip:{callbacks:{label:c=>fmtN(c.raw)+' vozidel'}}}}});
+
+  // --- 9. palety ---
+  const palRadky = [];
+  ['093','095','096'].forEach(k=>{
+    [['Nakládka', o=>o.isLoad],['Vykládka', o=>o.isUnload]].forEach(([tn,test])=>{
+      const rs = d.filter(o=>o.sklad===k && test(o));
+      const eur = rs.map(o=>o.palEurReal).filter(x=>x!=null && x>0);
+      const ost = rs.map(o=>o.palOstReal).filter(x=>x!=null && x>0);
+      const posk = rs.map(o=>(o.palEurPosk||0)+(o.palOstPosk||0)).filter(x=>x>0);
+      if (!eur.length && !ost.length) return;
+      palRadky.push({k, tn, sumEur:eur.reduce((a,b)=>a+b,0), avg:avg(eur), med:med(eur),
+                     n:eur.length, sumOst:ost.reduce((a,b)=>a+b,0), posk:posk.reduce((a,b)=>a+b,0)}); }); });
+  $('an-palety').innerHTML = palRadky.map(r=>`<tr><td>${SK[r.k]}</td><td>${r.tn}</td>
+      <td>${fmtN(Math.round(r.sumEur))}</td>
+      <td><strong>${r.avg!=null?r.avg.toFixed(1):'—'}</strong> <span style="color:#888;font-size:11px">z ${fmtN(r.n)} voz.</span></td>
+      <td>${r.med!=null?Math.round(r.med):'—'}</td><td>${fmtN(Math.round(r.sumOst))}</td>
+      <td style="color:${r.posk?'#A32D2D':'inherit'}">${r.posk?fmtN(Math.round(r.posk)):'—'}</td></tr>`).join('')
+    || '<tr><td colspan="7" class="empty">Za vybrané období nejsou vyplněné palety</td></tr>';
+  mk('c-an-palety', {type:'bar', data:{labels:palRadky.map(r=>SK[r.k].replace('CS1 ','').replace('CS2 ','')+' '+r.tn.slice(0,3).toLowerCase()+'.'),
+      datasets:[{label:'Ø EUR palet na vozidlo', data:palRadky.map(r=>r.avg!=null?Math.round(r.avg*10)/10:null),
+                 backgroundColor:palRadky.map(r=>SKCOL[r.k]), borderRadius:3}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},
+      tooltip:{callbacks:{label:c=>'Ø '+c.raw+' palet · medián '+(palRadky[c.dataIndex].med!=null?Math.round(palRadky[c.dataIndex].med):'—')}}},
+      scales:{x:{ticks:{font:{size:9}}}}}});
+
+  // --- 10. předstih přípravy a doba příjmu ---
+  const sPrip = d.filter(o=>o.pripraveno != null && o.start != null && o.start - o.pripraveno > -1440 && o.start - o.pripraveno < 10080);
+  const predstih = sPrip.map(o=>o.start - o.pripraveno);
+  const prijem = d.filter(o=>o.isUnload).map(o=>o.proc).filter(x=>x!=null);
+  const pokrytiSk = ['093','095','096'].map(k=>{
+    const r = d.filter(o=>o.sklad===k); return r.length ? SK[k]+' '+pct(r.filter(o=>o.pripraveno!=null).length, r.length)+' %' : null;
+  }).filter(Boolean).join(' · ');
+  $('an-priprava-desc').innerHTML = `<strong>Předstih přípravy</strong> = od značky „Připraveno k expedici" do plánovaného začátku.
+    Značku nepoužívají všechny sklady stejně (${pokrytiSk}), takže <strong>čísla platí jen pro ty, které ji klikají</strong>
+    — pro CS2 Úžice se předstih spočítat nedá. <strong>Doba příjmu</strong> = zpracování u vykládek.`;
+  $('an-priprava').innerHTML =
+    metric('info','Medián předstihu', (()=>{const m=med(predstih); return m!=null?(m>=60?(m/60).toFixed(1).replace('.',',')+' h':Math.round(m)+' min'):'—';})(), 'z '+fmtN(predstih.length)+' rezervací') +
+    metric('','Připraveno pozdě', fmtN(predstih.filter(x=>x<0).length), 'až po plánovaném začátku') +
+    metric('info','Medián doby příjmu', (()=>{const m=med(prijem); return m!=null?Math.round(m)+' min':'—';})(), 'z '+fmtN(prijem.length)+' vykládek') +
+    metric('','Příjem nad 60 min', fmtN(prijem.filter(x=>x>60).length), prijem.length?pct(prijem.filter(x=>x>60).length,prijem.length)+' % vykládek':'');
+
+  // --- 11. přehled ramp ---
+  // Vytíženost v procentech se tu vědomě nepočítá: jmenovatel je provozní doba
+  // rampy z TSC (03_metriky/tsc-dochvilnost, bod 8) a ta zatím v dashboardu není
+  // — je v listech PROVOZ_RAMPY / PROVOZ_PAUZY a přivede ji záložka Pauzy CS.
+  // Ručně zadaná provozní doba v localStorage byla zrušena, protože to byl odhad.
+  const dnySkl = {}; d.forEach(o=>{ if (o.proc != null) (dnySkl[o.sklad] || (dnySkl[o.sklad] = new Set())).add(o.date); });
+  const byRamp = groupBy(d.filter(o=>o.rampa), o=>o.sklad+'|'+o.rampa);
+  const ramps = Object.keys(byRamp).map(key=>{
+    const [sk,name] = key.split('|'), rs = byRamp[key], s = stats(rs), ww = winStats(rs);
+    const procs = rs.map(o=>o.proc).filter(x=>x!=null);
+    const obsazeno = procs.reduce((a,b)=>a+b,0);
+    const dnu = dnySkl[sk] ? dnySkl[sk].size : 0;
+    return {sk, name, n:rs.length, load:rs.filter(o=>o.isLoad).length, unl:rs.filter(o=>o.isUnload).length,
+      dochv:s.ev?pct(s.punct,s.ev):null, med:med(procs),
+      a:procs.filter(x=>x<15).length, b:procs.filter(x=>x>=15&&x<=30).length, c:procs.filter(x=>x>30).length,
+      w:ww.eval?ww.pct:null, obs:dnu?Math.round(obsazeno/dnu):null};
+  }).sort((a,b)=>b.n-a.n);
+  const nej = ramps.filter(r=>r.obs!=null).sort((a,b)=>b.obs-a.obs)[0];
+  $('an-rampy-desc').innerHTML = `<strong>Obsazeno Ø/den</strong> = minuty zpracování (zahájení → dokončení) na rampě dělené počtem dnů s provozem.
+    Je to <strong>čitatel vytíženosti, ne procento</strong> — jmenovatel je provozní doba rampy z TSC a ta se do dashboardu dostane až se záložkou Pauzy CS.
+    Ručně zadávaná provozní doba byla zrušená, byl to odhad, ne skutečnost.`;
+  $('an-rampy-kpi').innerHTML =
+    metric('info','Aktivních ramp', fmtN(ramps.length), f.cs ? SK[f.cs] : 'všechny sklady') +
+    metric('warn','Nejobsazenější rampa', nej?esc(nej.name):'—', nej?nej.obs+' min/den':'') +
+    metric('','Dnů s provozem', fmtN(Object.keys(dnySkl).reduce((m,k)=>Math.max(m, dnySkl[k].size), 0)), 've vybraném období') +
+    metric('','Medián zpracování', mm(med(d.map(o=>o.proc))), 'přes všechny rampy');
+  $('ramp-table').innerHTML = ramps.map(r=>`<tr><td><strong>${esc(r.name)}</strong></td><td>${SK[r.sk]||r.sk}</td>
+    <td>${fmtN(r.n)}</td><td>${fmtN(r.load)}</td><td>${fmtN(r.unl)}</td>
+    <td style="font-weight:600;color:${r.dochv==null?'#aaa':rankColor(100-r.dochv)}">${r.dochv!=null?r.dochv+' %':'—'}</td>
+    <td style="text-align:center">${mm(r.med)}</td><td>${fmtN(r.a)}</td><td>${fmtN(r.b)}</td><td>${fmtN(r.c)}</td>
+    <td>${r.w!=null?r.w+' %':'—'}</td><td style="font-weight:600">${r.obs!=null?r.obs+' min':'—'}</td></tr>`).join('')
+    || '<tr><td colspan="12" class="empty">Žádná data</td></tr>';
 }
-function loadProvoz2(){ let p=null; try{p=JSON.parse(localStorage.getItem(provozKey()));}catch(e){} p=p||{open:'06:00',close:'16:00',bf:'11:30',bt:'12:00'}; $('r-open').value=p.open; $('r-close').value=p.close; $('r-break-from').value=p.bf; $('r-break-to').value=p.bt; }
-function buildHeatmap(data){
-  const days = ['Po','Út','St','Čt','Pá']; const hours = [6,7,8,9,10,11,12,13,14,15];
+
+function buildHeatmap(data, rezim){
+  const days = DNY.slice(0,5), hours = [5,6,7,8,9,10,11,12,13,14,15,16];
   const grid = days.map(()=>hours.map(()=>0));
-  data.forEach(o=>{ const di = days.indexOf(o.den), hi = hours.indexOf(o.hourPlan); if (di>=0&&hi>=0) grid[di][hi]++; });
-  const maxV = Math.max(...grid.flat(), 1);
-  let h = '<div class="hm-header">'+hours.map(x=>`<div class="hm-hlabel">${x}h</div>`).join('')+'</div>';
+  data.forEach(o=>{
+    // podle plánu = den a hodina slotu; podle příjezdu = skutečný příjezd dopravce
+    const h = rezim === 'arr' ? (o.arr != null ? hourOf(o.arr) : null) : o.hourPlan;
+    const den = rezim === 'arr' ? (o.arrDate ? DNY[(new Date(o.arrDate+'T00:00:00Z').getUTCDay()+6)%7] : null) : o.den;
+    const di = days.indexOf(den), hi = hours.indexOf(h);
+    if (di >= 0 && hi >= 0) grid[di][hi]++; });
+  const maxV = Math.max.apply(null, grid.reduce((a,b)=>a.concat(b), [1]));
+  let h = '<div class="hm-header">' + hours.map(x=>`<div class="hm-hlabel">${x}h</div>`).join('') + '</div>';
   days.forEach((day,di)=>{ h += `<div class="hm-row"><div class="hm-rlabel">${day}</div>`;
-    hours.forEach((_,hi)=>{ const v = grid[di][hi], t = v/maxV; const r2=Math.round(29+(226-29)*t), g2=Math.round(158+(75-158)*t), b2=Math.round(117+(74-117)*t);
+    hours.forEach((_,hi)=>{ const v = grid[di][hi], t = v/maxV;
+      const r2 = Math.round(29+(226-29)*t), g2 = Math.round(158+(75-158)*t), b2 = Math.round(117+(74-117)*t);
       h += `<div class="hm-cell" style="background:rgb(${r2},${g2},${b2});color:${t>0.6?'#fff':'#333'}">${v||''}</div>`; });
     h += '</div>'; });
   $('heatmap').innerHTML = h;
@@ -1737,7 +1959,6 @@ async function start(){
     rebuildAll();
     updateStamp();
     $('loading-screen').style.display = 'none'; $('app').style.display = 'block';
-    loadProvoz2();
     applyFilter();
     loadM3Data(); loadInfo();
     setInterval(()=>{ if (!document.hidden) refreshLive(false); }, AUTO_REFRESH_MS);
