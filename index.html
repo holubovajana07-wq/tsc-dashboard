@@ -385,12 +385,73 @@ const SK = {'095':'CS1 Úžice','093':'CS1 Prostějov','096':'CS2 Úžice'};
 const SKCOL = {'093':'#7F77DD','095':'#1D9E75','096':'#D85A30'};
 const DNY = ['Po','Út','St','Čt','Pá','So','Ne'];
 
+// ============================================================
+// STÁTNÍ SVÁTKY
+// Rezervace na svátek nejsou skutečné závozy — dispečeři je jen nemažou,
+// náhradní závozy jedou v běžných dnech. Do dashboardu se vůbec nenačítají.
+// Seznam se počítá, protože v TSC je neúplný (viz 03_metriky/tsc-dochvilnost).
+// ============================================================
+function velikonocniNedele(r){
+  const a=r%19, b=Math.floor(r/100), c=r%100, d=Math.floor(b/4), e=b%4,
+        f=Math.floor((b+8)/25), g=Math.floor((b-f+1)/3), h=(19*a+b-d-g+15)%30,
+        i=Math.floor(c/4), k=c%4, l=(32+2*e+2*i-h-k)%7, m=Math.floor((a+11*h+22*l)/451);
+  const mes=Math.floor((h+l-7*m+114)/31), den=((h+l-7*m+114)%31)+1;
+  return new Date(Date.UTC(r, mes-1, den));
+}
+const SVATKY_CACHE = {};
+function svatkyRoku(rok){
+  if (SVATKY_CACHE[rok]) return SVATKY_CACHE[rok];
+  const s = new Set();
+  const dej = (m,d)=>s.add(rok+'-'+pad(m)+'-'+pad(d));
+  [[1,1],[5,1],[5,8],[7,5],[7,6],[9,28],[10,28],[11,17],[12,24],[12,25],[12,26]].forEach(x=>dej(x[0],x[1]));
+  const vn = velikonocniNedele(rok);
+  [-2, 1].forEach(posun=>{                       // Velký pátek a Velikonoční pondělí
+    const x = new Date(vn.getTime() + posun*86400000);
+    dej(x.getUTCMonth()+1, x.getUTCDate());
+  });
+  SVATKY_CACHE[rok] = s;
+  return s;
+}
+function jeSvatek(dateISO){
+  if (!dateISO || dateISO.length < 10) return false;
+  return svatkyRoku(+dateISO.slice(0,4)).has(dateISO);
+}
+
+// ============================================================
+// PÁSMA ODCHYLKY PŘÍJEZDU (12 pásem, tolerance ±5)
+// Nahrazuje starších 7 pásem. Krajní „jiný den" se určuje podle
+// kalendářního dne, ne podle počtu minut — vozidlo plánované na 7:00,
+// které přijelo předchozí den v 18:00, je jiný den, i když je to jen 13 h.
+// ============================================================
+const PASMA = ['Jiný den – před','>60 min před','30–60 před','15–30 před','5–15 před',
+               'Na čas (±5)','5–15 po','15–30 po','30–60 po','>60 min po',
+               'Jiný den – po','Bez rezervace'];
+const PCOL  = ['#1F5E9E','#378ADD','#6FA8E0','#A7CBEB','#C9DFF2',
+               '#639922','#F3C76B','#EF9F27','#D85A30','#E24B4A',
+               '#A32D2D','#8A6FB0'];
+function pasmo(o){
+  if (o.bez) return 11;
+  if (o.diff == null || !o.state) return null;
+  if (o.jinyDen) return o.diff < 0 ? 0 : 10;
+  const d = o.diff;
+  if (d < -60) return 1;  if (d < -30) return 2;  if (d < -15) return 3;  if (d < -5) return 4;
+  if (d <= 5)  return 5;
+  if (d <= 15) return 6;  if (d <= 30) return 7;  if (d <= 60) return 8;
+  return 9;
+}
+function pasmaCounts(rows){
+  const c = new Array(PASMA.length).fill(0);
+  rows.forEach(o=>{ const i = pasmo(o); if (i != null) c[i]++; });
+  return c;
+}
+
 let ALL = [];            // zpracované rezervace (bez „Nedorazilo“ a „Bez rezervace“)
 let EXC = [];            // vyřazené řádky: Nedorazilo + Bez rezervace (do statistik se nepočítají)
 let exF = [];            // EXC podle hlavního filtru
 let HIST = null;         // {ver, rows}
 let REC_ROWS = [], DNES_ROWS = [];
-let filtered = [];
+let filtered = [];       // pro souhrny: bez svátků a bez budoucích rezervací
+let filtrZobraz = [];    // pro tabulky: totéž + budoucí (zobrazují se zašedle)
 let charts = {};
 let ACTIVE = 'prehled';
 let M3DATA = [];
@@ -413,6 +474,9 @@ function isoToday(){const n=new Date();return n.getFullYear()+'-'+pad(n.getMonth
 function isoShift(days){const n=new Date();n.setDate(n.getDate()+days);return n.getFullYear()+'-'+pad(n.getMonth()+1)+'-'+pad(n.getDate());}
 function nowWall(){const n=new Date();return Date.UTC(n.getFullYear(),n.getMonth(),n.getDate(),n.getHours(),n.getMinutes())/60000;}
 function isoDate(s){return s&&s.length>=10?s.slice(6,10)+'-'+s.slice(3,5)+'-'+s.slice(0,2):'';}
+// Časy z listu jsou pražský čas uložený přes Date.UTC, takže UTC gettery
+// vrátí zpátky pražské datum.
+function isoZMinut(m){ const d=new Date(m*60000); return d.getUTCFullYear()+'-'+pad(d.getUTCMonth()+1)+'-'+pad(d.getUTCDate()); }
 function pt(s){ if(!s) return null; const m=/^(\d{2})\.(\d{2})\.(\d{4}) (\d{2}):(\d{2})/.exec(s); return m?Date.UTC(+m[3],+m[2]-1,+m[1],+m[4],+m[5])/60000:null; }
 function nn(v){ if(v===''||v==null) return null; const x=parseFloat(String(v).replace(',','.')); return isNaN(x)?null:x; }
 function hhmm(t){ if(t==null) return '—'; const m=((t%1440)+1440)%1440; return pad(Math.floor(m/60))+':'+pad(Math.round(m%60)); }
@@ -442,20 +506,40 @@ function parseRow(r){
   o.waitStart = (o.brana != null && o.zah != null && o.zah >= o.brana) ? o.zah - o.brana : null;      // brána → zahájení
   o.stay = (o.brana != null && o.odj != null && o.odj >= o.brana && o.odj - o.brana < 1440) ? o.odj - o.brana : null; // brána → odjezd
   o.proc = (o.zah != null && o.dok != null && o.dok >= o.zah) ? o.dok - o.zah : null;                  // zahájení → dokončení
-  // kontrola kvality: nelogické pořadí časů → doba zpracování se nepočítá
-  o.bad = (o.zah != null && o.dok != null && o.dok < o.zah) || (o.proc != null && o.proc > 600) || (o.brana != null && o.odj != null && o.odj < o.brana);
-  if (o.bad) o.proc = null;
+  // Kontrola kvality (03_metriky/tsc-dochvilnost, bod 4). U vadného řádku
+  // se nepočítá ŽÁDNÁ časová metrika, ale do počtů rezervací vstupuje.
+  // Důvod se ukládá, aby šel vypsat v záložce „Vyřazené rezervace — chyby".
+  o.chyby = [];
+  if (o.zah != null && o.dok != null && o.dok < o.zah) o.chyby.push('dokončení před zahájením');
+  if (o.brana != null && o.odj != null && o.odj < o.brana) o.chyby.push('odjezd před příjezdem k bráně');
+  if (o.proc != null && o.proc < 1)   o.chyby.push('odbavení kratší než 1 min');
+  if (o.proc != null && o.proc > 120) o.chyby.push('odbavení delší než 2 h');
+  o.bad = o.chyby.length > 0;
   o.depDiff = (o.odj != null && o.end != null) ? o.odj - o.end : null;                                 // odjezd − konec okna
+  if (o.bad) { o.proc = null; o.stay = null; o.waitStart = null; o.depDiff = null; }
+
+  // datum skutečného příjezdu a příznak „přijel jiný den, než měl plán"
+  o.arrDate = o.arr != null ? isoZMinut(o.arr) : null;
+  o.jinyDen = !!(o.arrDate && o.date && o.arrDate !== o.date);
+  o.svatek  = jeSvatek(o.date);
+  o.future  = !!(o.date && o.date > isoToday());
   o.hourPlan = o.start != null ? hourOf(o.start) : null;
   o.isLoad = o.typ.indexOf('Nakládka') >= 0; o.isUnload = o.typ.indexOf('Vykládka') >= 0;
   return o;
 }
-function stats(d, ex){
-  ex = ex || [];
+// Jmenovatele se počítají z JEDNÉ množiny (03_metriky/tsc-dochvilnost, bod 1):
+//   n          = rezervací celkem (plán, včetně nedorazilých a bez rezervace)
+//   uskutecneno= celkem − nedorazilo
+//   ev         = hodnocených příjezdů (má měřenou odchylku od plánu)
+// Druhý parametr se ignoruje — zůstal kvůli starším voláním, než se
+// dodělají zbývající záložky.
+function stats(d, _ex){
   const ev = d.filter(o=>o.state);
   const late = ev.filter(o=>o.state==='late').length, early = ev.filter(o=>o.state==='early').length;
+  const noshow = d.filter(o=>o.nedorazil).length;
   return {n:d.length, ev:ev.length, late, early, ontime:ev.length-late-early, punct:ev.length-late,
-          noshow:ex.filter(o=>o.nedorazil).length, bez:ex.filter(o=>o.bez).length, bad:d.filter(o=>o.bad).length};
+          uskutecneno:d.length-noshow,
+          noshow, bez:d.filter(o=>o.bez).length, bad:d.filter(o=>o.bad).length};
 }
 function winStats(d){ let ok=0, over=0; d.forEach(o=>{ if(o.win==='ok') ok++; else if(o.win==='over') over++; }); return {ok, over, eval:ok+over, pct:pct(ok,ok+over)}; }
 const BANDS = ['Dříve >30','Dříve 15–30','Dříve 5–15','Na čas (±5)','Pozdě 5–15','Pozdě 15–30','Pozdě >30'];
@@ -495,8 +579,11 @@ function rebuildAll(){
   if (HIST) HIST.rows.forEach(r=>map.set(r[0], r));
   REC_ROWS.forEach(r=>map.set(r[0], r));
   DNES_ROWS.forEach(r=>map.set(r[0], r));
+  // Všechno jde do ALL — nedorazilo i bez rezervace zůstávají v datech
+  // a počítají se do „Rezervací celkem" (rozhodnutí 29. 10. 2026, ruší
+  // starší rozdělení na ALL/EXC). Svátky se nenačítají vůbec.
   ALL = []; EXC = [];
-  map.forEach(r=>{ if (r[0] && r.length > 40) { const o = parseRow(r); (o.nedorazil || o.bez ? EXC : ALL).push(o); } });
+  map.forEach(r=>{ if (r[0] && r.length > 40) { const o = parseRow(r); if (!o.svatek) ALL.push(o); } });
 }
 
 async function loadAll(){
@@ -550,8 +637,11 @@ async function refreshLive(manual){
 // FILTR
 // ============================================================
 function curFilter(){ return {from:$('g-from').value, to:$('g-to').value, cs:$('g-cs').value, dop:$('g-doprava').value, typ:$('g-typ').value}; }
-function filt(rows, f, noDate){
+// `proZobrazeni` = true vrátí i budoucí rezervace (pro tabulky, kde se
+// ukazují zašedle); do souhrnů budoucnost nepatří.
+function filt(rows, f, noDate, proZobrazeni){
   return rows.filter(o=>{
+    if (!proZobrazeni && o.future) return false;
     if (!noDate) { if (f.from && o.date && o.date < f.from) return false; if (f.to && o.date && o.date > f.to) return false; }
     if (f.cs && o.sklad !== f.cs) return false;
     if (f.dop && o.skDo !== f.dop) return false;
@@ -559,10 +649,21 @@ function filt(rows, f, noDate){
     return true;
   });
 }
+// Filtr bez omezení na sklad — pro karty, které sklady porovnávají
+// (Srovnání skladů, Plnění dopravců). Je to vědomá výjimka a na kartě
+// musí být napsaná, viz navrh-prehled.md.
+function filtVsechnySklady(rows, f){
+  const bezSkladu = {from:f.from, to:f.to, cs:'', dop:f.dop, typ:f.typ};
+  return filt(rows, bezSkladu, false);
+}
 function applyFilter(){
-  filtered = filt(ALL, curFilter(), false);
-  exF = filt(EXC, curFilter(), false);
-  $('g-count').textContent = fmtN(filtered.length) + ' rezervací';
+  const f = curFilter();
+  filtered = filt(ALL, f, false);              // souhrny: bez svátků a bez budoucnosti
+  filtrZobraz = filt(ALL, f, false, true);     // tabulky: i budoucí (zašedle)
+  exF = [];                                    // zrušeno, zůstává kvůli starším voláním
+  const budouc = filtrZobraz.length - filtered.length;
+  $('g-count').textContent = fmtN(filtered.length) + ' rezervací'
+    + (budouc ? ' (+ ' + fmtN(budouc) + ' naplánovaných)' : '');
   renderActive();
 }
 function onFilter(){ applyFilter(); }
@@ -702,7 +803,7 @@ function rDopravci(){
     const r = p==null?'<span class="pill pill-nd">—</span>':(pp<20?'<span class="pill pill-ok">Výborné</span>':pp<35?'<span class="pill pill-ok">Dobré</span>':pp<50?'<span class="pill pill-late">Průměrné</span>':'<span class="pill pill-bad">Špatné</span>');
     return `<tr><td title="${esc(c.name)}"><strong>${esc(c.name.substring(0,32))}</strong></td><td>${c.n}</td><td>${c.early}</td><td>${c.ontime}</td><td style="color:${pp>40?'#A32D2D':'inherit'}">${c.late}</td><td style="font-weight:${pp>40?600:400};color:${pp>40?'#A32D2D':'inherit'}">${p!=null?p+'%':'—'}</td><td>${r}</td></tr>`; }).join('') || '<tr><td colspan="7" class="empty">Žádná data</td></tr>';
 
-  const bz = exF.filter(o=>o.bez);
+  const bz = d.filter(o=>o.bez);
   const bzBy = Object.entries(groupBy(bz, o=>o.dopravce||'Neznámý')).map(([name,rs])=>({name,n:rs.length,sk:[...new Set(rs.map(o=>SK[o.sklad]||o.sklad))].join(', ')})).sort((a,b)=>b.n-a.n);
   $('bez-kpi').innerHTML = metric('danger','Bez rezervace',fmtN(bz.length),'ve vybraném období') + metric('info','Dopravců',fmtN(bzBy.length),'') + metric('warn','Nejčastěji',bzBy[0]?esc(bzBy[0].name.substring(0,22)):'—',bzBy[0]?bzBy[0].n+'×':'');
   $('bez-table').innerHTML = bzBy.slice(0,25).map(c=>`<tr><td>${esc(c.name)}</td><td>${c.n}</td><td>${esc(c.sk)}</td></tr>`).join('') || '<tr><td colspan="3" class="empty">Žádná vozidla bez rezervace</td></tr>';
@@ -848,7 +949,7 @@ function rVedeni(){
   mk('c-sklady', {type:'bar', data:{labels:sk.map(c=>SK[c]), datasets:[
       {label:'Včas+dříve %',data:sk.map(c=>{const s=stats(d.filter(o=>o.sklad===c));return s.ev?pct(s.punct,s.ev):0;}),backgroundColor:'#639922'},
       {label:'V okně %',data:sk.map(c=>winStats(d.filter(o=>o.sklad===c)).pct),backgroundColor:'#185FA5'},
-      {label:'No-show %',data:sk.map(c=>{const r=d.filter(o=>o.sklad===c).length, x=exF.filter(o=>o.sklad===c&&o.nedorazil).length;return pct(x,(r+x)||1);}),backgroundColor:'#E24B4A'}]},
+      {label:'No-show %',data:sk.map(c=>{const r=d.filter(o=>o.sklad===c);return pct(r.filter(o=>o.nedorazil).length, r.length||1);}),backgroundColor:'#E24B4A'}]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{max:100,ticks:{callback:v=>v+'%'}}}}});
   // aktuální měsíc po týdnech (ignoruje datum, respektuje ostatní filtry)
   const f = curFilter(); const nd = filt(ALL, f, true); const n = new Date(); const akt = n.getFullYear()+'-'+pad(n.getMonth()+1);
@@ -866,7 +967,7 @@ function rReditelka(){
   const d = filtered.filter(o=>!den || o.den===den);
   if (!d.length){ ['r-prijezdy-kpi','r-plan-kpi','r-unikatni-kpi','r-cekani-kpi','r-areal-kpi','r-odjezd-kpi'].forEach(i=>$(i).innerHTML='<div class="empty" style="grid-column:1/-1">Žádná data pro vybraný filtr</div>'); return; }
   const ev = d.filter(o=>o.state); const bc = bandCounts(ev.map(o=>o.diff)); const n = ev.length || 1;
-  const dx = exF.filter(o=>!den || o.den===den);
+  const dx = d;
   const nedor = dx.filter(o=>o.nedorazil).length, bez = dx.filter(o=>o.bez).length;
   $('r-prijezdy-kpi').innerHTML =
     metric('ok','Na čas (±5 min)',pct(bc[3],n)+' %',fmtN(bc[3])+' vozidel') +
