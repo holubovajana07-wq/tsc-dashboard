@@ -927,7 +927,11 @@ function rPrehled(){
   $('pre-kpi').innerHTML =
     metric('info','Rezervací celkem',fmtN(s.n),'plán včetně nedorazilých') +
     metric('','Uskutečněno',fmtN(s.uskutecneno), s.noshow ? 'z toho '+fmtN(s.noshow)+' nedorazilo' : 'žádné nedorazilo') +
-    metric('ok','Dochvilnost příjezdu', s.ev?pct(s.punct,s.ev)+' %':'—', 'z '+fmtN(s.ev)+' hodnocených příjezdů') +
+    // „Dochvilnost" tu znamená NEPŘIJEL POZDĚ, ne „přijel na čas": do ±5 min
+    // se trefí jen 15 % vozidel, většina přijede dřív. Pojmenování předepisuje
+    // 03_metriky/tsc-dochvilnost, M5 — bez něj si to každý přečte jinak.
+    metric('ok','Nepřijel pozdě', s.ev?pct(s.punct,s.ev)+' %':'—',
+           'do plánu + 5 min · z '+fmtN(s.ev)+' hodnocených') +
     metric(w.eval && w.pct>=80 ? 'ok':'warn','Odbaveno v okně', w.eval?w.pct+' %':'—',
            'hodnoceno '+fmtN(w.eval)+' z '+fmtN(s.n)+' rezervací') +
     metric('','Medián odchylky', med_==null?'—':(med_>0?'+':'')+Math.round(med_)+' min','záporně = přijel dřív') +
