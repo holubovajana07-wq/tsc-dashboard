@@ -1,16 +1,22 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="cs">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TSC Dashboard — DEK Centrální sklad</title>
+<title>Time Slot Control (TSC) reporting — DEK Centrální sklad</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;background:#f8f7f2;color:#1a1a18;font-size:14px}
 .topbar{background:#fff;border-bottom:0.5px solid #e8e7e2;padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:48px;position:sticky;top:0;z-index:100}
 .topbar-left{display:flex;align-items:center;gap:12px}
-.logo{font-size:16px;font-weight:700}.logo span{color:#185FA5}
+/* Logo DEK se načítá ze souboru logo-dek.svg vedle index.html. Dokud tam
+   není, onerror ho i s oddělovačem schová — dashboard se tím nerozbije. */
+.logo-dek{height:22px;width:auto;display:block}
+.delic{width:1px;height:22px;background:#e8e7e2}
+.nazev{font-size:15px;font-weight:700;letter-spacing:-.2px;line-height:1.15}
+.nazev .zkr{color:#185FA5;font-weight:500}
+.nazev .pod{display:block;font-size:9.5px;font-weight:400;color:#aaa;letter-spacing:.4px;text-transform:uppercase}
 .badge{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:500}
 .badge-green{background:#EAF3DE;color:#27500A}
 .badge-blue{background:#E6F1FB;color:#185FA5}
@@ -123,7 +129,10 @@ tr:hover td{background:#fafaf7}
 <div id="app" style="display:none">
   <div class="topbar">
     <div class="topbar-left">
-      <div class="logo">TSC <span>Dispečink</span></div>
+      <img class="logo-dek" src="logo-dek.svg" alt="DEK"
+           onerror="this.style.display='none'; this.nextElementSibling.style.display='none'">
+      <div class="delic"></div>
+      <div class="nazev">Time Slot Control <span class="zkr">(TSC)</span><span class="pod">reporting · centrální sklad</span></div>
       <span class="badge badge-green" id="live-badge">● Živá data</span>
       <span class="badge badge-blue">DEK-CENTRALNISKLAD</span>
     </div>
@@ -189,9 +198,7 @@ tr:hover td{background:#fafaf7}
     <button class="tab" onclick="showTab('logistik',this)">🏭 Logistik CS</button>
     <button class="tab" onclick="showTab('analyza',this)">📍 Analýza CS</button>
     <button class="tab" onclick="showTab('pauzy',this)">⏸ Pauzy CS z TSC</button>
-    <button class="tab" onclick="showTab('vedeni',this)">📈 KPI vedení</button>
     <button class="tab" onclick="showTab('m3',this)">📦 m3 analýza</button>
-    <button class="tab" onclick="showTab('reditelka',this)">👔 Ředitelka CS</button>
   </div>
 
   <div class="content">
@@ -415,59 +422,6 @@ tr:hover td{background:#fafaf7}
         <div class="tw"><table><thead><tr><th>Rampa</th><th>Sklad</th><th>Celkem</th><th>Nakládka</th><th>Vykládka</th><th>Dochvilnost</th><th>Medián zprac.</th><th>&lt;15 min</th><th>15–30</th><th>&gt;30 min</th><th>V okně %</th><th>Vytíženost</th></tr></thead><tbody id="ramp-table"></tbody></table></div></div>
     </div>
 
-    <!-- KPI VEDENÍ -->
-    <div id="tab-vedeni" class="view">
-      <div class="section-title">KPI vedení</div>
-      <p class="section-desc">Měsíční a týdenní přehled klíčových ukazatelů. Dochvilnost a odbavení v okně podle jednotných pravidel ±5 min.</p>
-      <div class="metrics m5" id="mgmt-kpi"></div>
-      <div class="grid2">
-        <div class="card"><h3>Měsíční trend</h3><div class="card-desc">Počet rezervací a vozidel pozdě / včas+dříve.</div>
-          <div class="legend"><span><span class="ld" style="background:#378ADD"></span>Celkem</span><span><span class="ld" style="background:#E24B4A"></span>Pozdě</span><span><span class="ld" style="background:#639922"></span>Včas+dříve</span></div>
-          <div class="cbox" style="height:220px"><canvas id="c-mgmt-trend"></canvas></div></div>
-        <div class="card"><h3>Srovnání skladů</h3><div class="card-desc">Dochvilnost, odbavení v okně a podíl no-show (%).</div>
-          <div class="legend"><span><span class="ld" style="background:#639922"></span>Včas+dříve %</span><span><span class="ld" style="background:#185FA5"></span>V okně %</span><span><span class="ld" style="background:#E24B4A"></span>No-show %</span></div>
-          <div class="cbox" style="height:220px"><canvas id="c-sklady"></canvas></div></div>
-      </div>
-      <div class="card"><h3>Aktuální měsíc — po týdnech <span id="aktual-mesic" style="font-size:11px;color:#888;font-weight:400"></span></h3>
-        <div class="card-desc">Aktuální kalendářní měsíc po KT týdnech (respektuje filtr skladu, dopravy a typu; datum se ignoruje).</div>
-        <div class="tw"><table><thead><tr><th>Týden</th><th>Celkem</th><th>Pozdě</th><th>% pozdě</th><th>Před čas.</th><th>Na čas</th><th>Nedorazilo</th><th>Medián odch.</th><th>V okně %</th><th>Stav</th></tr></thead><tbody id="mgmt-tydny"></tbody></table></div></div>
-      <div class="card"><h3>Měsíční souhrn KPI</h3>
-        <div class="tw"><table><thead><tr><th>Měsíc</th><th>Celkem</th><th>Pozdě</th><th>% pozdě</th><th>Před časem</th><th>Na čas</th><th>Nedorazilo</th><th>Medián odch.</th><th>V okně %</th></tr></thead><tbody id="mgmt-table"></tbody></table></div></div>
-    </div>
-
-    <!-- ŘEDITELKA CS -->
-    <div id="tab-reditelka" class="view">
-      <div class="section-title">Přehled pro vedení CS</div>
-      <p class="section-desc">Dochvilnost příjezdů a odjezdů, časy čekání v areálu, podíl naplánovaných vozidel a plnění časových oken. Všude stejná tolerance ±5 min. Platí hlavní filtr; navíc lze omezit den v týdnu.</p>
-      <div class="filters">
-        <div class="fg"><label>Den v týdnu</label>
-          <select id="r-den" onchange="rReditelka()"><option value="">Všechny dny</option><option value="Po">Pondělí</option><option value="Út">Úterý</option><option value="St">Středa</option><option value="Čt">Čtvrtek</option><option value="Pá">Pátek</option></select></div>
-      </div>
-      <div class="card"><h3>1. Dochvilnost příjezdů</h3>
-        <div class="card-desc">Odchylka příjezdu dopravce od plánovaného začátku. Na čas = ±5 min.</div>
-        <div class="metrics m5" id="r-prijezdy-kpi"></div>
-        <div class="grid2" style="margin-top:12px">
-          <div><div style="font-size:11px;font-weight:600;color:#888;margin-bottom:8px;text-transform:uppercase">Pásma příjezdů</div><div class="cbox" style="height:210px"><canvas id="c-r-kose"></canvas></div></div>
-          <div><div style="font-size:11px;font-weight:600;color:#888;margin-bottom:8px;text-transform:uppercase">Dochvilnost dle typu akce (%)</div><div class="cbox" style="height:210px"><canvas id="c-r-typy"></canvas></div></div>
-        </div></div>
-      <div class="grid2">
-        <div class="card"><h3>2. Naplánovaná vozidla</h3><div class="card-desc">Vozidla s rezervací vs. příjezdy bez rezervace. Cíl: 100 % s rezervací.</div>
-          <div class="metrics m3" id="r-plan-kpi"></div><div class="cbox" style="height:180px;margin-top:10px"><canvas id="c-r-plan"></canvas></div></div>
-        <div class="card"><h3>3. Dopravci a dodavatelé</h3><div class="card-desc">Počet unikátních dopravců a dodavatelů za období.</div>
-          <div class="metrics m3" id="r-unikatni-kpi"></div><div id="r-unikatni-list" style="margin-top:10px;font-size:12px"></div></div>
-      </div>
-      <div class="grid2">
-        <div class="card"><h3>4. Čekání na zahájení</h3><div class="card-desc">Od příjezdu do podniku (brána) do zahájení zpracování. Medián.</div>
-          <div class="metrics m3" id="r-cekani-kpi"></div><div class="cbox" style="height:190px;margin-top:10px"><canvas id="c-r-cekani"></canvas></div></div>
-        <div class="card"><h3>5. Čas v areálu</h3><div class="card-desc">Od příjezdu do podniku (brána) do odjezdu z podniku. Medián.</div>
-          <div class="metrics m3" id="r-areal-kpi"></div><div class="cbox" style="height:190px;margin-top:10px"><canvas id="c-r-areal"></canvas></div></div>
-      </div>
-      <div class="card"><h3>6. Odjezd vs. konec okna</h3>
-        <div class="card-desc">Odjezd z podniku vs. plánovaný konec okna. Včas = ±5 min. Níže odbavení v okně (dokončení zpracování ≤ konec + 5 min).</div>
-        <div class="metrics m5" id="r-odjezd-kpi"></div>
-        <div class="cbox" style="height:220px;margin-top:12px"><canvas id="c-r-odjezd"></canvas></div></div>
-    </div>
-
     <!-- PAUZY CS Z TSC -->
     <div id="tab-pauzy" class="view">
       <div class="section-title">Pauzy CS z TSC</div>
@@ -489,7 +443,7 @@ tr:hover td{background:#fafaf7}
     <!-- M3 -->
     <div id="tab-m3" class="view">
       <div class="section-title">m3 analýza — CS1 Úžice (S095) vs CS1 Prostějov (S093)</div>
-      <p class="section-desc">Data z tabulky Vytížení aut. Celkem vstup m3 = plán, Odjelo celkem m3 = skutečnost. Crossdock a převozy se nepočítají do plnění plánu. Platí hlavní filtr (datum a sklad; CS2 Úžice zde není).</p>
+      <p class="section-desc">Data z tabulky Vytížení aut. Celkem vstup m3 = plán, Odjelo celkem m3 = skutečnost. Crossdock a převozy se nepočítají do plnění plánu. Z hlavního filtru platí <strong>datum a sklad</strong>; typ akce, skupina dopravy ani den v týdnu se tady neuplatňují, protože m3 tabulka ty údaje nemá. CS2 Úžice v m3 datech není.</p>
       <div id="m3-chyby-banner" style="display:none;background:#FCEBEB;border:1px solid #E24B4A;border-radius:8px;padding:12px 16px;margin-bottom:14px;font-size:12px">
         <strong style="color:#A32D2D">⚠️ Upozornění na chybný formát v tabulce Vytížení aut:</strong>
         <div id="m3-chyby-list" style="margin-top:8px;color:#501313;line-height:1.8"></div></div>
@@ -518,7 +472,7 @@ tr:hover td{background:#fafaf7}
       </div>
       <div class="card"><h3>Detail po pobočkách — TOP 20</h3><div class="card-desc">Podle odjelo m3. Červeně = více než 20 % zbytkového. % zbytkové = zbytkové / (odjelo + zbytkové).</div>
         <div class="tw"><table><thead><tr><th>Pobočka</th><th>Sklad</th><th>Závozy</th><th>Vstup m3</th><th>Odjelo m3</th><th>Zbytkové m3</th><th>% zbytk.</th><th>Převozy</th><th>Zrušeno</th></tr></thead><tbody id="m3-table"></tbody></table></div></div>
-      <div class="card"><h3>Propojení s TSC rezervacemi</h3><div class="card-desc">Závozy z m3 tabulky vs. TSC rezervace pro stejnou pobočku — za <b>stejné období a sklad</b> (hlavní filtr).</div>
+      <div class="card"><h3>Propojení s TSC rezervacemi</h3><div class="card-desc">Závozy z m3 tabulky vs. TSC rezervace pro stejnou pobočku, za <b>stejné období a sklad</b>. Zbytek hlavního filtru (typ akce, skupina dopravy, den v týdnu) se tady <b>vědomě neuplatňuje</b> — m3 tabulka tyhle rozměry nemá a sloupce by se pak porovnávaly každý za jinou množinu.</div>
         <div class="tw"><table><thead><tr><th>Pobočka</th><th>Sklad</th><th>Závozy (m3)</th><th>Rezervace (TSC)</th><th>Odjelo m3</th><th>Zbytkové m3</th><th>% zbytk.</th></tr></thead><tbody id="m3-tsctable"></tbody></table></div></div>
       </div>
     </div>
@@ -731,10 +685,6 @@ function stats(d, _ex){
           noshow, bez:d.filter(o=>o.bez).length, bad:d.filter(o=>o.bad).length};
 }
 function winStats(d){ let ok=0, over=0; d.forEach(o=>{ if(o.win==='ok') ok++; else if(o.win==='over') over++; }); return {ok, over, eval:ok+over, pct:pct(ok,ok+over)}; }
-const BANDS = ['Dříve >30','Dříve 15–30','Dříve 5–15','Na čas (±5)','Pozdě 5–15','Pozdě 15–30','Pozdě >30'];
-const BCOL = ['#378ADD','#6FA8E0','#A7CBEB','#639922','#EF9F27','#D85A30','#E24B4A'];
-function band(d){ if(d==null) return null; if(d<-30)return 0; if(d<-15)return 1; if(d<-5)return 2; if(d<=5)return 3; if(d<=15)return 4; if(d<=30)return 5; return 6; }
-function bandCounts(vals){ const c=new Array(7).fill(0); vals.forEach(v=>{const b=band(v); if(b!=null) c[b]++;}); return c; }
 function pillHtml(o){
   if (o.nedorazil) return '<span class="pill pill-bad">Nedorazil</span>';
   if (o.bez) return '<span class="pill pill-nd">Bez rezervace</span>';
@@ -936,7 +886,9 @@ function showTab(name, btn){
   renderActive();
 }
 function renderActive(){
-  const f = {prehled:rPrehled, dispecer:rDispecer, dopravci:rDopravci, logistik:rLogistik, analyza:rAnalyza, pauzy:rPauzy, vedeni:rVedeni, m3:rM3, reditelka:rReditelka}[ACTIVE];
+  const f = {prehled:rPrehled, dispecer:rDispecer, dopravci:rDopravci, logistik:rLogistik,
+             analyza:rAnalyza, pauzy:rPauzy, m3:rM3}[ACTIVE];
+  if (!f) { console.error('Neznámá záložka: ' + ACTIVE); return; }
   try { f(); } catch(e){ console.error(ACTIVE, e); }
 }
 
@@ -2000,97 +1952,6 @@ function buildHeatmap(data, rezim){
     h += '</div>'; });
   $('heatmap').innerHTML = h;
 }
-
-// ============================================================
-// KPI VEDENÍ
-// ============================================================
-function kpiRow(rows, ex){
-  const s = stats(rows, ex), w = winStats(rows), m = med(rows.filter(o=>o.state).map(o=>o.diff));
-  return {s, w, med:m, pl:s.ev?pct(s.late,s.ev):null};
-}
-function rVedeni(){
-  const d = filtered, k = kpiRow(d, exF);
-  $('mgmt-kpi').innerHTML =
-    metric('info','Celkem rezervací',fmtN(d.length),'') +
-    metric('ok','Dochvilnost dopravců',k.s.ev?pct(k.s.punct,k.s.ev)+' %':'—','příjezd ≤ +5 min') +
-    metric('warn','Přijelo pozdě',k.pl!=null?k.pl+' %':'—',fmtN(k.s.late)+' vozidel') +
-    metric('ok','Odbaveno v okně',k.w.eval?k.w.pct+' %':'—',k.w.ok+' z '+k.w.eval) +
-    metric('danger','Nedorazilo',fmtN(k.s.noshow),'+ '+k.s.bez+' bez rezervace');
-  const byM = groupBy(d, o=>o.date.slice(0,7)); const months = Object.keys(byM).filter(m=>m.length===7).sort();
-  $('mgmt-table').innerHTML = months.map(m=>{ const kk = kpiRow(byM[m]); return `<tr><td><strong>${m}</strong></td><td>${fmtN(byM[m].length)}</td><td style="color:${(kk.pl||0)>40?'#A32D2D':'inherit'}">${kk.s.late}</td><td style="font-weight:${(kk.pl||0)>40?600:400};color:${(kk.pl||0)>40?'#A32D2D':'inherit'}">${kk.pl!=null?kk.pl+'%':'—'}</td><td>${kk.s.early}</td><td>${kk.s.ontime}</td><td>${kk.s.noshow}</td><td>${kk.med!=null?(kk.med>0?'+':'')+Math.round(kk.med)+' min':'—'}</td><td style="font-weight:500;color:${kk.w.eval&&kk.w.pct<70?'#A32D2D':'#3B6D11'}">${kk.w.eval?kk.w.pct+'%':'—'}</td></tr>`; }).join('') || '<tr><td colspan="9" class="empty">Žádná data</td></tr>';
-  mk('c-mgmt-trend', {type:'line', data:{labels:months, datasets:[
-      {label:'Celkem',data:months.map(m=>byM[m].length),borderColor:'#378ADD',backgroundColor:'rgba(55,138,221,.08)',tension:.3,fill:true,pointRadius:3},
-      {label:'Pozdě',data:months.map(m=>stats(byM[m]).late),borderColor:'#E24B4A',backgroundColor:'rgba(226,75,74,.08)',tension:.3,fill:true,pointRadius:3},
-      {label:'Včas+dříve',data:months.map(m=>stats(byM[m]).punct),borderColor:'#639922',backgroundColor:'rgba(99,153,34,.08)',tension:.3,fill:true,pointRadius:3}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{autoSkip:false,font:{size:9}}}}}});
-  const sk = ['093','095','096'].filter(c=>d.some(o=>o.sklad===c));
-  mk('c-sklady', {type:'bar', data:{labels:sk.map(c=>SK[c]), datasets:[
-      {label:'Včas+dříve %',data:sk.map(c=>{const s=stats(d.filter(o=>o.sklad===c));return s.ev?pct(s.punct,s.ev):0;}),backgroundColor:'#639922'},
-      {label:'V okně %',data:sk.map(c=>winStats(d.filter(o=>o.sklad===c)).pct),backgroundColor:'#185FA5'},
-      {label:'No-show %',data:sk.map(c=>{const r=d.filter(o=>o.sklad===c);return pct(r.filter(o=>o.nedorazil).length, r.length||1);}),backgroundColor:'#E24B4A'}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{max:100,ticks:{callback:v=>v+'%'}}}}});
-  // aktuální měsíc po týdnech (ignoruje datum, respektuje ostatní filtry)
-  const f = curFilter(); const nd = filt(ALL, f, true); const n = new Date(); const akt = n.getFullYear()+'-'+pad(n.getMonth()+1);
-  $('aktual-mesic').textContent = akt;
-  const ad = nd.filter(o=>o.date.slice(0,7)===akt); const byKT = groupBy(ad, o=>o.kt||'—'); const kts = Object.keys(byKT).sort(); const lastKT = kts[kts.length-1];
-  $('mgmt-tydny').innerHTML = kts.map(kt=>{ const kk = kpiRow(byKT[kt]); const open = kt===lastKT;
-    return `<tr style="${open?'background:#FFFBEA':''}"><td><strong>${esc(kt)}</strong> ${open?'<span style="font-size:10px;color:#BA7517;background:#FAEEDA;padding:1px 5px;border-radius:10px">neucelený</span>':''}</td><td>${byKT[kt].length}</td><td>${kk.s.late}</td><td style="color:${(kk.pl||0)>40?'#A32D2D':'inherit'}">${kk.pl!=null?kk.pl+'%':'—'}</td><td>${kk.s.early}</td><td>${kk.s.ontime}</td><td>${kk.s.noshow}</td><td>${kk.med!=null?(kk.med>0?'+':'')+Math.round(kk.med)+' min':'—'}</td><td style="font-weight:500;color:${kk.w.eval&&kk.w.pct<70?'#A32D2D':'#3B6D11'}">${kk.w.eval?kk.w.pct+'%':'—'}</td><td>${open?'⏳ Probíhá':'✅ Ukončen'}</td></tr>`; }).join('') || '<tr><td colspan="10" class="empty">Žádná data pro aktuální měsíc</td></tr>';
-}
-
-// ============================================================
-// ŘEDITELKA CS
-// ============================================================
-function rReditelka(){
-  const den = $('r-den').value;
-  const d = filtered.filter(o=>!den || o.den===den);
-  if (!d.length){ ['r-prijezdy-kpi','r-plan-kpi','r-unikatni-kpi','r-cekani-kpi','r-areal-kpi','r-odjezd-kpi'].forEach(i=>$(i).innerHTML='<div class="empty" style="grid-column:1/-1">Žádná data pro vybraný filtr</div>'); return; }
-  const ev = d.filter(o=>o.state); const bc = bandCounts(ev.map(o=>o.diff)); const n = ev.length || 1;
-  const dx = d;
-  const nedor = dx.filter(o=>o.nedorazil).length, bez = dx.filter(o=>o.bez).length;
-  $('r-prijezdy-kpi').innerHTML =
-    metric('ok','Na čas (±5 min)',pct(bc[3],n)+' %',fmtN(bc[3])+' vozidel') +
-    metric('info','Dříve (> 5 min)',pct(bc[0]+bc[1]+bc[2],n)+' %',fmtN(bc[0]+bc[1]+bc[2])+' vozidel') +
-    metric('warn','Zpoždění 5–30 min',pct(bc[4]+bc[5],n)+' %',fmtN(bc[4]+bc[5])+' vozidel') +
-    metric('danger','Zpoždění nad 30 min',pct(bc[6],n)+' %',fmtN(bc[6])+' vozidel') +
-    metric('','Mimo statistiky',fmtN(nedor+bez),nedor+' nepřijelo + '+bez+' bez rez. (nezapočteno)');
-  mk('c-r-kose', {type:'bar', data:{labels:BANDS, datasets:[{data:bc, backgroundColor:BCOL, borderRadius:4}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:9}}}}}});
-  const types = [['Nakládka',d.filter(o=>o.isLoad&&!o.isUnload)],['Vykládka',d.filter(o=>o.isUnload&&!o.isLoad)],['Nakládka + Vykládka',d.filter(o=>o.isLoad&&o.isUnload)]].filter(t=>t[1].some(o=>o.state));
-  mk('c-r-typy', {type:'bar', data:{labels:types.map(t=>t[0]), datasets:BANDS.map((b,i)=>({label:b, backgroundColor:BCOL[i], data:types.map(t=>{const e=t[1].filter(o=>o.state); return pct(bandCounts(e.map(o=>o.diff))[i], e.length||1);})}))},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:9},boxWidth:10}}},scales:{x:{stacked:true},y:{stacked:true,max:100,ticks:{callback:v=>v+'%'}}}}});
-
-  const sRez = d.length, dTot = d.length + bez;
-  $('r-plan-kpi').innerHTML = metric('ok','S rezervací',pct(sRez,dTot)+' %',fmtN(sRez)+' vozidel') + metric('danger','Bez rezervace',pct(bez,dTot)+' %',fmtN(bez)+' vozidel') + metric('info','Celkem',fmtN(dTot),'');
-  mk('c-r-plan', {type:'doughnut', data:{labels:['S rezervací','Bez rezervace'], datasets:[{data:[sRez,bez],backgroundColor:['#1D9E75','#E24B4A'],borderWidth:3,borderColor:'#fff'}]}, options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:11}}}}}});
-
-  const uDek = new Set(d.filter(o=>o.skDo==='DEK doprava').map(o=>o.dopravce)).size;
-  const uDod = new Set(d.filter(o=>o.skDo==='Dodavatel').map(o=>o.dopravce)).size;
-  const uFirm = new Set(d.filter(o=>o.skDo==='Dodavatel').map(o=>o.dodavatel)).size;
-  $('r-unikatni-kpi').innerHTML = metric('info','DEK dopravci',uDek,'unikátních') + metric('info','Dopravci dodavatelů',uDod,'unikátních') + metric('info','Dodavatelé (firmy)',uFirm,'unikátních');
-  const top = Object.entries(groupBy(d, o=>o.dopravce||'—')).sort((a,b)=>b[1].length-a[1].length).slice(0,5);
-  $('r-unikatni-list').innerHTML = '<strong style="font-size:11px;color:#888">TOP 5 DOPRAVCŮ</strong>' + top.map(([nm,rs])=>`<div class="rank-row"><span class="rank-name" title="${esc(nm)}">${esc(nm.substring(0,28))}</span><span style="font-size:12px;font-weight:600;color:#185FA5">${rs.length}</span></div>`).join('');
-
-  const wait = d.map(o=>o.waitStart).filter(x=>x!=null&&x<480);
-  const wl = d.filter(o=>o.isLoad&&!o.isUnload).map(o=>o.waitStart).filter(x=>x!=null&&x<480), wu = d.filter(o=>o.isUnload&&!o.isLoad).map(o=>o.waitStart).filter(x=>x!=null&&x<480);
-  $('r-cekani-kpi').innerHTML = metric('warn','Medián celkem',mm(med(wait)),fmtN(wait.length)+' měřených') + metric('','Nakládka',mm(med(wl)),'') + metric('','Vykládka',mm(med(wu)),'');
-  const wb = [[0,5],[5,10],[10,20],[20,30],[30,60],[60,1e9]];
-  mk('c-r-cekani', {type:'bar', data:{labels:['0–5','5–10','10–20','20–30','30–60','>60'].map(b=>b+' min'), datasets:[{data:wb.map(([a,b])=>wait.filter(x=>x>=a&&x<b).length),backgroundColor:'#378ADD',borderRadius:4}]}, options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:10}}}}}});
-
-  const stay = d.map(o=>o.stay).filter(x=>x!=null&&x<600);
-  $('r-areal-kpi').innerHTML = metric('info','Medián v areálu',mm(med(stay)),fmtN(stay.length)+' měřených') + metric('ok','Do 60 min',stay.length?pct(stay.filter(x=>x<=60).length,stay.length)+' %':'—','') + metric('warn','Nad 90 min',stay.length?pct(stay.filter(x=>x>90).length,stay.length)+' %':'—','');
-  const ab = [[0,30],[30,60],[60,90],[90,120],[120,1e9]];
-  mk('c-r-areal', {type:'bar', data:{labels:['do 30','30–60','60–90','90–120','>120'].map(b=>b+' min'), datasets:[{data:ab.map(([a,b])=>stay.filter(x=>x>a&&x<=b||(a===0&&x===0)).length),backgroundColor:'#7F77DD',borderRadius:4}]}, options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:10}}}}}});
-
-  const dep = d.map(o=>o.depDiff).filter(x=>x!=null && Math.abs(x)<1440); const dn = dep.length||1; const dc = bandCounts(dep); const w = winStats(d);
-  $('r-odjezd-kpi').innerHTML =
-    metric('ok','Odjel včas (±5 min)',pct(dc[3],dn)+' %',fmtN(dc[3])+' vozidel') +
-    metric('info','Odjel dříve (> 5 min)',pct(dc[0]+dc[1]+dc[2],dn)+' %',fmtN(dc[0]+dc[1]+dc[2])+' vozidel') +
-    metric('warn','Zpoždění 5–30 min',pct(dc[4]+dc[5],dn)+' %',fmtN(dc[4]+dc[5])+' vozidel') +
-    metric('danger','Zpoždění nad 30 min',pct(dc[6],dn)+' %',fmtN(dc[6])+' vozidel') +
-    metric('ok','Odbaveno v okně',w.eval?w.pct+' %':'—','dokončení ≤ konec + 5 min ('+w.ok+' z '+w.eval+')');
-  mk('c-r-odjezd', {type:'bar', data:{labels:BANDS, datasets:[{data:dc, backgroundColor:BCOL, borderRadius:4}]}, options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:10}}}}}});
-}
-
 // ============================================================
 // M3 ANALÝZA
 // ============================================================
@@ -2175,8 +2036,12 @@ function rM3(){
   const pobocky = Object.entries(byPob).map(([kod,rs])=>({kod,sklad:rs[0][M3.sklad],n:rs.length,vstup:sm(rs,M3.celkemVstupM3),odjelo:sm(rs,M3.odjeloCelkem),zb:sm(rs,M3.zbytkove),prev:sm(rs,M3.prevoz),zr:rs.filter(r=>r[M3.zruseno]==='ZRUŠENO'||r[M3.zruseno]==='X').length})).sort((a,b)=>b.odjelo-a.odjelo).slice(0,20);
   $('m3-table').innerHTML = pobocky.map(p=>{ const pz=pP(p.zb,p.odjelo+p.zb); const col=pz>20?'#A32D2D':(pz>10?'#BA7517':'inherit');
     return `<tr><td><strong>${esc(p.kod)}</strong></td><td>${SK[p.sklad]||p.sklad}</td><td style="text-align:center">${p.n}</td><td style="text-align:right">${R(p.vstup)}</td><td style="text-align:right">${R(p.odjelo)}</td><td style="text-align:right;color:${col}">${R(p.zb)}</td><td style="text-align:center;color:${col};font-weight:500">${pz}%</td><td style="text-align:right">${R(p.prev)}</td><td style="text-align:center">${p.zr}</td></tr>`; }).join('') || '<tr><td colspan="9" class="empty">Žádná data</td></tr>';
-  // TSC rezervace za STEJNÉ období a sklad (hlavní filtr)
-  const tscBy = groupBy(filtered, o=>(o.no||'').split(/[|\s+]/)[0].trim().toUpperCase());
+  // TSC rezervace za STEJNÉ období a sklad jako m3 řádky vedle nich.
+  // Schválně se nebere `filtered`: ten navíc filtruje typ akce, skupinu
+  // dopravy a den v týdnu, které m3 tabulka nemá — sloupce by se pak
+  // porovnávaly každý za jinou množinu a nikdo by to nepoznal.
+  const tscProM3 = filt(ALL, {from:f.from, to:f.to, cs:f.cs, dop:'', typ:'', den:''}, false);
+  const tscBy = groupBy(tscProM3, o=>(o.no||'').split(/[|\s+]/)[0].trim().toUpperCase());
   $('m3-tsctable').innerHTML = pobocky.slice(0,15).map(p=>{ const tr = tscBy[p.kod] || tscBy['P'+p.kod] || []; const pz=pP(p.zb,p.odjelo+p.zb); const col=pz>20?'#A32D2D':(pz>10?'#BA7517':'inherit');
     return `<tr><td><strong>${esc(p.kod)}</strong></td><td>${SK[p.sklad]||p.sklad}</td><td style="text-align:center">${p.n}</td><td style="text-align:center;color:${tr.length?'inherit':'#aaa'}">${tr.length||'—'}</td><td style="text-align:right">${R(p.odjelo)}</td><td style="text-align:right;color:${col}">${R(p.zb)}</td><td style="text-align:center;color:${col};font-weight:500">${pz}%</td></tr>`; }).join('') || '<tr><td colspan="7" class="empty">Žádná data</td></tr>';
 }
