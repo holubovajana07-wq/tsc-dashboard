@@ -481,8 +481,9 @@ tr:hover td{background:#fafaf7}
         <div class="tw"><table><thead><tr><th>Název</th><th>Opakování</th><th>Od</th><th>Do</th><th>Délka</th><th>Platí od</th><th>Platí do</th><th>Rampy</th><th>Pozn.</th></tr></thead><tbody id="pauzy-tab"></tbody></table></div></div>
 
       <div class="card"><h3>Otevírací doba a čistá provozní doba po rampách</h3>
-        <div class="card-desc">Otevírací doba je <strong>na rampě, ne na skladě</strong> — každá rampa může mít jinou. Čistá provozní doba = otevírací doba mínus denní přestávky, které se té rampy týkají; z ní se počítá jmenovatel vytíženosti.</div>
-        <div class="tw"><table><thead><tr><th>Rampa</th><th>Sklad</th><th>Po</th><th>Út</th><th>St</th><th>Čt</th><th>Pá</th><th>So</th><th>Ne</th><th>Přestávky/den</th><th>Čistá doba Po–Pá</th></tr></thead><tbody id="pauzy-rampy"></tbody></table></div></div>
+        <div class="card-desc">Otevírací doba je <strong>na rampě, ne na skladě</strong> — každá rampa může mít jinou. Čistá provozní doba = otevírací doba mínus denní přestávky, které se té rampy týkají; z ní se počítá jmenovatel vytíženosti.<br>
+        Sloupec <strong>Skutečně se jezdí</strong> je kontrola proti realitě: nejčasnější a nejpozdější <em>plánovaný začátek</em> rezervace na té rampě za poslední tři měsíce. Když nesedí s otevírací dobou, je buď špatně nastavení v TSC, nebo se rezervace zakládají mimo otevírací dobu — obojí stojí za prověření.</div>
+        <div class="tw"><table><thead><tr><th>Rampa</th><th>Sklad</th><th>Po</th><th>Út</th><th>St</th><th>Čt</th><th>Pá</th><th>So</th><th>Ne</th><th>Přestávky/den</th><th>Čistá doba Po–Pá</th><th>Skutečně se jezdí</th></tr></thead><tbody id="pauzy-rampy"></tbody></table></div></div>
     </div>
 
     <!-- M3 -->
@@ -1786,7 +1787,13 @@ function rAnalyza(){
        sečtená přes dny, kdy se na rampě jelo. Přestávky i otevírací doba se berou <strong>pro každý den zvlášť</strong>
        podle pravidel platných k tomu datu — kdo v létě přidal přestávku, nemá tím zkreslené jaro.
        Nastavení je vidět v záložce <strong>Pauzy CS z TSC</strong>; opravuje se tam, ne tady.
-       ${bezProvozu ? '<br>⚠ U '+bezProvozu+' ramp se vytíženost spočítat nedá — chybí jim v TSC otevírací doba nebo nejsou v seznamu ramp.' : ''}`
+       ${bezProvozu ? '<br>⚠ U '+bezProvozu+' ramp se vytíženost spočítat nedá — chybí jim v TSC otevírací doba nebo nejsou v seznamu ramp.' : ''}
+       ${(!f.from || f.from < PROVOZ_HISTORIE_OD)
+         ? '<br>🔴 <strong>Období sahá před ' + PROVOZ_HISTORIE_OD.split("-").reverse().join(". ") + ', odkdy vedeme historii nastavení.</strong> '
+           + 'Pro starší dny se počítá s <strong>dnešní</strong> otevírací dobou a dnešními přestávkami, protože TSC si starý stav nepamatuje. '
+           + 'Kde se nastavení mezitím změnilo, je vytíženost za starší měsíce zkreslená — a víme o jedné takové změně: '
+           + 'na S093 se do února 2026 nezaložila ani jedna rezervace před 7:00, od března už ano.'
+         : ''}`
     : `<strong>Obsazeno Ø/den</strong> = minuty zpracování na rampě dělené počtem dnů s provozem. Je to
        <strong>čitatel vytíženosti, ne procento</strong> — jmenovatel (čistá provozní doba z TSC) se zatím nenačetl,
        viz záložka Pauzy CS z TSC.`;
@@ -1818,6 +1825,9 @@ const PR_SL = {rampa:0, sklad:1, virt:2, minRez:3};   // PROVOZ_RAMPY
 const PA_SL = {nazev:0, opak:1, od:2, do:3, delka:4, platiOd:5, platiDo:6, rampy:7, pozn:8};
 const DEN_SL = i => 4 + i*3;    // Po od / Po do / Po minut, pak Út…
 const MAIL_SPRAVCE = 'jana.prochazkova@dek-cz.com';
+// Od kdy vedeme vlastní historii nastavení provozu (PROVOZ_*_HISTORIE).
+// Pro starší období známe jen DNEŠNÍ nastavení — TSC si starý stav nepamatuje.
+const PROVOZ_HISTORIE_OD = '2026-10-30';
 
 function provozTab(klic){ return (PROVOZ && PROVOZ[klic] && PROVOZ[klic].length > 1) ? PROVOZ[klic].slice(1) : []; }
 function datumCZ(s){ const m = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(String(s||'')); return m ? m[3]+'-'+m[2]+'-'+m[1] : null; }
@@ -1936,19 +1946,41 @@ function rPauzy(){
       <td style="white-space:normal;color:#888;font-size:11px">${esc(p[PA_SL.pozn])}</td></tr>`;
   }).join('') || '<tr><td colspan="9" class="empty">Žádná pravidla</td></tr>';
 
-  // --- tabulka ramp ---
+  // --- tabulka ramp, s kontrolou proti skutečným rezervacím ---
+  // Nastavení v TSC se dá zadat jakkoli; tohle je jediné místo, kde se dá
+  // porovnat s tím, kdy se na rampě opravdu jezdí.
+  const od3m = isoShift(-90);
+  const skutecnost = {};
+  ALL.forEach(o=>{ if (!o.rampa || o.start == null || o.bez || o.date < od3m) return;
+    const m = ((o.start % 1440) + 1440) % 1440;
+    const x = skutecnost[o.rampa] || (skutecnost[o.rampa] = {min:1e9, max:-1, n:0});
+    x.n++; if (m < x.min) x.min = m; if (m > x.max) x.max = m; });
+
   $('pauzy-rampy').innerHTML = rampy.map(r=>{
-    const pa = pauzyRampy(r[PR_SL.rampa], dnesISO).min;
+    const nazev = r[PR_SL.rampa];
+    const pa = pauzyRampy(nazev, dnesISO).min;
     const bunka = i => { const od = r[DEN_SL(i)], doo = r[DEN_SL(i)+1], m = +r[DEN_SL(i)+2] || 0;
       return m ? `<td style="font-size:11px">${esc(od)}–${esc(doo)}</td>` : '<td style="color:#ddd">—</td>'; };
     const cista = [0,1,2,3,4].map(i=>cistaDoba(r, i, dnesISO)).filter(x=>x>0);
     const prum = cista.length ? Math.round(avg(cista)) : null;
-    return `<tr><td><strong>${esc(r[PR_SL.rampa])}</strong>${r[PR_SL.virt]==='Ano'?' <span class="pill pill-nd">virtuální</span>':''}</td>
+    // porovnání s realitou: bere se pondělní otevírací doba jako reprezentant
+    const sk = skutecnost[nazev];
+    let real = '<span style="color:#ccc">bez rezervací</span>';
+    if (sk && sk.n){
+      const otev = prMinZHHMM(r[DEN_SL(0)]), zavr = prMinZHHMM(r[DEN_SL(0)+1]);
+      const drive = otev != null && sk.min < otev - 5, pozdeji = zavr != null && sk.max > zavr + 5;
+      real = `<span style="${drive||pozdeji?'color:#A32D2D;font-weight:600':''}">${hhmm(sk.min)}–${hhmm(sk.max)}</span>`
+           + (drive||pozdeji ? ' <span class="pill pill-bad">mimo otevírací dobu</span>' : '')
+           + ` <span style="color:#888;font-size:11px">${fmtN(sk.n)} rez.</span>`;
+    }
+    return `<tr><td><strong>${esc(nazev)}</strong>${r[PR_SL.virt]==='Ano'?' <span class="pill pill-nd">virtuální</span>':''}</td>
       <td>${esc(r[PR_SL.sklad])}</td>${[0,1,2,3,4,5,6].map(bunka).join('')}
       <td style="${pa?'':'color:#A32D2D;font-weight:600'}">${pa?pa+' min':'žádné'}</td>
-      <td style="font-weight:600">${prum!=null?(prum/60).toFixed(1).replace('.',',')+' h':'—'}</td></tr>`;
-  }).join('') || '<tr><td colspan="11" class="empty">Žádné rampy</td></tr>';
+      <td style="font-weight:600">${prum!=null?(prum/60).toFixed(1).replace('.',',')+' h':'—'}</td>
+      <td style="white-space:normal">${real}</td></tr>`;
+  }).join('') || '<tr><td colspan="12" class="empty">Žádné rampy</td></tr>';
 }
+function prMinZHHMM(s){ const m = /^(\d{1,2}):(\d{2})$/.exec(String(s||'')); return m ? (+m[1])*60 + (+m[2]) : null; }
 
 function buildHeatmap(data, rezim){
   const days = DNY.slice(0,5), hours = [5,6,7,8,9,10,11,12,13,14,15,16];
