@@ -608,6 +608,58 @@ function rebuildAll(){
   // starší rozdělení na ALL/EXC). Svátky se nenačítají vůbec.
   ALL = []; EXC = [];
   map.forEach(r=>{ if (r[0] && r.length > 40) { const o = parseRow(r); if (!o.svatek) ALL.push(o); } });
+  ALL = bezBlokovanychSlotu(ALL);
+}
+
+// ============================================================
+// BLOKOVANÉ SLOTY
+//
+// Některé rampy mají stálou opakovanou rezervaci, kterou si sklad drží
+// pro případ potřeby a skoro nikdy ji nevyužije. Na CS2 je to VRATKY
+// (1 793 z 1 803 opakovaných nedorazilo, 99 %) a rampy Nakládka 1–4
+// (100 %, 100 %, 98 %, 100 %). Není to nedorazilé vozidlo, je to držené okno.
+//
+// Dokud se nedorazilá vozidla ze statistik vyřazovala, nebylo to vidět;
+// po rozhodnutí z 29. 10. 2026 začala tahle čísla kazit no-show —
+// CS2 vycházelo 17 % místo skutečných 6 %.
+//
+// Pravidlo se neváže na názvy ramp, ale na chování: rampa, kde se
+// opakované rezervace prakticky neodbavují. Na CS1 jsou opakované
+// rezervace běžně plněné (nedorazí 1–5 %), takže se jich to netýká.
+// Jakmile sklad začne vratky odbavovat, podíl klesne pod práh a řádky
+// se do statistik vrátí samy.
+// Rozhodnutí Jany 30. 10. 2026: v Google Sheetu zůstávají, do dashboardu
+// se nezapočítávají nikam.
+// ============================================================
+const BLOK_PRAH = 0.8;    // podíl nedorazilých z opakovaných na rampě
+const BLOK_MIN  = 10;     // kolik opakovaných musí rampa mít, aby se posuzovala
+let BLOKOVANE = [];       // vyřazené řádky — k vypsání v záložce s chybami
+
+function bezBlokovanychSlotu(rows){
+  const naRampe = {};
+  rows.forEach(o=>{
+    if (o.r[C.opak] !== 'Ano') return;
+    const k = o.sklad + '|' + (o.rampa || '');
+    const x = naRampe[k] || (naRampe[k] = {op:0, ns:0});
+    x.op++; if (o.nedorazil) x.ns++;
+  });
+  const blokove = {};
+  Object.keys(naRampe).forEach(k=>{
+    const x = naRampe[k];
+    if (x.op >= BLOK_MIN && x.ns / x.op >= BLOK_PRAH) blokove[k] = true;
+  });
+  BLOKOVANE = [];
+  const zbytek = rows.filter(o=>{
+    const jeBlok = o.nedorazil && o.r[C.opak] === 'Ano'
+                && blokove[o.sklad + '|' + (o.rampa || '')];
+    if (jeBlok) BLOKOVANE.push(o);
+    return !jeBlok;
+  });
+  if (BLOKOVANE.length) {
+    console.info('Blokované sloty vyřazeny z dashboardu: ' + BLOKOVANE.length
+      + ' rezervací na rampách ' + Object.keys(blokove).join(', '));
+  }
+  return zbytek;
 }
 
 async function loadAll(){
