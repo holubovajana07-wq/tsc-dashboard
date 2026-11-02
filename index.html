@@ -639,7 +639,7 @@ tr:hover td{background:#fafaf7}
         <div class="card"><h3>Odjelo m3 — Úžice vs Prostějov</h3><div class="card-desc">Skutečně naložený objem po měsících.</div><div class="cbox" style="height:220px"><canvas id="c-m3-sklady"></canvas></div></div>
       </div>
       <div class="grid2">
-        <div class="card"><h3>Zbytkové — TOP pobočky</h3><div class="card-desc">Pobočky s nejvyšším zbytkovým objemem.</div><div class="cbox" style="height:260px"><canvas id="c-m3-zbytky"></canvas></div></div>
+        <div class="card"><h3>Zbytkové — TOP 10 poboček</h3><div class="card-desc">Deset poboček s nejvyšším zbytkovým objemem; ostatní v grafu nejsou.</div><div class="cbox" style="height:260px"><canvas id="c-m3-zbytky"></canvas></div></div>
         <div class="card"><h3>Průměr m3 dle dne v týdnu</h3><div class="card-desc">Průměrný objem nakládky na řádek záznamu a den.</div><div class="cbox" style="height:260px"><canvas id="c-m3-dny"></canvas></div></div>
       </div>
       <div class="card"><h3>Detail po pobočkách — TOP 20</h3><div class="card-desc">Podle odjelo m3. Červeně = více než 20 % zbytkového. % zbytkové = zbytkové / (odjelo + zbytkové).</div>
@@ -791,6 +791,15 @@ function hhmm(t){ if(t==null) return '—'; const m=((t%1440)+1440)%1440; return
 function hourOf(t){ return Math.floor((((t%1440)+1440)%1440)/60); }
 function metric(cls,lbl,val,sub){return `<div class="metric ${cls}"><div class="lbl">${lbl}</div><div class="val">${val}</div>${sub?`<div class="sub">${sub}</div>`:''}</div>`;}
 function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+// Ořez tabulky musí být vidět V TABULCE — ne v hlavičce karty, kterou nikdo
+// nečte, a hlavně ne nikde. Tichý ořez je nejtišší způsob, jak ukázat špatné
+// číslo: tabulka vypadá kompletně a není. Proto jeden společný řádek na konec
+// každého seznamu, který se někde ustřihl.
+function orezRadek(celkem, zobrazeno, sloupcu, co, duvod){
+  return celkem > zobrazeno
+    ? `<tr><td colspan="${sloupcu}" style="color:#888;font-style:italic;text-align:center;white-space:normal">Zobrazeno ${fmtN(zobrazeno)} z ${fmtN(celkem)} ${co} — ${duvod || 'zbytek se sem nevejde, zužte filtr nahoře.'}</td></tr>`
+    : '';
+}
 
 // ============================================================
 // DEFINICE (jediné místo, kde se rozhoduje o dochvilnosti a okně)
@@ -1384,13 +1393,16 @@ function rDopravci(){
     metric(bzNeznamy>bz.length/2?'warn':'','Bez názvu dopravce', fmtN(bzNeznamy), bz.length?pct(bzNeznamy,bz.length)+' % z nich':'') +
     metric('info','Pojmenovaných dopravců', fmtN(bzZnamy.length), 'dá se u nich zjistit, kdo přijel') +
     metric('','Nejčastější z pojmenovaných', bzZnamy[0]?esc(bzZnamy[0].name.substring(0,22)):'—', bzZnamy[0]?bzZnamy[0].n+'×':'');
-  $('dop-bez').innerHTML = bzBy.slice(0,25).map(c=>
+  $('dop-bez').innerHTML = (bzBy.slice(0,25).map(c=>
       `<tr><td title="${esc(c.name)}">${esc(c.name.substring(0,40))}</td><td>${fmtN(c.n)}</td><td>${esc(c.sk)}</td></tr>`).join('')
-    || '<tr><td colspan="3" class="empty">Žádná vozidla bez rezervace</td></tr>';
+    + orezRadek(bzBy.length, 25, 4, 'dopravců'))
+    || '<tr><td colspan="4" class="empty">Žádná vozidla bez rezervace</td></tr>';
 
   // --- 7. žebříček ---
   const zeb = carrierRows(d).filter(c=>c.ev>=5 && !BEZ_JMENA(c.name)).sort((a,b)=>a.pctLate-b.pctLate);
-  $('dop-zebricek').innerHTML = rankHtml(zeb.slice(0,15));
+  $('dop-zebricek').innerHTML = rankHtml(zeb.slice(0,15))
+    + (zeb.length > 15 ? `<div style="color:#888;font-size:11px;font-style:italic;padding:8px 0 0">Zobrazeno 15 z ${fmtN(zeb.length)} dopravců s aspoň 5 hodnocenými příjezdy.</div>` : '')
+    + (zeb.length ? `<div style="color:#888;font-size:11px;padding:4px 0 0">Do žebříčku se počítají jen dopravci s <strong>aspoň 5 hodnocenými příjezdy</strong>; bez toho by nahoře skončil kdokoli s jednou jízdou.</div>` : '');
   const top = zeb.slice(0,10);
   mk('c-dop-zebricek', {type:'bar', data:{labels:top.map(c=>c.name.substring(0,16)), datasets:[
       {label:'Včas',  data:top.map(c=>100-c.pctLate), backgroundColor:'#639922'},
@@ -1565,7 +1577,8 @@ function rLogistik(){
       <td title="${esc(o.dopravce)}">${esc(o.dopravce.substring(0,24))||'—'}</td><td>${esc(o.typ)||'—'}</td>
       <td>${e ? hhmm(e.t)+' <span style="color:#888;font-size:11px">('+(e.m>0?'+':'')+e.m+' min, z '+e.n+' jízd)</span>'
                 : '<span style="color:#ccc">málo historie</span>'}</td></tr>`;
-  }).join('') || '<tr><td colspan="8" class="empty">Nic naplánovaného</td></tr>';
+  }).join('') + orezRadek(budouc.length, 40, 9, 'naplánovaných rezervací')
+    || '<tr><td colspan="9" class="empty">Nic naplánovaného</td></tr>';
 
   // --- 3. dodržení okna a příčiny ---
   const pookne = d.filter(o=>o.win==='over');
@@ -1655,7 +1668,8 @@ function rLogistik(){
       <td title="${esc(o.dopravce)}">${esc(o.dopravce.substring(0,20))||'—'}</td><td>${esc(o.typ)||'—'}</td>
       <td>${hhmm(o.zah)}</td><td>${hhmm(o.dok)}</td>
       <td style="font-weight:600;color:#A32D2D">${o.proc} min</td></tr>`).join('')
-    || '<tr><td colspan="9" class="empty">Žádné odbavení pod 5 minut 👍</td></tr>';
+    + orezRadek(pod5.length, 40, 10, 'odbavení pod 5 minut')
+    || '<tr><td colspan="10" class="empty">Žádné odbavení pod 5 minut 👍</td></tr>';
 
   // --- 5. nevyplněná data ---
   $('nevypl-count').textContent = `(${fmtN(nevyp.length)} záznamů)`;
@@ -2046,20 +2060,25 @@ function rAnalyza(){
   const pookne = d.filter(o=>o.win==='over');
   $('an-okno-desc').innerHTML = `Hodnoceno <strong>${fmtN(w.eval)} z ${fmtN(d.length)}</strong> rezervací (${pct(w.eval,d.length)} %);
     zbytek přijel později než plán + 5 min nebo nemá časy. Příčiny podle <em>10_doprava/tsc/odbaveni-priciny</em> —
-    jednotlivé případy a časová osa rampy jsou v Logistiku CS.`;
+    jednotlivé případy a časová osa rampy jsou v Logistiku CS.
+    V tabulce jsou jen rampy s <strong>aspoň 10 hodnocenými příjezdy</strong> — z pěti příjezdů vyjde 80 % nebo 100 % a nic to neříká.`;
   const skupRampy = groupBy(d.filter(o=>o.rampa), o=>o.sklad+'|'+o.rampa);
   const radky = Object.keys(skupRampy).map(key=>{
     const [sk,name] = key.split('|'), rs = skupRampy[key], ww = winStats(rs);
     const poc = {}; rs.filter(o=>o.win==='over').forEach(o=>{ const k = urciPricinu(o).k; poc[k]=(poc[k]||0)+1; });
     const nej = Object.keys(poc).sort((a,b)=>poc[b]-poc[a])[0];
     return {sk, name, ev:ww.eval, ok:ww.ok, over:ww.over, pct:ww.pct, nej, nejN:nej?poc[nej]:0};
-  }).filter(r=>r.ev >= 10).sort((a,b)=>(a.pct==null?101:a.pct)-(b.pct==null?101:b.pct));
-  $('an-okno').innerHTML = radky.map(r=>`<tr>
+  });
+  const rampCelkem = radky.length;
+  const rampMalo = radky.filter(r=>r.ev < 10).length;
+  const radkyZobr = radky.filter(r=>r.ev >= 10).sort((a,b)=>(a.pct==null?101:a.pct)-(b.pct==null?101:b.pct));
+  $('an-okno').innerHTML = radkyZobr.map(r=>`<tr>
       <td><strong>${esc(r.name)}</strong> <span style="color:#888">${SK[r.sk]||r.sk}</span></td>
       <td>${fmtN(r.ev)}</td>
       <td><span class="a-chip ${r.pct>=90?'a-ok':(r.pct>=75?'a-warn':'a-bad')}">${r.pct} %</span></td>
       <td>${fmtN(r.over)}</td>
       <td>${r.nej ? '<i style="display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;background:'+PRICINA[r.nej].c+'"></i>'+PRICINA[r.nej].t+' <span style="color:#888">('+r.nejN+')</span>' : '—'}</td></tr>`).join('')
+    + orezRadek(rampCelkem, rampCelkem - rampMalo, 5, 'ramp', 'zbylé mají méně než 10 hodnocených příjezdů, takže by jejich procento nic neznamenalo.')
     || '<tr><td colspan="5" class="empty">Žádná rampa s aspoň 10 hodnocenými příjezdy</td></tr>';
   const KOSE_PRE = [[5,15],[15,30],[30,60],[60,1e9]];
   mk('c-an-prekroceni', {type:'bar', data:{labels:KOSE_PRE.map(([a,b])=>b>1e8?'> 60 min':a+'–'+b+' min'), datasets:[{
@@ -2080,12 +2099,14 @@ function rAnalyza(){
     aMetric('warn','P80', (()=>{const v=p80(zpoz.map(x=>x.cek)); return v!=null?Math.round(v)+' <small>min</small>':'—';})(), 'čtyři z pěti čekají míň') +
     aMetric('bad','Nad 2 hodiny', fmtN(zpoz.filter(x=>x.cek>120).length), 'vozidel');
   const zpozRampa = groupBy(zpoz.filter(x=>x.o.rampa), x=>x.o.sklad+'|'+x.o.rampa);
-  $('an-zpozdene').innerHTML = Object.keys(zpozRampa).map(key=>{
+  const zpozVse = Object.keys(zpozRampa).map(key=>{
       const [sk,name] = key.split('|'), v = zpozRampa[key].map(x=>x.cek);
-      return {sk, name, n:v.length, m:med(v), p:p80(v)}; })
-    .filter(r=>r.n >= 5).sort((a,b)=>b.m-a.m)
+      return {sk, name, n:v.length, m:med(v), p:p80(v)}; });
+  const zpozZobr = zpozVse.filter(r=>r.n >= 5).sort((a,b)=>b.m-a.m);
+  $('an-zpozdene').innerHTML = zpozZobr
     .map(r=>`<tr><td>${SK[r.sk]||r.sk}</td><td><strong>${esc(r.name)}</strong></td><td>${fmtN(r.n)}</td>
       <td style="font-weight:600">${mm(r.m)}</td><td style="color:#888">${mm(r.p)}</td></tr>`).join('')
+    + orezRadek(zpozVse.length, zpozZobr.length, 5, 'ramp', 'zbylé mají méně než 5 zpožděných vozidel, medián z nich neřekne nic.')
     || '<tr><td colspan="5" class="empty">Žádná rampa s aspoň 5 zpožděnými vozidly</td></tr>';
 
   // --- 10. palety / skladba objemu ---
@@ -2165,9 +2186,9 @@ function rAnalyza(){
     const dnu = dnyRampy[key] ? dnyRampy[key].size : 0;
     const dost = maProvoz ? dostupneMin(key, name) : null;
     return {sk, name, n:rs.length, load:rs.filter(o=>o.isLoad).length, unl:rs.filter(o=>o.isUnload).length,
-      dochv:s.ev?pct(s.punct,s.ev):null, med:med(procs),
+      dochv:s.ev?pct(s.punct,s.ev):null, dochvN:s.ev, med:med(procs), medN:procs.length,
       a:procs.filter(x=>x<15).length, b:procs.filter(x=>x>=15&&x<=30).length, c:procs.filter(x=>x>30).length,
-      w:ww.eval?ww.pct:null, obs:dnu?Math.round((obsRampy[key]||0)/dnu):null,
+      w:ww.eval?ww.pct:null, wN:ww.eval, obs:dnu?Math.round((obsRampy[key]||0)/dnu):null,
       util:dost ? Math.round(100*(obsRampy[key]||0)/dost) : null};
   }).sort((a,b)=>b.n-a.n);
   const sUtil = ramps.filter(r=>r.util != null);
@@ -2197,9 +2218,9 @@ function rAnalyza(){
     aMetric('','Medián zpracování', mm(med(d.map(o=>o.proc))), 'přes všechny rampy');
   $('ramp-table').innerHTML = ramps.map(r=>`<tr><td><strong>${esc(r.name)}</strong></td><td>${SK[r.sk]||r.sk}</td>
     <td>${fmtN(r.n)}</td><td>${fmtN(r.load)}</td><td>${fmtN(r.unl)}</td>
-    <td>${r.dochv!=null?'<span class="a-chip '+(r.dochv>=80?'a-ok':(r.dochv>=60?'a-warn':'a-bad'))+'">'+r.dochv+' %</span>':'—'}</td>
-    <td style="text-align:center">${mm(r.med)}</td><td>${fmtN(r.a)}</td><td>${fmtN(r.b)}</td><td>${fmtN(r.c)}</td>
-    <td>${r.w!=null?r.w+' %':'—'}</td>
+    <td>${r.dochv!=null?'<span class="a-chip '+(r.dochv>=80?'a-ok':(r.dochv>=60?'a-warn':'a-bad'))+'">'+r.dochv+' %</span> <span style="color:#888;font-size:11px">z '+fmtN(r.dochvN)+'</span>':'—'}</td>
+    <td style="text-align:center">${mm(r.med)} <span style="color:#888;font-size:11px">z ${fmtN(r.medN)}</span></td><td>${fmtN(r.a)}</td><td>${fmtN(r.b)}</td><td>${fmtN(r.c)}</td>
+    <td>${r.w!=null?r.w+' % <span style="color:#888;font-size:11px">z '+fmtN(r.wN)+'</span>':'—'}</td>
     <td style="font-weight:600">${r.util!=null
         ? r.util+' % <span style="color:#888;font-size:11px;font-weight:400">'+r.obs+' min/den</span>'
         : (r.obs!=null ? r.obs+' min/den' : '—')}</td></tr>`).join('')
@@ -2231,7 +2252,9 @@ function anDetail(d){
     return {k, n:rs.length, ontime:s.ev?pct(s.punct,s.ev):null, pozde:rs.filter(o=>o.state==='late').length,
             nd:rs.filter(o=>o.nedorazil).length, mdiff:med(rs.filter(o=>!o.bez).map(o=>o.diff)),
             mproc:med(rs.map(o=>o.proc)), w:ww.eval?ww.pct:null};
-  }).sort((a,b)=>b.n-a.n).slice(0,40);
+  }).sort((a,b)=>b.n-a.n);
+  const skupinCelkem = radky.length;
+  radky.length = Math.min(radky.length, 40);
 
   $('an-det-sum').innerHTML = radky.map(r=>`<tr class="${AN_ROZ===r.k?'a-sel':''}" onclick="anRoz(${JSON.stringify(r.k).replace(/"/g,'&quot;')})" style="cursor:pointer">
       <td><strong>${esc(r.k)}</strong></td><td>${fmtN(r.n)}</td>
@@ -2239,6 +2262,7 @@ function anDetail(d){
       <td>${fmtN(r.pozde)}</td><td>${r.nd?fmtN(r.nd):'—'}</td>
       <td>${r.mdiff!=null?(r.mdiff>0?'+':'')+Math.round(r.mdiff)+' min':'—'}</td>
       <td>${mm(r.mproc)}</td><td>${r.w!=null?r.w+' %':'—'}</td></tr>`).join('')
+    + orezRadek(skupinCelkem, radky.length, 8, 'skupin')
     || '<tr><td colspan="8" class="empty">Za vybraný výřez nejsou žádné rezervace</td></tr>';
 
   if (!AN_ROZ || !sk[AN_ROZ]){ $('an-det-rozpad').innerHTML = ''; return; }
@@ -2523,9 +2547,12 @@ function rM3(){
   const dMap={0:6,1:0,2:1,3:2,4:3,5:4,6:5}; const s93d=new Array(7).fill(0), s95d=new Array(7).fill(0), c93=new Array(7).fill(0), c95=new Array(7).fill(0);
   pobAll.forEach(r=>{ const dt=pdM3(r[M3.datum]); if(!dt) return; const di=dMap[new Date(dt+'T12:00:00').getDay()]; const m=m3num(r[M3.odjeloCelkem]); if(r[M3.sklad]==='093'){s93d[di]+=m;c93[di]++;}else{s95d[di]+=m;c95[di]++;} });
   mk('c-m3-dny', {type:'bar', data:{labels:DNY, datasets:[{label:'CS1 Prostějov',data:s93d.map((v,i)=>c93[i]?Math.round(v/c93[i]):0),backgroundColor:'#7F77DD'},{label:'CS1 Úžice',data:s95d.map((v,i)=>c95[i]?Math.round(v/c95[i]):0),backgroundColor:'#1D9E75'}]}, options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>v+' m3'}}}}});
-  const pobocky = Object.entries(byPob).map(([kod,rs])=>({kod,sklad:rs[0][M3.sklad],n:rs.length,vstup:sm(rs,M3.celkemVstupM3),odjelo:sm(rs,M3.odjeloCelkem),zb:sm(rs,M3.zbytkove),prev:sm(rs,M3.prevoz),zr:rs.filter(r=>r[M3.zruseno]==='ZRUŠENO'||r[M3.zruseno]==='X').length})).sort((a,b)=>b.odjelo-a.odjelo).slice(0,20);
+  const pobockyVse = Object.entries(byPob).map(([kod,rs])=>({kod,sklad:rs[0][M3.sklad],n:rs.length,vstup:sm(rs,M3.celkemVstupM3),odjelo:sm(rs,M3.odjeloCelkem),zb:sm(rs,M3.zbytkove),prev:sm(rs,M3.prevoz),zr:rs.filter(r=>r[M3.zruseno]==='ZRUŠENO'||r[M3.zruseno]==='X').length})).sort((a,b)=>b.odjelo-a.odjelo);
+  const pobocky = pobockyVse.slice(0,20);
   $('m3-table').innerHTML = pobocky.map(p=>{ const pz=pP(p.zb,p.odjelo+p.zb); const col=pz>20?'#A32D2D':(pz>10?'#BA7517':'inherit');
-    return `<tr><td><strong>${esc(p.kod)}</strong></td><td>${SK[p.sklad]||p.sklad}</td><td style="text-align:center">${p.n}</td><td style="text-align:right">${R(p.vstup)}</td><td style="text-align:right">${R(p.odjelo)}</td><td style="text-align:right;color:${col}">${R(p.zb)}</td><td style="text-align:center;color:${col};font-weight:500">${pz}%</td><td style="text-align:right">${R(p.prev)}</td><td style="text-align:center">${p.zr}</td></tr>`; }).join('') || '<tr><td colspan="9" class="empty">Žádná data</td></tr>';
+    return `<tr><td><strong>${esc(p.kod)}</strong></td><td>${SK[p.sklad]||p.sklad}</td><td style="text-align:center">${p.n}</td><td style="text-align:right">${R(p.vstup)}</td><td style="text-align:right">${R(p.odjelo)}</td><td style="text-align:right;color:${col}">${R(p.zb)}</td><td style="text-align:center;color:${col};font-weight:500">${pz}%</td><td style="text-align:right">${R(p.prev)}</td><td style="text-align:center">${p.zr}</td></tr>`; }).join('')
+    + orezRadek(pobockyVse.length, pobocky.length, 9, 'poboček', 'řadí se podle odjetých m3.')
+    || '<tr><td colspan="9" class="empty">Žádná data</td></tr>';
   // TSC rezervace za STEJNÉ období a sklad jako m3 řádky vedle nich.
   // Schválně se nebere `filtered`: ten navíc filtruje typ akce, skupinu
   // dopravy a den v týdnu, které m3 tabulka nemá — sloupce by se pak
@@ -2566,12 +2593,14 @@ function rM3(){
     <strong>U těch poboček proto vyjde méně vozidel, než ve skutečnosti přijelo.</strong><br>
     Vykládky se do tabulky nepočítají — je to opačný směr: příjem od dodavatele, nebo vratka z pobočky.
     Kód pobočky jich nese ${fmtN(vykSKodem)} a k závozům se nepřičítají.`;
-  $('m3-tsctable').innerHTML = pobocky.slice(0,15).map(p=>{ const tr = tscBy[p.kod] || tscBy['P'+p.kod] || []; const pz=pP(p.zb,p.odjelo+p.zb); const col=pz>20?'#A32D2D':(pz>10?'#BA7517':'inherit');
+  $('m3-tsctable').innerHTML = pobocky.slice(0,20).map(p=>{ const tr = tscBy[p.kod] || tscBy['P'+p.kod] || []; const pz=pP(p.zb,p.odjelo+p.zb); const col=pz>20?'#A32D2D':(pz>10?'#BA7517':'inherit');
     const pomer = p.n ? (tr.length / p.n) : null;
     return `<tr><td><strong>${esc(p.kod)}</strong></td><td>${SK[p.sklad]||p.sklad}</td><td style="text-align:center">${p.n}</td>
       <td style="text-align:center;color:${tr.length?'inherit':'#aaa'}">${tr.length||'—'}</td>
       <td style="text-align:center;color:#888">${pomer?pomer.toFixed(1).replace('.',','):'—'}</td>
-      <td style="text-align:right">${R(p.odjelo)}</td><td style="text-align:right;color:${col}">${R(p.zb)}</td><td style="text-align:center;color:${col};font-weight:500">${pz}%</td></tr>`; }).join('') || '<tr><td colspan="8" class="empty">Žádná data</td></tr>';
+      <td style="text-align:right">${R(p.odjelo)}</td><td style="text-align:right;color:${col}">${R(p.zb)}</td><td style="text-align:center;color:${col};font-weight:500">${pz}%</td></tr>`; }).join('')
+    + orezRadek(pobockyVse.length, pobocky.length, 8, 'poboček', 'řadí se podle odjetých m3.')
+    || '<tr><td colspan="8" class="empty">Žádná data</td></tr>';
 }
 
 // ============================================================
