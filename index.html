@@ -469,7 +469,8 @@ tr:hover td{background:#fafaf7}
             <div class="cbox sm"><canvas id="c-an-akce"></canvas></div></div>
           <div class="a-card"><h3>Rezervace a účast</h3>
             <div class="desc">Nedorazilo a vozidla bez rezervace <strong>zůstávají v datech</strong> (rozhodnutí 27. 10. 2026), ale do časových metrik nevstupují — proto má každé procento v dashboardu napsaný svůj jmenovatel.</div>
-            <div class="cbox sm"><canvas id="c-an-ucast"></canvas></div></div>
+            <div class="cbox sm"><canvas id="c-an-ucast"></canvas></div>
+            <div id="an-ucast-cisla" style="font-size:12px;line-height:1.9;margin-top:8px"></div></div>
           <div class="a-card"><h3>Rezervace podle dne v týdnu</h3>
             <div class="desc">Provozní profil skladu. Kliknutím na sloupec se den nastaví do hlavního filtru nahoře.</div>
             <div class="cbox sm"><canvas id="c-an-dny"></canvas></div></div>
@@ -479,15 +480,15 @@ tr:hover td{background:#fafaf7}
       <details class="a-sec" open>
         <summary><h3>Doba odbavení a fáze</h3><span class="n">Kde přesně se čas ztrácí — rozpad na pět úseků od příjezdu po odjezd.</span></summary>
         <div class="a-card"><h3>Pět fází času v areálu</h3>
-          <div class="desc">Mediány úseků podle <em>03_metriky/tsc-dochvilnost</em>, bod 6. <strong>Doba v areálu se počítá od příjezdu dopravce, ne od brány</strong> — starší čísla z dřívějších verzí dashboardu proto nejsou srovnatelná. Vadné řádky se nepočítají.<br><strong>Fázi 1 nečti podle mediánu.</strong> Značka „Na parkovišti" se kliká prakticky u brány (62 % vozidel do 2 minut), takže medián vychází kolem nuly. Smysl dává až podíl dlouhých čekání, který je vedle.</div>
+          <div class="desc">Úseky podle <em>03_metriky/tsc-dochvilnost</em>, bod 6. <strong>Doba v areálu se počítá od příjezdu dopravce, ne od brány</strong> — starší čísla z dřívějších verzí dashboardu proto nejsou srovnatelná. Vadné řádky se nepočítají.<br><strong>Graf skládá průměry, ne mediány.</strong> Mediány se nesčítají — součet mediánů fází dává zhruba polovinu skutečné doby v areálu, takže skládaný sloupec z nich je matematicky nesmysl. Průměry se sčítají přesně, proto sloupec v grafu sedí na průměrnou dobu v areálu. V tabulce je obojí vedle sebe: medián říká, jak to vypadá u běžného auta, průměr kolik času to sebere celkem.<br><strong>Fázi 1 nečti podle mediánu.</strong> Značka „Na parkovišti" se kliká prakticky u brány (62 % vozidel do 2 minut), takže medián vychází kolem nuly, ale průměr je výrazně vyšší — dlouhá čekání jsou vzácná a zato velká.</div>
           <div class="a-grid a-g2">
             <div class="cbox"><canvas id="c-an-faze"></canvas></div>
-            <div><div class="a-tw"><table><thead><tr><th>Úsek</th><th>Celkem</th><th>Nakládka</th><th>Vykládka</th><th>Měřeno</th><th>Nad 30 min</th></tr></thead><tbody id="an-faze"></tbody></table></div></div>
+            <div><div class="a-tw"><table><thead><tr><th>Úsek</th><th>Medián</th><th>Průměr</th><th>⌀ Nakládka</th><th>⌀ Vykládka</th><th>Měřeno</th><th>Nad 30 min</th></tr></thead><tbody id="an-faze"></tbody></table></div></div>
           </div></div>
 
         <div class="a-grid a-g2">
           <div class="a-card"><h3>Rozpad doby v areálu dle střediska</h3>
-            <div class="desc">Stejné čtyři úseky, ale po skladech. Ukazuje, že každý sklad má provoz uspořádaný jinak — čísla mezi sklady se proto nedají brát jako výkon.</div>
+            <div class="desc">Stejné čtyři úseky v <strong>průměrných minutách</strong>, ale po skladech — ze stejného důvodu jako v grafu vedle. Ukazuje, že každý sklad má provoz uspořádaný jinak — čísla mezi sklady se proto nedají brát jako výkon.</div>
             <div class="cbox"><canvas id="c-an-dwell"></canvas></div></div>
           <div class="a-card"><h3>Vývoj doby v areálu (medián)</h3>
             <div class="desc" id="an-trend-dwell-desc"></div>
@@ -499,7 +500,7 @@ tr:hover td{background:#fafaf7}
             <div class="desc">Zahájení → dokončení, podle hodiny zahájení.</div>
             <div class="cbox sm"><canvas id="c-odb-hodina"></canvas></div></div>
           <div class="a-card"><h3>Doba zpracování — distribuce</h3>
-            <div class="desc">Rozložení doby zpracování. Podrobněji, včetně seznamu podezřelých krátkých záznamů, v Logistiku CS.</div>
+            <div class="desc">Rozložení doby zpracování. Podrobněji, včetně seznamu podezřelých krátkých záznamů, v Logistiku CS.<br><strong>Koše nejsou stejně široké</strong> — první má 4 minuty, poslední je otevřený. Sloupce jsou stejně široké jen opticky, srovnávej jejich výšku, ne plochu.</div>
             <div class="cbox sm"><canvas id="c-odb-dist"></canvas></div></div>
         </div>
       </details>
@@ -1119,24 +1120,32 @@ function rPrehled(){
     // 03_metriky/tsc-dochvilnost, M5 — bez něj si to každý přečte jinak.
     metric('ok','Nepřijel pozdě', s.ev?pct(s.punct,s.ev)+' %':'—',
            'do plánu + 5 min · z '+fmtN(s.ev)+' hodnocených') +
+    // Zelená/oranžová na 80 % je PRACOVNÍ práh, ne dohodnutý cíl — v
+    // 03_metriky/tsc-dochvilnost žádný cíl zatím není. Dokud není, musí to
+    // u čísla být napsané, jinak barva tvrdí něco, co nikdo neschválil.
     metric(w.eval && w.pct>=80 ? 'ok':'warn','Odbaveno v okně', w.eval?w.pct+' %':'—',
-           'hodnoceno '+fmtN(w.eval)+' z '+fmtN(s.n)+' rezervací') +
+           'hodnoceno '+fmtN(w.eval)+' z '+fmtN(s.n)+' rezervací · barva dle pracovního prahu 80 %') +
     metric('','Medián odchylky', med_==null?'—':(med_>0?'+':'')+Math.round(med_)+' min','záporně = přijel dřív') +
     metric(s.bez?'danger':'','Bez rezervace', fmtN(s.bez), s.n?pct(s.bez,s.n)+' % z celku':'');
 
   // --- 2. dochvilnost v čase ---
   const g = granularita(d);
-  $('pre-trend-desc').textContent = 'Příjezd dopravce včas a naše odbavení v okně, ' + GRAN_POPIS[g] + '.';
   const byO = groupBy(d.filter(o=>o.date), o=>obdobiKlic(o.date, g));
-  const klice = Object.keys(byO).sort();
-  const dochv = klice.map(k=>{ const st = stats(byO[k]); return st.ev ? pct(st.punct, st.ev) : null; });
-  const vOkne = klice.map(k=>{ const ww = winStats(byO[k]); return ww.eval ? ww.pct : null; });
+  // Nedoběhlý poslední koš se vynechává (stejné pravidlo jako v Analýze CS):
+  // jeden den proti pětidennímu týdnu udělá v křivce skok, který není provoz.
+  const uO = anOsaUplna(Object.keys(byO).sort(), byO);
+  const klice = uO.osa;
+  $('pre-trend-desc').textContent = 'Příjezd dopravce včas a naše odbavení v okně, ' + GRAN_POPIS[g] + '.'
+    + (uO.orez ? ' Poslední období ještě neskončilo, proto se nekreslí.' : '')
+    + ' Bod, za kterým stojí méně než ' + AN_MIN_BOD + ' hodnocených, se vynechává.';
+  const dochv = klice.map(k=>{ const st = stats(byO[k]); return st.ev >= AN_MIN_BOD ? pct(st.punct, st.ev) : null; });
+  const vOkne = klice.map(k=>{ const ww = winStats(byO[k]); return ww.eval >= AN_MIN_BOD ? ww.pct : null; });
   mk('c-trend', {type:'line', data:{labels:klice.map(k=>obdobiPopis(k,g)), datasets:[
       {label:'Dochvilnost příjezdu',data:dochv,borderColor:'#378ADD',backgroundColor:'transparent',tension:.3,spanGaps:true,pointRadius:3},
       {label:'Odbaveno v okně',data:vOkne,borderColor:'#639922',backgroundColor:'transparent',tension:.3,spanGaps:true,pointRadius:3}]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},
       tooltip:{callbacks:{label:c=>c.dataset.label+': '+(c.raw==null?'—':c.raw+' %')}}},
-      scales:{x:{ticks:{autoSkip:true,maxTicksLimit:14,font:{size:9}}},y:{max:100,ticks:{callback:v=>v+'%'}}}}});
+      scales:{x:{ticks:{autoSkip:true,maxTicksLimit:14,font:{size:9}}},y:{min:0,max:100,ticks:{callback:v=>v+'%'}}}}});
 
   // --- 3. rozpad odchylky do 12 pásem ---
   const pc = pasmaCounts(d);
@@ -1338,32 +1347,38 @@ function rDopravci(){
         ${g.jine ? '<br>+ '+fmtN(g.jine.length)+' jízd objednaných dodavatelem (mimo plnění smlouvy)' : ''}</div></div>`;
   }).join('');
 
+  const poctySkup = skupiny.map(g=>pasmaCounts(g.rows));
   mk('c-dop-pasma', {type:'bar', data:{labels:PASMA, datasets:skupiny.map((g,i)=>{
-      const c = pasmaCounts(g.rows), celk = c.reduce((a,b)=>a+b,0) || 1;
+      const c = poctySkup[i], celk = c.reduce((a,b)=>a+b,0) || 1;
       return {label:g.nazev, data:c.map(x=>Math.round(1000*x/celk)/10),
               backgroundColor:['#185FA5','#1D9E75','#EF9F27'][i], borderRadius:2};
     })},
     options:{responsive:true,maintainAspectRatio:false,
       plugins:{legend:{position:'bottom',labels:{font:{size:11},boxWidth:12}},
-        tooltip:{callbacks:{label:c=>c.dataset.label+': '+c.raw+' % příjezdů'}}},
-      scales:{x:{ticks:{font:{size:9},maxRotation:60,minRotation:45}},y:{ticks:{callback:v=>v+'%'}}}}});
+        tooltip:{callbacks:{label:c=>{ const r = poctySkup[c.datasetIndex];
+          return c.dataset.label+': '+c.raw+' % — '+fmtN(r[c.dataIndex])+' z '+fmtN(r.reduce((a,b)=>a+b,0))+' příjezdů'; }}}},
+      scales:{x:{ticks:{font:{size:9},maxRotation:60,minRotation:45}},
+              y:{min:0,suggestedMax:60,ticks:{callback:v=>v+'%'}}}}});
 
   // --- 3. dochvilnost v čase ---
   const g = granularita(d);
-  $('dop-trend-desc').textContent = 'Podíl včasných příjezdů ' + GRAN_POPIS[g]
-    + '. Prázdné místo v křivce znamená, že skupina v tom období neměla hodnocený příjezd.';
   const rady = skupiny.concat([{nazev:'Dodavatelská doprava', rows:dod}]);
-  const klice = [...new Set(d.filter(o=>o.date).map(o=>obdobiKlic(o.date, g)))].sort();
+  const byVse = groupBy(d.filter(o=>o.date), o=>obdobiKlic(o.date, g));
+  const uD = anOsaUplna(Object.keys(byVse).sort(), byVse);
+  const klice = uD.osa;
+  $('dop-trend-desc').textContent = 'Podíl včasných příjezdů ' + GRAN_POPIS[g]
+    + '. Prázdné místo v křivce znamená, že skupina v tom období neměla aspoň ' + AN_MIN_BOD + ' hodnocených příjezdů.'
+    + (uD.orez ? ' Poslední období ještě neskončilo, proto se nekreslí.' : '');
   mk('c-dop-trend', {type:'line', data:{labels:klice.map(k=>obdobiPopis(k,g)), datasets:rady.map((r,i)=>{
       const by = groupBy(r.rows.filter(o=>o.date), o=>obdobiKlic(o.date, g));
       return {label:r.nazev, borderColor:['#185FA5','#1D9E75','#EF9F27','#8A6FB0'][i],
               backgroundColor:'transparent', tension:.3, spanGaps:true, pointRadius:2,
-              data:klice.map(k=>{ const st = by[k] ? stats(by[k]) : null; return st && st.ev ? pct(st.punct, st.ev) : null; })};
+              data:klice.map(k=>{ const st = by[k] ? stats(by[k]) : null; return st && st.ev >= AN_MIN_BOD ? pct(st.punct, st.ev) : null; })};
     })},
     options:{responsive:true,maintainAspectRatio:false,
       plugins:{legend:{position:'bottom',labels:{font:{size:11},boxWidth:12}},
         tooltip:{callbacks:{label:c=>c.dataset.label+': '+(c.raw==null?'—':c.raw+' %')}}},
-      scales:{x:{ticks:{autoSkip:true,maxTicksLimit:14,font:{size:9}}},y:{max:100,ticks:{callback:v=>v+'%'}}}}});
+      scales:{x:{ticks:{autoSkip:true,maxTicksLimit:14,font:{size:9}}},y:{min:0,max:100,ticks:{callback:v=>v+'%'}}}}});
 
   // --- 4. ostatní DEK dopravci ---
   const ost = carrierRows(skupiny[2].rows).filter(c=>c.n>=3 && !BEZ_JMENA(c.name)).sort((a,b)=>b.n-a.n);
@@ -1408,8 +1423,11 @@ function rDopravci(){
       {label:'Včas',  data:top.map(c=>100-c.pctLate), backgroundColor:'#639922'},
       {label:'Pozdě', data:top.map(c=>c.pctLate),     backgroundColor:'#E24B4A'}]},
     options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.dataset.label+': '+c.raw+' %'}}},
-      scales:{x:{stacked:true,max:100,ticks:{callback:v=>v+'%'}},y:{stacked:true,ticks:{font:{size:10}}}}}});
+      plugins:{legend:{display:false},tooltip:{callbacks:{
+        title:c=>top[c[0].dataIndex].name,
+        label:c=>{ const t = top[c.dataIndex];
+          return c.dataset.label+': '+c.raw+' % — '+fmtN(c.datasetIndex ? t.late : t.ev - t.late)+' z '+fmtN(t.ev)+' hodnocených příjezdů'; }}}},
+      scales:{x:{stacked:true,min:0,max:100,ticks:{callback:v=>v+'%'}},y:{stacked:true,ticks:{font:{size:10}}}}}});
 }
 
 // ============================================================
@@ -1589,13 +1607,21 @@ function rLogistik(){
     <em>výklad z časových značek, ne důkaz</em> — ber ji jako podnět k dotazu.`;
   const prepad = pookne.map(o=>({o, p:urciPricinu(o)}));
   const poc = {}; prepad.forEach(x=>{ poc[x.p.k] = (poc[x.p.k]||0) + 1; });
-  const vidPric = PRICINY.filter(p=>poc[p.k]);
-  mk('c-log-pookne', {type:'doughnut', data:{labels:vidPric.map(p=>p.t), datasets:[{
-      data:vidPric.map(p=>poc[p.k]), backgroundColor:vidPric.map(p=>p.c), borderWidth:2, borderColor:'#fff'}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10}}}}});
-  $('log-priciny').innerHTML = PRICINY.map(p=>poc[p.k]
-      ? `<tr><td><span class="ld" style="display:inline-block;background:${p.c};margin-right:6px"></span><strong>${p.t}</strong></td>
-           <td style="color:#888">${p.ci}</td><td>${fmtN(poc[p.k])}</td><td>${pct(poc[p.k], pookne.length)} %</td></tr>` : '')
+  // Vodorovné pruhy, ne výseč: dvě největší příčiny mívají 145 a 140 případů
+  // a ve výseči se nedá poznat, která je větší. Seřazeno od největší, aby
+  // pořadí bylo vidět bez počítání.
+  const vidPric = PRICINY.filter(p=>poc[p.k]).slice().sort((a,b)=>poc[b.k]-poc[a.k]);
+  mk('c-log-pookne', {type:'bar', data:{labels:vidPric.map(p=>p.t), datasets:[{
+      data:vidPric.map(p=>poc[p.k]), backgroundColor:vidPric.map(p=>p.c), borderRadius:3}]},
+    options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',
+      plugins:{legend:{display:false},
+        tooltip:{callbacks:{label:c=>fmtN(c.raw)+' případů · '+pct(c.raw, pookne.length)+' % z ujetých oken'}}},
+      scales:{x:{beginAtZero:true,grid:{color:'#eee'},ticks:{precision:0,font:{size:10}}},
+              y:{grid:{display:false},ticks:{font:{size:10},autoSkip:false}}}}});
+  // Stejné pořadí jako v grafu vedle — jinak se ty dva pohledy nedají přečíst zároveň.
+  $('log-priciny').innerHTML = vidPric.map(p=>
+      `<tr><td><span class="ld" style="display:inline-block;background:${p.c};margin-right:6px"></span><strong>${p.t}</strong></td>
+           <td style="color:#888">${p.ci}</td><td>${fmtN(poc[p.k])}</td><td>${pct(poc[p.k], pookne.length)} %</td></tr>`)
     .join('') || '<tr><td colspan="4" class="empty">Všechno odbaveno v okně 👍</td></tr>';
   $('log-pripady').innerHTML = prepad.slice().sort((a,b)=>(b.o.date||'').localeCompare(a.o.date||'')).slice(0,40).map(x=>{
     const o = x.o, p = PRICINA[x.p.k];
@@ -1888,37 +1914,49 @@ function rAnalyza(){
   const s0 = stats(d);
   $('an-kpi').innerHTML =
     aMetric('neutral','Rezervací', fmtN(d.length), f.cs ? SK[f.cs] : 'všechny sklady') +
+    // Práh 80 % je pracovní, ne dohodnutý cíl — viz poznámka v rPrehled().
     aMetric(s0.ev && pct(s0.punct,s0.ev)>=80 ? 'ok':'warn','Dochvilnost příjezdu',
-            s0.ev ? pct(s0.punct,s0.ev)+' <small>%</small>' : '—', 'z '+fmtN(s0.ev)+' hodnocených příjezdů') +
+            s0.ev ? pct(s0.punct,s0.ev)+' <small>%</small>' : '—',
+            'z '+fmtN(s0.ev)+' hodnocených příjezdů · barva dle pracovního prahu 80 %') +
     aMetric(w.eval && w.pct>=80 ? 'ok':'warn','Odbaveno v okně',
-            w.eval ? w.pct+' <small>%</small>' : '—', 'hodnoceno '+fmtN(w.eval)+' z '+fmtN(d.length)) +
+            w.eval ? w.pct+' <small>%</small>' : '—',
+            'hodnoceno '+fmtN(w.eval)+' z '+fmtN(d.length)+' · pracovní práh 80 %') +
     aMetric('','Medián doby v areálu', medArealu!=null?Math.round(medArealu)+' <small>min</small>':'—', 'příjezd → odjezd');
 
   // --- 2. přesnost časů: příjezd × odjezd, obojí po typu akce ---
-  mk('c-an-pasma-typ', {type:'bar', data:{labels:PASMA, datasets:AN_TYPY.map(([t,test,col])=>{
-      const c = pasmaCounts(d.filter(test)), celk = c.reduce((a,b)=>a+b,0) || 1;
+  // Procento bez počtu se nedá zkontrolovat — 30 % je ze 7 000 vozidel něco
+  // jiného než ze 40. Absolutní číslo i jmenovatel proto patří do tooltipu.
+  const poctyArr = AN_TYPY.map(([,test])=>pasmaCounts(d.filter(test)));
+  mk('c-an-pasma-typ', {type:'bar', data:{labels:PASMA, datasets:AN_TYPY.map(([t,test,col],di)=>{
+      const c = poctyArr[di], celk = c.reduce((a,b)=>a+b,0) || 1;
       return {label:t, data:c.map(x=>Math.round(1000*x/celk)/10),
               backgroundColor:anBarvy(col, PASMA.length, 'arr'), borderRadius:2}; })},
     options:aOpt({
       onClick:(e,el)=>{ if (el.length) anKlik('arr', el[0].index, PASMA[el[0].index]); },
       plugins:{legend:{position:'bottom',labels:{font:{size:11},boxWidth:12}},
-        tooltip:{callbacks:{label:c=>c.dataset.label+': '+c.raw+' % příjezdů'}}},
+        tooltip:{callbacks:{label:c=>{ const r = poctyArr[c.datasetIndex];
+          return c.dataset.label+': '+c.raw+' % — '+fmtN(r[c.dataIndex])+' z '+fmtN(r.reduce((a,b)=>a+b,0))+' příjezdů'; }}}},
+      // Pevná osa 0–60 %: bez ní si Chart.js volí maximum podle nejvyššího
+      // sloupce a stejně vysoký sloupec vypadá u každého skladu jinak
+      // (Prostějov 60, Úžice 45). suggestedMax, ne max — kdyby někdy
+      // nějaké pásmo přes 60 % přeteklo, graf se musí roztáhnout, ne uříznout.
       scales:{x:{grid:{display:false},ticks:{font:{size:9},maxRotation:60,minRotation:45}},
-              y:{grid:{color:'#eee'},ticks:{callback:v=>v+'%',font:{size:10}}}}})});
+              y:{grid:{color:'#eee'},min:0,suggestedMax:60,ticks:{callback:v=>v+'%',font:{size:10}}}}})});
 
   const mericiOdjezd = d.filter(o=>pasmoOdj(o) != null).length;
-  mk('c-an-dep', {type:'bar', data:{labels:PASMA_ODJ, datasets:AN_TYPY.map(([t,test,col])=>{
-      const rs = d.filter(test); const c = new Array(PASMA_ODJ.length).fill(0);
-      rs.forEach(o=>{ const i = pasmoOdj(o); if (i != null) c[i]++; });
-      const celk = c.reduce((a,b)=>a+b,0) || 1;
+  const poctyDep = AN_TYPY.map(([,test])=>{ const c = new Array(PASMA_ODJ.length).fill(0);
+    d.filter(test).forEach(o=>{ const i = pasmoOdj(o); if (i != null) c[i]++; }); return c; });
+  mk('c-an-dep', {type:'bar', data:{labels:PASMA_ODJ, datasets:AN_TYPY.map(([t,test,col],di)=>{
+      const c = poctyDep[di], celk = c.reduce((a,b)=>a+b,0) || 1;
       return {label:t, data:c.map(x=>Math.round(1000*x/celk)/10),
               backgroundColor:anBarvy(col, PASMA_ODJ.length, 'dep'), borderRadius:2}; })},
     options:aOpt({
       onClick:(e,el)=>{ if (el.length) anKlik('dep', el[0].index, PASMA_ODJ[el[0].index]); },
       plugins:{legend:{position:'bottom',labels:{font:{size:11},boxWidth:12}},
-        tooltip:{callbacks:{label:c=>c.dataset.label+': '+c.raw+' % odjezdů'}}},
+        tooltip:{callbacks:{label:c=>{ const r = poctyDep[c.datasetIndex];
+          return c.dataset.label+': '+c.raw+' % — '+fmtN(r[c.dataIndex])+' z '+fmtN(r.reduce((a,b)=>a+b,0))+' odjezdů'; }}}},
       scales:{x:{grid:{display:false},ticks:{font:{size:9},maxRotation:60,minRotation:45}},
-              y:{grid:{color:'#eee'},ticks:{callback:v=>v+'%',font:{size:10}}}}})});
+              y:{grid:{color:'#eee'},min:0,suggestedMax:60,ticks:{callback:v=>v+'%',font:{size:10}}}}})});
   $('an-dep-pozn').innerHTML = `Měřeno u <strong>${fmtN(mericiOdjezd)} z ${fmtN(d.length)}</strong> rezervací
     (${pct(mericiOdjezd, d.length)} %); zbytek nemá vyplněný odjezd nebo je to vadný řádek.
     Kolegyně počítala odjezd včas jako <em>do +15 min</em> po konci slotu, my ±5 jako všude jinde —
@@ -1940,6 +1978,11 @@ function rAnalyza(){
       onClick:(e,el)=>{ if (el.length) anKlik('ucast', el[0].index, AN_UCAST[el[0].index][0]); },
       scales:{}, plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,padding:8}},
         tooltip:{callbacks:{label:c=>c.label+': '+fmtN(c.raw)+' ('+pct(c.raw,d.length)+' % plánu)'}}}})});
+  // Výseč tu má typicky 96/2/2 — ty dva zajímavé díly jsou v ní neviditelné,
+  // takže čísla musí být i textem, jinak karta nic neříká.
+  $('an-ucast-cisla').innerHTML = AN_UCAST.map(([t,,col],i)=>
+    `<div><span style="color:${col}">●</span> ${t}: <strong>${fmtN(ucastData[i])}</strong>
+     <span style="color:#888">(${pct(ucastData[i], d.length)} % z ${fmtN(d.length)} plánovaných)</span></div>`).join('');
 
   mk('c-an-dny', {type:'bar', data:{labels:DNY, datasets:['093','095','096'].map(k=>({
       label:SK[k], backgroundColor:SKCOL[k], borderRadius:2,
@@ -1951,30 +1994,45 @@ function rAnalyza(){
   const FAZE = [['1. Čekání před branou','predBranou','#9aa7b4'],['2. Od brány k zahájení','waitStart','#e8a13a'],
                 ['3. Zpracování','proc','#2f6bb0'],['4. Po zpracování','poZprac','#3c9e5f']];
   const medOf = (rows,k) => med(rows.map(o=>o[k]));
+  // Skládaný sloupec musí sčítat průměry, ne mediány: medián není aditivní,
+  // součet mediánů fází dává 22 min proti skutečné mediánové době 37 min.
+  // Průměry sedí na setinu, proto graf kreslí je a tabulka ukazuje obojí.
+  const avgOf = (rows,k) => { const v = rows.map(o=>o[k]).filter(x=>x!=null); return v.length ? avg(v) : null; };
+  // Průměry musí být ze STEJNÉ množiny řádků, jinak se taky nesečtou: když se
+  // každá fáze počítá ze svých 7 365 / 7 481 / 7 466 / 7 463 vozidel, vyjde
+  // součet 44,8 proti průměrné době v areálu 43,2. Proto se do grafu i do
+  // sloupce Průměr berou jen vozidla, která mají změřené všechny čtyři úseky.
+  const fazeRows = d.filter(o=>o.vArealu != null && FAZE.every(([,k])=>o[k] != null));
   const nad30 = k => { const v = d.filter(o=>o[k]!=null); return v.length ? pct(v.filter(o=>o[k]>30).length, v.length)+' %' : '—'; };
   $('an-faze').innerHTML = FAZE.map(([t,k])=>{
       const mer = d.filter(o=>o[k]!=null).length;
-      return `<tr><td><strong>${t}</strong></td><td>${mm(medOf(d,k))}</td>
-        <td>${mm(medOf(d.filter(o=>o.isLoad),k))}</td><td>${mm(medOf(d.filter(o=>o.isUnload),k))}</td>
+      return `<tr><td><strong>${t}</strong></td><td>${mm(medOf(d,k))}</td><td style="font-weight:600">${mm(avgOf(fazeRows,k))}</td>
+        <td>${mm(avgOf(fazeRows.filter(o=>o.isLoad),k))}</td><td>${mm(avgOf(fazeRows.filter(o=>o.isUnload),k))}</td>
         <td style="color:#888">${fmtN(mer)}</td><td>${nad30(k)}</td></tr>`; }).join('')
     + `<tr style="background:#f6f6f6"><td><strong>Doba v areálu celkem</strong></td><td><strong>${mm(medArealu)}</strong></td>
-        <td>${mm(medOf(d.filter(o=>o.isLoad),'vArealu'))}</td><td>${mm(medOf(d.filter(o=>o.isUnload),'vArealu'))}</td>
-        <td style="color:#888">${fmtN(d.filter(o=>o.vArealu!=null).length)}</td><td>${nad30('vArealu')}</td></tr>`;
+        <td style="font-weight:600">${mm(avgOf(fazeRows,'vArealu'))}</td>
+        <td>${mm(avgOf(fazeRows.filter(o=>o.isLoad),'vArealu'))}</td><td>${mm(avgOf(fazeRows.filter(o=>o.isUnload),'vArealu'))}</td>
+        <td style="color:#888">${fmtN(d.filter(o=>o.vArealu!=null).length)}</td><td>${nad30('vArealu')}</td></tr>`
+    + `<tr><td colspan="7" style="color:#888;font-style:italic;white-space:normal">Sloupce <strong>Průměr</strong>, ⌀ Nakládka a ⌀ Vykládka
+        jsou z ${fmtN(fazeRows.length)} vozidel, která mají změřené všechny čtyři úseky — jen tak se čtyři průměry sečtou
+        na dobu v areálu. Medián je z celé množiny a je u každého úseku jiná, proto se nesčítá.
+        Sloupec <strong>Měřeno</strong> říká, kolik vozidel má ten jeden úsek vyplněný.</td></tr>`;
   mk('c-an-faze', {type:'bar', data:{labels:['Celkem','Nakládka','Vykládka'], datasets:FAZE.map(([t,k,col])=>({
       label:t, backgroundColor:col,
-      data:[medOf(d,k), medOf(d.filter(o=>o.isLoad),k), medOf(d.filter(o=>o.isUnload),k)]}))},
+      data:[avgOf(fazeRows,k), avgOf(fazeRows.filter(o=>o.isLoad),k), avgOf(fazeRows.filter(o=>o.isUnload),k)]}))},
     options:aOpt({plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10}},
-        tooltip:{callbacks:{label:c=>c.dataset.label+': '+mm(c.raw)}}},
-      scales:{x:{stacked:true,grid:{display:false}},y:{stacked:true,grid:{color:'#eee'},ticks:{callback:v=>v+' min'}}}})});
+        title:{display:true,text:'Průměrné minuty — sloupec se sčítá na dobu v areálu',font:{size:11},color:'#666'},
+        tooltip:{callbacks:{label:c=>c.dataset.label+': '+mm(c.raw)+' průměrně'}}},
+      scales:{x:{stacked:true,grid:{display:false}},y:{stacked:true,beginAtZero:true,grid:{color:'#eee'},ticks:{callback:v=>v+' min'}}}})});
 
   // rozpad doby v areálu po skladech
   const sklady = ['093','095','096'].filter(k=>d.some(o=>o.sklad===k));
   mk('c-an-dwell', {type:'bar', data:{labels:sklady.map(k=>SK[k]), datasets:FAZE.map(([t,k,col])=>({
-      label:t, backgroundColor:col, data:sklady.map(s=>medOf(d.filter(o=>o.sklad===s), k))}))},
+      label:t, backgroundColor:col, data:sklady.map(s=>avgOf(fazeRows.filter(o=>o.sklad===s), k))}))},
     options:aOpt({indexAxis:'y',
       plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10}},
-        tooltip:{callbacks:{label:c=>c.dataset.label+': '+mm(c.raw)}}},
-      scales:{x:{stacked:true,grid:{color:'#eee'},ticks:{callback:v=>v+' min'}},y:{stacked:true,grid:{display:false}}}})});
+        tooltip:{callbacks:{label:c=>c.dataset.label+': '+mm(c.raw)+' průměrně'}}},
+      scales:{x:{stacked:true,beginAtZero:true,grid:{color:'#eee'},ticks:{callback:v=>v+' min'}},y:{stacked:true,grid:{display:false}}}})});
 
   // vývoj doby v areálu
   $('an-trend-dwell-desc').innerHTML = `Medián doby v areálu a čistého zpracování. Osa je po
@@ -2030,7 +2088,7 @@ function rAnalyza(){
   // --- 7. tepelná mapa a špičky ---
   ['plan','arr'].forEach(r=>{ const b = $('an-hm-'+r);
     if (b) b.classList.toggle('active', MAPA_REZIM === r); });
-  buildHeatmap(d, MAPA_REZIM);
+  buildHeatmap(d, MAPA_REZIM, filtVsechnySklady(ALL, curFilter()));
 
   mk('c-rampy-h', {type:'bar', data:{labels:hours.map(h=>h+'h'), datasets:['093','095','096'].map(k=>({
       label:SK[k], data:hours.map(h=>d.filter(o=>o.sklad===k && o.hourPlan===h).length), backgroundColor:SKCOL[k], borderRadius:2}))},
@@ -2085,8 +2143,8 @@ function rAnalyza(){
       data:KOSE_PRE.map(([a,b])=>pookne.filter(o=>{const x=o.dok-o.end; return x>=a && x<b;}).length),
       backgroundColor:['#e8c46b','#e8a13a','#d87b30','#d24b4b'], borderRadius:3}]},
     options:aOpt({plugins:{legend:{display:false},
-      title:{display:true,text:'O kolik se okno přetáhlo',font:{size:11},color:'#666'},
-      tooltip:{callbacks:{label:c=>fmtN(c.raw)+' vozidel'}}}})});
+      title:{display:true,text:'O kolik se okno přetáhlo (koše nejsou stejně široké)',font:{size:11},color:'#666'},
+      tooltip:{callbacks:{label:c=>fmtN(c.raw)+' vozidel · '+pct(c.raw, pookne.length)+' % z ujetých oken'}}}})});
 
   // --- 9. zpožděná vozidla (metrika 5c) ---
   const zpoz = d.filter(o=>o.diff != null && o.diff > TOL && o.zah != null && o.arr != null
@@ -2448,22 +2506,40 @@ function rPauzy(){
 }
 function prMinZHHMM(s){ const m = /^(\d{1,2}):(\d{2})$/.exec(String(s||'')); return m ? (+m[1])*60 + (+m[2]) : null; }
 
-function buildHeatmap(data, rezim){
-  const days = DNY.slice(0,5), hours = [5,6,7,8,9,10,11,12,13,14,15,16];
-  const grid = days.map(()=>hours.map(()=>0));
+const HM_DNY = DNY.slice(0,5), HM_HOD = [5,6,7,8,9,10,11,12,13,14,15,16];
+function hmGrid(data, rezim){
+  const grid = HM_DNY.map(()=>HM_HOD.map(()=>0));
   data.forEach(o=>{
     // podle plánu = den a hodina slotu; podle příjezdu = skutečný příjezd dopravce
     const h = rezim === 'arr' ? (o.arr != null ? hourOf(o.arr) : null) : o.hourPlan;
     const den = rezim === 'arr' ? (o.arrDate ? DNY[(new Date(o.arrDate+'T00:00:00Z').getUTCDay()+6)%7] : null) : o.den;
-    const di = days.indexOf(den), hi = hours.indexOf(h);
+    const di = HM_DNY.indexOf(den), hi = HM_HOD.indexOf(h);
     if (di >= 0 && hi >= 0) grid[di][hi]++; });
-  const maxV = Math.max.apply(null, grid.reduce((a,b)=>a.concat(b), [1]));
-  let h = '<div class="hm-header">' + hours.map(x=>`<div class="hm-hlabel">${x}h</div>`).join('') + '</div>';
-  days.forEach((day,di)=>{ h += `<div class="hm-row"><div class="hm-rlabel">${day}</div>`;
-    hours.forEach((_,hi)=>{ const v = grid[di][hi], t = v/maxV;
-      const r2 = Math.round(29+(226-29)*t), g2 = Math.round(158+(75-158)*t), b2 = Math.round(117+(74-117)*t);
-      h += `<div class="hm-cell" style="background:rgb(${r2},${g2},${b2});color:${t>0.6?'#fff':'#333'}">${v||''}</div>`; });
+  return grid;
+}
+const hmMax = grid => Math.max.apply(null, grid.reduce((a,b)=>a.concat(b), [1]));
+// Škála se nepočítá z právě zobrazeného skladu. Když se počítala, vyšla
+// každému jiná (Prostějov 100, Úžice 82) a stejně tmavá buňka znamenala
+// pokaždé něco jiného — mapy se nedaly porovnat mezi sklady, což je přesně
+// to, k čemu ta mapa je. Teď je to maximum přes všechny tři sklady zvlášť,
+// takže přepnutí skladu barvami nehne. V pohledu „Vše" se sčítají tři
+// sklady do jedné buňky, a tam je maximum pochopitelně vyšší.
+function buildHeatmap(data, rezim, refData){
+  const grid = hmGrid(data, rezim);
+  const maxV = Math.max(hmMax(grid), ...(refData
+    ? ['093','095','096'].map(k=>hmMax(hmGrid(refData.filter(o=>o.sklad===k), rezim)))
+    : [1]));
+  const barva = t => { const r2 = Math.round(29+(226-29)*t), g2 = Math.round(158+(75-158)*t), b2 = Math.round(117+(74-117)*t);
+    return `rgb(${r2},${g2},${b2})`; };
+  let h = '<div class="hm-header">' + HM_HOD.map(x=>`<div class="hm-hlabel">${x}h</div>`).join('') + '</div>';
+  HM_DNY.forEach((day,di)=>{ h += `<div class="hm-row"><div class="hm-rlabel">${day}</div>`;
+    HM_HOD.forEach((_,hi)=>{ const v = grid[di][hi], t = Math.min(1, v/maxV);
+      h += `<div class="hm-cell" style="background:${barva(t)};color:${t>0.6?'#fff':'#333'}" title="${day} ${HM_HOD[hi]}h · ${fmtN(v)} vozidel">${v||''}</div>`; });
     h += '</div>'; });
+  h += `<div style="display:flex;align-items:center;gap:8px;margin-top:10px;font-size:11px;color:#666">
+    <span>0</span>${[0,.2,.4,.6,.8,1].map(t=>`<i style="display:inline-block;width:26px;height:12px;border-radius:2px;background:${barva(t)}"></i>`).join('')}
+    <span>${fmtN(maxV)} vozidel</span>
+    <span style="margin-left:10px;font-style:italic">Škála je společná pro všechny tři sklady — přepnutí skladu barvami nehne.</span></div>`;
   $('heatmap').innerHTML = h;
 }
 // ============================================================
@@ -2540,13 +2616,13 @@ function rM3(){
   const sumM = (m,k)=>Math.round(byM[m].filter(isPob).reduce((a,r)=>a+m3num(r[k]),0));
   mk('c-m3-trend', {type:'bar', data:{labels:months, datasets:[{label:'Vstup m3',data:months.map(m=>sumM(m,M3.celkemVstupM3)),backgroundColor:'rgba(24,95,165,.25)'},{label:'Odjelo m3',data:months.map(m=>sumM(m,M3.odjeloCelkem)),backgroundColor:'#1D9E75'},{label:'Zbytkové',data:months.map(m=>sumM(m,M3.zbytkove)),backgroundColor:'#E24B4A'}]}, options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{autoSkip:false,font:{size:9}}},y:{ticks:{callback:v=>v+' m3'}}}}});
   const s093m=groupBy(pob093,r=>pdM3(r[M3.datum]).slice(0,7)), s095m=groupBy(pob095,r=>pdM3(r[M3.datum]).slice(0,7));
-  mk('c-m3-sklady', {type:'bar', data:{labels:months, datasets:[{label:'CS1 Prostějov',data:months.map(m=>Math.round(sm(s093m[m]||[],M3.odjeloCelkem))),backgroundColor:'#7F77DD'},{label:'CS1 Úžice',data:months.map(m=>Math.round(sm(s095m[m]||[],M3.odjeloCelkem))),backgroundColor:'#1D9E75'}]}, options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{autoSkip:false,font:{size:9}}},y:{ticks:{callback:v=>v+' m3'}}}}});
+  mk('c-m3-sklady', {type:'bar', data:{labels:months, datasets:[{label:'CS1 Prostějov',data:months.map(m=>Math.round(sm(s093m[m]||[],M3.odjeloCelkem))),backgroundColor:'#7F77DD'},{label:'CS1 Úžice',data:months.map(m=>Math.round(sm(s095m[m]||[],M3.odjeloCelkem))),backgroundColor:'#1D9E75'}]}, options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10}}},scales:{x:{ticks:{autoSkip:false,font:{size:9}}},y:{beginAtZero:true,ticks:{callback:v=>v+' m3'}}}}});
   const pobAll = data.filter(isPob); const byPob = groupBy(pobAll, r=>r[M3.pobockaKod]);
   const topZb = Object.entries(byPob).map(([k,rs])=>({k,z:sm(rs,M3.zbytkove)})).filter(x=>x.z>0).sort((a,b)=>b.z-a.z).slice(0,10);
   mk('c-m3-zbytky', {type:'bar', data:{labels:topZb.map(x=>x.k), datasets:[{label:'Zbytkové m3',data:topZb.map(x=>Math.round(x.z)),backgroundColor:'#E24B4A',borderRadius:4}]}, options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{callback:v=>v+' m3'}},y:{ticks:{font:{size:10}}}}}});
   const dMap={0:6,1:0,2:1,3:2,4:3,5:4,6:5}; const s93d=new Array(7).fill(0), s95d=new Array(7).fill(0), c93=new Array(7).fill(0), c95=new Array(7).fill(0);
   pobAll.forEach(r=>{ const dt=pdM3(r[M3.datum]); if(!dt) return; const di=dMap[new Date(dt+'T12:00:00').getDay()]; const m=m3num(r[M3.odjeloCelkem]); if(r[M3.sklad]==='093'){s93d[di]+=m;c93[di]++;}else{s95d[di]+=m;c95[di]++;} });
-  mk('c-m3-dny', {type:'bar', data:{labels:DNY, datasets:[{label:'CS1 Prostějov',data:s93d.map((v,i)=>c93[i]?Math.round(v/c93[i]):0),backgroundColor:'#7F77DD'},{label:'CS1 Úžice',data:s95d.map((v,i)=>c95[i]?Math.round(v/c95[i]):0),backgroundColor:'#1D9E75'}]}, options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>v+' m3'}}}}});
+  mk('c-m3-dny', {type:'bar', data:{labels:DNY, datasets:[{label:'CS1 Prostějov',data:s93d.map((v,i)=>c93[i]?Math.round(v/c93[i]):0),backgroundColor:'#7F77DD'},{label:'CS1 Úžice',data:s95d.map((v,i)=>c95[i]?Math.round(v/c95[i]):0),backgroundColor:'#1D9E75'}]}, options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10}}},scales:{y:{beginAtZero:true,ticks:{callback:v=>v+' m3'}}}}});
   const pobockyVse = Object.entries(byPob).map(([kod,rs])=>({kod,sklad:rs[0][M3.sklad],n:rs.length,vstup:sm(rs,M3.celkemVstupM3),odjelo:sm(rs,M3.odjeloCelkem),zb:sm(rs,M3.zbytkove),prev:sm(rs,M3.prevoz),zr:rs.filter(r=>r[M3.zruseno]==='ZRUŠENO'||r[M3.zruseno]==='X').length})).sort((a,b)=>b.odjelo-a.odjelo);
   const pobocky = pobockyVse.slice(0,20);
   $('m3-table').innerHTML = pobocky.map(p=>{ const pz=pP(p.zb,p.odjelo+p.zb); const col=pz>20?'#A32D2D':(pz>10?'#BA7517':'inherit');
