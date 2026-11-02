@@ -476,7 +476,7 @@ tr:hover td{background:#fafaf7}
       <div class="card"><h3>Propojení s TSC rezervacemi</h3>
         <div class="card-desc">⚠ <strong>Každý sloupec počítá něco jiného, nejsou to dvě strany téže mince.</strong>
         <em>Závozů (m3)</em> je počet řádků v tabulce Vytížení aut — to je zhruba <strong>jeden plánovaný závoz na pobočku a den</strong>.
-        <em>Vozidel (TSC)</em> je počet rezervací, tedy <strong>jednotlivých aut na rampě</strong>. Když pobočku obslouží dvě auta, je to
+        <em>Vozidel (TSC)</em> je počet nakládek, tedy <strong>jednotlivých aut na rampě</strong>. Když pobočku obslouží dvě auta, je to
         jeden řádek m3 a dvě rezervace — proto u velkých poboček vychází <strong>TSC víc a je to správně</strong>.
         Sloupec <em>Aut na závoz</em> ten poměr ukazuje přímo.<br>
         Z hlavního filtru platí <b>období a sklad</b>; typ akce, skupina dopravy a den v týdnu se tu vědomě neuplatňují, protože m3 tabulka ty rozměry nemá.</div>
@@ -2057,7 +2057,7 @@ function rM3(){
   // token: jedna jízda běžně obsluhuje víc poboček („P110 + P235").
   // Tři způsoby zápisu, které se v poli reálně vyskytují:
   //   P250 / P 250 / P-250  → prefix P, mezera nebo pomlčka se ignoruje
-  //   VRATKY 131, NO-100-26-00030 → samostatné trojčíslí bez P
+  //   NO-100-26-00030, VRATKY 131 → samostatné trojčíslí bez P
   // Trojčíslí bez P se uzná jen tehdy, když taková pobočka v m3 opravdu
   // existuje. Jinak by se jako pobočka počítalo číslo zakázky, rok nebo
   // kód skladu (S095 → 095), a tabulka by tiše nabrala neexistující vozy.
@@ -2071,18 +2071,23 @@ function rM3(){
     while ((m = reN.exec(u))) if (znameKody.has('P'+m[1])) out.add('P'+m[1]);
     return [...out];
   };
-  const tscBy = {};
-  tscProM3.forEach(o=>kodyPobocek(o).forEach(x=>(tscBy[x] || (tscBy[x] = [])).push(o)));
-  // Podíl napárování se počítá jen z nakládek. Vykládka je příjem zboží od
-  // dodavatele, žádnou pobočku nemá a mít nemůže — kdyby se počítala do
-  // jmenovatele, vyjde „nenapárováno 48 %" a vypadá to jako chyba zadávání.
+  // Do sloupce „Vozidel (TSC)" patří jen nakládky, protože řádek m3 je
+  // plánovaný ZÁVOZ na pobočku. Vykládka je pohyb opačným směrem: příjem od
+  // dodavatele (pobočku nemá) nebo vratka z pobočky („VRATKY 131"). Vratka
+  // kód pobočky nese, takže by se tiše připočítala k závozům a poměr
+  // „Aut na závoz" by u poboček s hodně vratkami vyšel vyšší, než je pravda.
+  // Nakládka + Vykládka se počítá — to je závoz, který cestou bere vratky.
   const naklProM3 = tscProM3.filter(o=>o.isLoad);
+  const tscBy = {};
+  naklProM3.forEach(o=>kodyPobocek(o).forEach(x=>(tscBy[x] || (tscBy[x] = [])).push(o)));
   const naparovano = naklProM3.filter(o=>kodyPobocek(o).length).length;
+  const vykSKodem = tscProM3.filter(o=>!o.isLoad && kodyPobocek(o).length).length;
   $('m3-shoda').innerHTML = `Pobočku se podařilo vyčíst u <strong>${fmtN(naparovano)} z ${fmtN(naklProM3.length)}</strong>
-    nakládek (${pct(naparovano, naklProM3.length)} %). Vykládky se sem nepočítají — je to příjem od dodavatele,
-    který pobočku nemá. U zbytku nakládek je v poli <em>Číslo NO / Zakázka</em> něco, z čeho se pobočka vyčíst nedá:
-    většinou převoz mezi sklady (<code>S095, S093</code>), <code>Geis CZ s.r.o.</code> nebo „více NO".
-    <strong>U těch poboček proto vyjde méně vozidel, než ve skutečnosti přijelo.</strong>`;
+    nakládek (${pct(naparovano, naklProM3.length)} %). U zbytku je v poli <em>Číslo NO / Zakázka</em> něco, z čeho se
+    pobočka vyčíst nedá: většinou převoz mezi sklady (<code>S095, S093</code>), <code>Geis CZ s.r.o.</code> nebo „více NO".
+    <strong>U těch poboček proto vyjde méně vozidel, než ve skutečnosti přijelo.</strong><br>
+    Vykládky se do tabulky nepočítají — je to opačný směr: příjem od dodavatele, nebo vratka z pobočky.
+    Kód pobočky jich nese ${fmtN(vykSKodem)} a k závozům se nepřičítají.`;
   $('m3-tsctable').innerHTML = pobocky.slice(0,15).map(p=>{ const tr = tscBy[p.kod] || tscBy['P'+p.kod] || []; const pz=pP(p.zb,p.odjelo+p.zb); const col=pz>20?'#A32D2D':(pz>10?'#BA7517':'inherit');
     const pomer = p.n ? (tr.length / p.n) : null;
     return `<tr><td><strong>${esc(p.kod)}</strong></td><td>${SK[p.sklad]||p.sklad}</td><td style="text-align:center">${p.n}</td>
