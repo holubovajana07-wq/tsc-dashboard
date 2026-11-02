@@ -731,6 +731,14 @@ function jeSvatek(dateISO){
 // kalendářního dne, ne podle počtu minut — vozidlo plánované na 7:00,
 // které přijelo předchozí den v 18:00, je jiný den, i když je to jen 13 h.
 // ============================================================
+// Práh dochvilnosti a dodržení okna. Dohodnuto 2. 11. 2026 (Jana), zapsáno
+// v 03_metriky/tsc-dochvilnost. Do té doby si každá karta vymýšlela vlastní
+// hranici — v kódu jich bylo sedm různých sad (80/60, 85/70, 90/75, 90/70…),
+// takže stejných 82 % svítilo na jedné kartě zeleně a na druhé oranžově.
+// Platí JEN pro dochvilnost a dodržení okna. Vyplněnost značek a m3 metriky
+// mají svoje hranice, protože měří něco jiného.
+const PRAH_OK = 80, PRAH_WARN = 60;
+const prahCls = (p, ok, warn, bad) => p == null ? bad : (p >= PRAH_OK ? ok : (p >= PRAH_WARN ? warn : bad));
 const PASMA = ['Jiný den – před','>60 min před','30–60 před','15–30 před','5–15 před',
                'Na čas (±5)','5–15 po','15–30 po','30–60 po','>60 min po',
                'Jiný den – po','Bez rezervace'];
@@ -1118,13 +1126,11 @@ function rPrehled(){
     // „Dochvilnost" tu znamená NEPŘIJEL POZDĚ, ne „přijel na čas": do ±5 min
     // se trefí jen 15 % vozidel, většina přijede dřív. Pojmenování předepisuje
     // 03_metriky/tsc-dochvilnost, M5 — bez něj si to každý přečte jinak.
-    metric('ok','Nepřijel pozdě', s.ev?pct(s.punct,s.ev)+' %':'—',
-           'do plánu + 5 min · z '+fmtN(s.ev)+' hodnocených') +
-    // Zelená/oranžová na 80 % je PRACOVNÍ práh, ne dohodnutý cíl — v
-    // 03_metriky/tsc-dochvilnost žádný cíl zatím není. Dokud není, musí to
-    // u čísla být napsané, jinak barva tvrdí něco, co nikdo neschválil.
-    metric(w.eval && w.pct>=80 ? 'ok':'warn','Odbaveno v okně', w.eval?w.pct+' %':'—',
-           'hodnoceno '+fmtN(w.eval)+' z '+fmtN(s.n)+' rezervací · barva dle pracovního prahu 80 %') +
+    metric(s.ev ? prahCls(pct(s.punct,s.ev),'ok','warn','danger') : 'warn','Nepřijel pozdě',
+           s.ev?pct(s.punct,s.ev)+' %':'—',
+           'do plánu + 5 min · z '+fmtN(s.ev)+' hodnocených · práh '+PRAH_OK+' %') +
+    metric(w.eval ? prahCls(w.pct,'ok','warn','danger') : 'warn','Odbaveno v okně', w.eval?w.pct+' %':'—',
+           'hodnoceno '+fmtN(w.eval)+' z '+fmtN(s.n)+' rezervací · práh '+PRAH_OK+' %') +
     metric('','Medián odchylky', med_==null?'—':(med_>0?'+':'')+Math.round(med_)+' min','záporně = přijel dřív') +
     metric(s.bez?'danger':'','Bez rezervace', fmtN(s.bez), s.n?pct(s.bez,s.n)+' % z celku':'');
 
@@ -1242,9 +1248,9 @@ function rDispecer(){
   $('disp-stats').innerHTML =
     metric('info','Rezervací celkem',fmtN(d.length),'') +
     metric('warn','Přijelo pozdě',s.ev?pct(s.late,s.ev)+' %':'—',fmtN(s.late)+' vozidel') +
-    metric('ok','Včas / dříve',s.ev?pct(s.punct,s.ev)+' %':'—',fmtN(s.punct)+' vozidel') +
+    metric(s.ev ? prahCls(pct(s.punct,s.ev),'ok','warn','danger') : 'warn','Včas / dříve',s.ev?pct(s.punct,s.ev)+' %':'—',fmtN(s.punct)+' vozidel') +
     metric('danger','Nedorazilo',fmtN(s.noshow),'+ '+s.bez+' bez rezervace') +
-    metric('ok','V okně',w.eval?w.pct+' %':'—',w.ok+' z '+w.eval);
+    metric(w.eval ? prahCls(w.pct,'ok','warn','danger') : 'warn','V okně',w.eval?w.pct+' %':'—',w.ok+' z '+w.eval);
   $('disp-tbody').innerHTML = d.map(o=>`<tr>
     <td>${esc(o.r[C.datum])}</td><td>${esc(o.den)}</td><td>${esc(o.kt)}</td><td>${SK[o.sklad]||o.sklad}</td><td style="font-family:monospace;font-size:11px">${esc(o.id)}</td>
     <td title="${esc(o.dopravce)}">${esc(o.dopravce.substring(0,22))||'—'}</td><td>${esc(o.typ)||'—'}</td><td title="${esc(o.no)}">${esc(o.no.substring(0,25))||'—'}</td><td>${esc(o.rampa)||'—'}</td>
@@ -1280,7 +1286,9 @@ function carrierRows(rows){
             brzy:    rs.filter(o=>o.state && o.diff != null && o.diff < -PRED_H).length};
   });
 }
-function rankColor(p){ return p<20?'#639922':(p<40?'#EF9F27':'#E24B4A'); }
+// Bere % POZDĚ, ne % včas — proto se práh obrací: pod 20 % pozdě = nad 80 %
+// včas. Odvozeno z PRAH_OK, ať to zůstane v souladu se zbytkem dashboardu.
+function rankColor(p){ return prahCls(100 - p, '#639922', '#EF9F27', '#E24B4A'); }
 // Počet hodnocených jízd je v řádku schválně vidět — bez něj vede žebříček
 // dopravce s pěti jízdami před smluvním s tisícem (zebricek-spolehlivosti, oddíl 2).
 function rankHtml(list){
@@ -1334,7 +1342,7 @@ function rDopravci(){
     {nazev:'Ostatní DEK dopravci', rows:dek.filter(o=>o.skD!=='C.S.CARGO' && o.skD!=='Autodoprava Siegl'),
                                    jine:null}
   ];
-  const cls = p => p==null ? 'info' : (p>=85 ? 'ok' : (p>=70 ? 'warn' : 'danger'));
+  const cls = p => p==null ? 'info' : prahCls(p,'ok','warn','danger');
   $('dop-smluvni').innerHTML = skupiny.map(g=>{
     const s = stats(g.rows), p = s.ev ? pct(s.punct, s.ev) : null;
     return `<div class="card" style="margin:0">
@@ -1389,7 +1397,7 @@ function rDopravci(){
   const ds = stats(dod);
   $('dop-dod-kpi').innerHTML =
     metric('info','Jízd',          fmtN(ds.n), 'objednal dodavatel') +
-    metric('ok','Dochvilnost',     ds.ev?pct(ds.punct,ds.ev)+' %':'—', 'z '+fmtN(ds.ev)+' hodnocených') +
+    metric(ds.ev ? prahCls(pct(ds.punct,ds.ev),'ok','warn','danger') : 'warn','Dochvilnost', ds.ev?pct(ds.punct,ds.ev)+' %':'—', 'z '+fmtN(ds.ev)+' hodnocených · práh '+PRAH_OK+' %') +
     metric('warn','Pozdě',         ds.ev?pct(ds.late,ds.ev)+' %':'—', fmtN(ds.late)+' příjezdů') +
     metric(ds.noshow?'danger':'','Nedorazilo', fmtN(ds.noshow), ds.n?pct(ds.noshow,ds.n)+' % jízd':'');
   const dodC = carrierRows(dod).filter(c=>c.n>=3 && !BEZ_JMENA(c.name)).sort((a,b)=>b.n-a.n).slice(0,20);
@@ -1557,7 +1565,7 @@ function rLogistik(){
   const mala = d.filter(o=>o.proc != null && o.proc < 5).length;
   $('log-kpi').innerHTML =
     metric('info','Rezervací celkem', fmtN(d.length), 've vybraném období') +
-    metric(w.eval && w.pct>=80 ? 'ok':'warn','Odbaveno v okně', w.eval?w.pct+' %':'—', fmtN(w.ok)+' z '+fmtN(w.eval)+' hodnocených') +
+    metric(w.eval ? prahCls(w.pct,'ok','warn','danger') : 'warn','Odbaveno v okně', w.eval?w.pct+' %':'—', fmtN(w.ok)+' z '+fmtN(w.eval)+' hodnocených · práh '+PRAH_OK+' %') +
     metric(nevyp.length?'danger':'','Nevyplněná data', fmtN(nevyp.length), pct(nevyp.length,d.length)+' % skončených rezervací') +
     metric(mala?'warn':'','Zpracování pod 5 min', fmtN(mala), 'podezřelé záznamy — k prověření');
 
@@ -1647,6 +1655,9 @@ function rLogistik(){
     ['Dokončení zpracování','dok','odbavení v okně, doba zpracování'],
     ['Odjezd','odj','konec času v areálu'],
     ['Připraveno k expedici','pripraveno','předstih přípravy — nepoužívají ji všechny sklady']];
+  // Záměrně NE PRAH_OK: tohle je vyplněnost značky, ne dochvilnost. Značka
+  // se buď kliká, nebo neklikádá — 80 % vyplněnosti je málo, u dochvilnosti
+  // je to cíl. Dvě různé věci, dvě různé hranice.
   const barva = p => p>=90?'#3B6D11':(p>=70?'#BA7517':'#A32D2D');
   $('log-znacky').innerHTML = skoncene.length ? ZNACKY.map(([t,k,uc])=>{
       const v = skoncene.filter(o=>o[k] != null).length, p = pct(v, skoncene.length);
@@ -1727,7 +1738,7 @@ function rLogistik(){
     const ws = winStats(dok);
     return {n, zah, dok:dok.length, avg:avg(dok.map(o=>o.proc)), ok:ws.ok, ev:ws.eval};
   }).sort((a,b)=>b.dok-a.dok);
-  $('skladnici-table').innerHTML = sk.map(x=>{ const p = x.ev?pct(x.ok,x.ev):null; const col = p==null?'#aaa':(p>=80?'#3B6D11':(p>=60?'#BA7517':'#A32D2D'));
+  $('skladnici-table').innerHTML = sk.map(x=>{ const p = x.ev?pct(x.ok,x.ev):null; const col = p==null?'#aaa':prahCls(p,'#3B6D11','#BA7517','#A32D2D');
     return `<tr><td><strong>${esc(x.n)}</strong></td><td style="text-align:center">${x.zah}</td><td style="text-align:center">${x.dok}</td><td style="text-align:center">${x.avg!=null?Math.round(x.avg)+' min':'—'}</td><td style="text-align:center">${x.ok} / ${x.ev}</td><td style="text-align:center;font-weight:600;color:${col}">${p!=null?p+'%':'—'}</td></tr>`; }).join('') || '<tr><td colspan="6" class="empty">Žádná data</td></tr>';
 
   // --- 8. posledních 20 odbavených ---
@@ -1914,13 +1925,12 @@ function rAnalyza(){
   const s0 = stats(d);
   $('an-kpi').innerHTML =
     aMetric('neutral','Rezervací', fmtN(d.length), f.cs ? SK[f.cs] : 'všechny sklady') +
-    // Práh 80 % je pracovní, ne dohodnutý cíl — viz poznámka v rPrehled().
-    aMetric(s0.ev && pct(s0.punct,s0.ev)>=80 ? 'ok':'warn','Dochvilnost příjezdu',
+    aMetric(s0.ev ? prahCls(pct(s0.punct,s0.ev),'ok','warn','bad') : 'warn','Dochvilnost příjezdu',
             s0.ev ? pct(s0.punct,s0.ev)+' <small>%</small>' : '—',
-            'z '+fmtN(s0.ev)+' hodnocených příjezdů · barva dle pracovního prahu 80 %') +
-    aMetric(w.eval && w.pct>=80 ? 'ok':'warn','Odbaveno v okně',
+            'z '+fmtN(s0.ev)+' hodnocených příjezdů · práh '+PRAH_OK+' %') +
+    aMetric(w.eval ? prahCls(w.pct,'ok','warn','bad') : 'warn','Odbaveno v okně',
             w.eval ? w.pct+' <small>%</small>' : '—',
-            'hodnoceno '+fmtN(w.eval)+' z '+fmtN(d.length)+' · pracovní práh 80 %') +
+            'hodnoceno '+fmtN(w.eval)+' z '+fmtN(d.length)+' · práh '+PRAH_OK+' %') +
     aMetric('','Medián doby v areálu', medArealu!=null?Math.round(medArealu)+' <small>min</small>':'—', 'příjezd → odjezd');
 
   // --- 2. přesnost časů: příjezd × odjezd, obojí po typu akce ---
@@ -2133,7 +2143,7 @@ function rAnalyza(){
   $('an-okno').innerHTML = radkyZobr.map(r=>`<tr>
       <td><strong>${esc(r.name)}</strong> <span style="color:#888">${SK[r.sk]||r.sk}</span></td>
       <td>${fmtN(r.ev)}</td>
-      <td><span class="a-chip ${r.pct>=90?'a-ok':(r.pct>=75?'a-warn':'a-bad')}">${r.pct} %</span></td>
+      <td><span class="a-chip ${prahCls(r.pct,'a-ok','a-warn','a-bad')}">${r.pct} %</span></td>
       <td>${fmtN(r.over)}</td>
       <td>${r.nej ? '<i style="display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;background:'+PRICINA[r.nej].c+'"></i>'+PRICINA[r.nej].t+' <span style="color:#888">('+r.nejN+')</span>' : '—'}</td></tr>`).join('')
     + orezRadek(rampCelkem, rampCelkem - rampMalo, 5, 'ramp', 'zbylé mají méně než 10 hodnocených příjezdů, takže by jejich procento nic neznamenalo.')
@@ -2270,13 +2280,15 @@ function rAnalyza(){
   $('an-rampy-kpi').innerHTML =
     aMetric('neutral','Aktivních ramp', fmtN(ramps.length), f.cs ? SK[f.cs] : 'všechny sklady') +
     (maProvoz
-      ? aMetric('ok','Ø vytíženost ramp', sUtil.length?Math.round(avg(sUtil.map(r=>r.util)))+' <small>%</small>':'—', 'z '+fmtN(sUtil.length)+' ramp s provozní dobou')
+      // Neutrální schválně: vytíženost nemá dohodnutý cíl a vyšší není lepší
+      // (rampa na 95 % nemá rezervu na nic). Zelená by tvrdila, že to je dobře.
+      ? aMetric('neutral','Ø vytíženost ramp', sUtil.length?Math.round(avg(sUtil.map(r=>r.util)))+' <small>%</small>':'—', 'z '+fmtN(sUtil.length)+' ramp s provozní dobou')
       : aMetric('','Ø vytíženost ramp', '—', 'čeká na nastavení z TSC')) +
     aMetric('warn','Nejvytíženější rampa', nej?esc(nej.name):'—', nej?(nej.util!=null?nej.util+' %':nej.obs+' min/den'):'') +
     aMetric('','Medián zpracování', mm(med(d.map(o=>o.proc))), 'přes všechny rampy');
   $('ramp-table').innerHTML = ramps.map(r=>`<tr><td><strong>${esc(r.name)}</strong></td><td>${SK[r.sk]||r.sk}</td>
     <td>${fmtN(r.n)}</td><td>${fmtN(r.load)}</td><td>${fmtN(r.unl)}</td>
-    <td>${r.dochv!=null?'<span class="a-chip '+(r.dochv>=80?'a-ok':(r.dochv>=60?'a-warn':'a-bad'))+'">'+r.dochv+' %</span> <span style="color:#888;font-size:11px">z '+fmtN(r.dochvN)+'</span>':'—'}</td>
+    <td>${r.dochv!=null?'<span class="a-chip '+prahCls(r.dochv,'a-ok','a-warn','a-bad')+'">'+r.dochv+' %</span> <span style="color:#888;font-size:11px">z '+fmtN(r.dochvN)+'</span>':'—'}</td>
     <td style="text-align:center">${mm(r.med)} <span style="color:#888;font-size:11px">z ${fmtN(r.medN)}</span></td><td>${fmtN(r.a)}</td><td>${fmtN(r.b)}</td><td>${fmtN(r.c)}</td>
     <td>${r.w!=null?r.w+' % <span style="color:#888;font-size:11px">z '+fmtN(r.wN)+'</span>':'—'}</td>
     <td style="font-weight:600">${r.util!=null
@@ -2316,7 +2328,7 @@ function anDetail(d){
 
   $('an-det-sum').innerHTML = radky.map(r=>`<tr class="${AN_ROZ===r.k?'a-sel':''}" onclick="anRoz(${JSON.stringify(r.k).replace(/"/g,'&quot;')})" style="cursor:pointer">
       <td><strong>${esc(r.k)}</strong></td><td>${fmtN(r.n)}</td>
-      <td>${r.ontime!=null?'<span class="a-chip '+(r.ontime>=80?'a-ok':(r.ontime>=60?'a-warn':'a-bad'))+'">'+r.ontime+' %</span>':'—'}</td>
+      <td>${r.ontime!=null?'<span class="a-chip '+prahCls(r.ontime,'a-ok','a-warn','a-bad')+'">'+r.ontime+' %</span>':'—'}</td>
       <td>${fmtN(r.pozde)}</td><td>${r.nd?fmtN(r.nd):'—'}</td>
       <td>${r.mdiff!=null?(r.mdiff>0?'+':'')+Math.round(r.mdiff)+' min':'—'}</td>
       <td>${mm(r.mproc)}</td><td>${r.w!=null?r.w+' %':'—'}</td></tr>`).join('')
