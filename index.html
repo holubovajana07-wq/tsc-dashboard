@@ -2053,18 +2053,36 @@ function rM3(){
   // dopravy a den v týdnu, které m3 tabulka nemá — sloupce by se pak
   // porovnávaly každý za jinou množinu a nikdo by to nepoznal.
   const tscProM3 = filt(ALL, {from:f.from, to:f.to, cs:f.cs, dop:'', typ:'', den:''}, false);
-  // Hledají se VŠECHNY kódy poboček v poli „Číslo NO / Zakázka", ne jen první
-  // token: jedna jízda běžně obsluhuje víc poboček („P110 + P235") a dřív se
-  // počítala jen té první. Zlepší to napárování z 36 % na 52 % rezervací.
-  const kodyPobocek = o => { const m = String(o.no||'').toUpperCase().match(/P\d{3,4}/g); return m ? [...new Set(m)] : []; };
+  // Z pole „Číslo NO / Zakázka" se berou VŠECHNY kódy poboček, ne jen první
+  // token: jedna jízda běžně obsluhuje víc poboček („P110 + P235").
+  // Tři způsoby zápisu, které se v poli reálně vyskytují:
+  //   P250 / P 250 / P-250  → prefix P, mezera nebo pomlčka se ignoruje
+  //   VRATKY 131, NO-100-26-00030 → samostatné trojčíslí bez P
+  // Trojčíslí bez P se uzná jen tehdy, když taková pobočka v m3 opravdu
+  // existuje. Jinak by se jako pobočka počítalo číslo zakázky, rok nebo
+  // kód skladu (S095 → 095), a tabulka by tiše nabrala neexistující vozy.
+  const znameKody = new Set(Object.keys(byPob));
+  const kodyPobocek = o => {
+    const u = String(o.no||'').toUpperCase(), out = new Set();
+    let m;
+    const reP = /P\s*[-.]?\s*(\d{3,4})/g;
+    while ((m = reP.exec(u))) out.add('P'+m[1]);
+    const reN = /(?<![\dA-Z])(\d{3})(?!\d)/g;
+    while ((m = reN.exec(u))) if (znameKody.has('P'+m[1])) out.add('P'+m[1]);
+    return [...out];
+  };
   const tscBy = {};
-  let naparovano = 0;
-  tscProM3.forEach(o=>{ const k = kodyPobocek(o); if (k.length) naparovano++;
-    k.forEach(x=>(tscBy[x] || (tscBy[x] = [])).push(o)); });
-  $('m3-shoda').innerHTML = `Na pobočku se podařilo napojit <strong>${fmtN(naparovano)} z ${fmtN(tscProM3.length)}</strong>
-    rezervací (${pct(naparovano, tscProM3.length)} %). U zbytku je v poli <em>Číslo NO / Zakázka</em> něco, z čeho se pobočka
-    vyčíst nedá — nejčastěji <code>X</code>, <code>XXX</code>, <code>1111</code>, název dopravce nebo „více NO".
-    <strong>U těch poboček proto vyjde méně vozidel, než ve skutečnosti přijelo</strong>, a tabulka se nedá číst jako přesná bilance.`;
+  tscProM3.forEach(o=>kodyPobocek(o).forEach(x=>(tscBy[x] || (tscBy[x] = [])).push(o)));
+  // Podíl napárování se počítá jen z nakládek. Vykládka je příjem zboží od
+  // dodavatele, žádnou pobočku nemá a mít nemůže — kdyby se počítala do
+  // jmenovatele, vyjde „nenapárováno 48 %" a vypadá to jako chyba zadávání.
+  const naklProM3 = tscProM3.filter(o=>o.isLoad);
+  const naparovano = naklProM3.filter(o=>kodyPobocek(o).length).length;
+  $('m3-shoda').innerHTML = `Pobočku se podařilo vyčíst u <strong>${fmtN(naparovano)} z ${fmtN(naklProM3.length)}</strong>
+    nakládek (${pct(naparovano, naklProM3.length)} %). Vykládky se sem nepočítají — je to příjem od dodavatele,
+    který pobočku nemá. U zbytku nakládek je v poli <em>Číslo NO / Zakázka</em> něco, z čeho se pobočka vyčíst nedá:
+    většinou převoz mezi sklady (<code>S095, S093</code>), <code>Geis CZ s.r.o.</code> nebo „více NO".
+    <strong>U těch poboček proto vyjde méně vozidel, než ve skutečnosti přijelo.</strong>`;
   $('m3-tsctable').innerHTML = pobocky.slice(0,15).map(p=>{ const tr = tscBy[p.kod] || tscBy['P'+p.kod] || []; const pz=pP(p.zb,p.odjelo+p.zb); const col=pz>20?'#A32D2D':(pz>10?'#BA7517':'inherit');
     const pomer = p.n ? (tr.length / p.n) : null;
     return `<tr><td><strong>${esc(p.kod)}</strong></td><td>${SK[p.sklad]||p.sklad}</td><td style="text-align:center">${p.n}</td>
