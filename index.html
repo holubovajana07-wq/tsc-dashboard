@@ -120,79 +120,88 @@ tr:hover td{background:#fafaf7}
 .klik{cursor:pointer}.klik:hover{text-decoration:underline}
 
 /* ============================================================
-   ANALÝZA CS — vizuál převzatý z reportu kolegyně
+   ANALÝZA CS — rozložení kolegyně, vzhled dashboardu
    ------------------------------------------------------------
-   Všechno je schválně zapouzdřené pod #tab-analyza. Ostatní záložky si
-   drží původní vzhled, dokud se nerozhodne, jestli se tenhle styl rozšíří
-   dál (zadání Jany 2. 11. 2026: „jiné záložky zatím neměnit vizuál").
-   Proto jsou třídy prefixované a-*, i když některé dělají totéž co
-   globální .card / .metric — míchat je by znamenalo, že změna stylu
-   v jedné záložce tiše přemaluje ostatní.
-   Barvy a rozměry odpovídají V:\CS\REPORTING_CS\Nahled_reportu_TSC.html.
+   Zadání Jany 3. 11. 2026: „barevně stejně jako můj dashboard — pozadí,
+   styl písma, nadpisy a popisy — ale zobrazení dat ať je po jejím."
+   Takže:
+   - PŘEVZATÉ OD NÍ zůstává všechno, co rozhoduje o tom, co a jak se
+     ukazuje: osm sbalovacích sekcí, mřížka karet, dvojice grafů vedle
+     sebe, výšky grafů, rolovací tabulka s přilepenou hlavičkou, CSV,
+     přepínače skladů, KPI pás nad sekcí.
+   - NAŠE je chrom: bílé pozadí obsahu, systémové písmo, modrý akcent
+     #185FA5 místo DEK červené, nadpisy karet verzálkami 12 px/#888,
+     popisy 11 px/#aaa, dlaždice #f8f7f2 s 3px proužkem, hlavičky tabulek
+     #f8f7f2 verzálkami, 0.5px linky #e8e7e2.
+   Třídy zůstávají prefixované a-* a zapouzdřené pod #tab-analyza. Dál se
+   nesahá do globálních .card/.metric, aby šlo rozložení téhle záložky
+   měnit bez dopadu na ostatní — hodnoty se ale schválně drží těch
+   globálních, ať to vypadá jako jeden dashboard, ne dva.
    ============================================================ */
 #tab-analyza{
-  --a-red:#E2001A; --a-red-dark:#B5000F; --a-ink:#2B2B2B; --a-bg:#F4F4F4;
-  --a-grey:#E5E5E5; --a-line:#DADADA; --a-muted:#666;
-  --a-shadow:0 1px 3px rgba(0,0,0,.08);
-  background:var(--a-bg); color:var(--a-ink);
-  font-family:'Segoe UI',Arial,sans-serif;
-  margin:-20px; padding:18px 22px 34px;
+  --a-acc:#185FA5; --a-ink:#1a1a18; --a-line:#e8e7e2; --a-muted:#888;
+  --a-faint:#aaa; --a-soft:#f8f7f2;
+  color:var(--a-ink);
 }
-#tab-analyza .a-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin:0 0 6px}
-#tab-analyza .a-head h2{font-size:19px;margin:0;font-weight:600}
-#tab-analyza .a-intro{font-size:12.5px;color:var(--a-muted);line-height:1.6;margin:0 0 16px;max-width:1000px}
+#tab-analyza .a-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin:0 0 4px}
+#tab-analyza .a-head h2{font-size:15px;margin:0;font-weight:500;letter-spacing:-.2px}
+#tab-analyza .a-head .a-sub{font-size:12px;color:var(--a-muted)}
+#tab-analyza .a-intro{font-size:12px;color:var(--a-muted);line-height:1.6;margin:0 0 16px;max-width:1000px}
 #tab-analyza details.a-sec{margin-bottom:22px}
-#tab-analyza details.a-sec>summary{cursor:pointer;list-style:none;display:flex;align-items:baseline;gap:10px;margin:0 0 12px;border-left:4px solid var(--a-red);padding-left:10px}
+#tab-analyza details.a-sec>summary{cursor:pointer;list-style:none;display:flex;align-items:baseline;gap:10px;margin:0 0 12px;border-left:3px solid var(--a-acc);padding-left:10px}
 #tab-analyza details.a-sec>summary::-webkit-details-marker{display:none}
-#tab-analyza details.a-sec>summary h3{font-size:16px;margin:0;font-weight:600;color:var(--a-ink);white-space:nowrap;flex:0 0 auto;text-transform:none;letter-spacing:0;display:block}
-#tab-analyza details.a-sec>summary .n{flex:1 1 auto;min-width:0;font-size:12.5px;color:var(--a-muted);font-weight:400}
-#tab-analyza details.a-sec>summary::after{content:'▾';margin-left:auto;color:#c2c2c2;font-size:11px}
+#tab-analyza details.a-sec>summary h3{font-size:15px;margin:0;font-weight:500;color:var(--a-ink);white-space:nowrap;flex:0 0 auto;text-transform:none;letter-spacing:0;display:block}
+#tab-analyza details.a-sec>summary .n{flex:1 1 auto;min-width:0;font-size:12px;color:var(--a-muted);font-weight:400;line-height:1.6}
+#tab-analyza details.a-sec>summary::after{content:'▾';margin-left:auto;color:#ccc;font-size:11px}
 #tab-analyza details.a-sec:not([open])>summary::after{content:'▸'}
-#tab-analyza .a-grid{display:grid;gap:16px;margin-bottom:16px}
-#tab-analyza .a-kpis{grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:14px}
+#tab-analyza .a-grid{display:grid;gap:14px;margin-bottom:14px}
+#tab-analyza .a-kpis{grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:10px}
 #tab-analyza .a-g2{grid-template-columns:1fr 1fr}
 #tab-analyza .a-g3{grid-template-columns:1fr 1fr 1fr}
 @media(max-width:900px){#tab-analyza .a-g2,#tab-analyza .a-g3{grid-template-columns:1fr}}
-#tab-analyza .a-card{background:#fff;border:none;border-radius:8px;padding:14px 16px;box-shadow:var(--a-shadow);min-width:0;margin:0 0 16px}
+#tab-analyza .a-card{background:#fff;border:0.5px solid var(--a-line);border-radius:10px;padding:16px;box-shadow:none;min-width:0;margin:0 0 14px}
 #tab-analyza .a-grid>.a-card{margin:0}
-#tab-analyza .a-card h3{font-size:13.5px;margin:0 0 2px;font-weight:600;color:var(--a-ink);text-transform:none;letter-spacing:0;display:block}
-#tab-analyza .a-card .desc{font-size:12px;color:var(--a-muted);margin:0 0 10px;line-height:1.55}
-#tab-analyza .a-kpi{background:#fff;border-radius:8px;padding:14px 16px;box-shadow:var(--a-shadow);border-left:4px solid var(--a-red);transition:box-shadow .15s,transform .1s}
-#tab-analyza .a-kpi:hover{box-shadow:0 3px 10px rgba(0,0,0,.14);transform:translateY(-1px)}
-#tab-analyza .a-kpi .label{font-size:11.5px;color:var(--a-muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px}
-#tab-analyza .a-kpi .value{font-size:24px;font-weight:700;line-height:1.05;color:var(--a-ink)}
-#tab-analyza .a-kpi .value small{font-size:14px;font-weight:600;color:var(--a-muted)}
-#tab-analyza .a-kpi .foot{font-size:11.5px;color:#888;margin-top:4px}
-#tab-analyza .a-kpi.ok{border-left-color:#3c9e5f}
-#tab-analyza .a-kpi.warn{border-left-color:#e8a13a}
-#tab-analyza .a-kpi.bad{border-left-color:#d24b4b}
-#tab-analyza .a-kpi.neutral{border-left-color:#9aa7b4}
+#tab-analyza .a-card h3{font-size:12px;margin:0 0 4px;font-weight:500;color:var(--a-muted);text-transform:uppercase;letter-spacing:.4px;display:block}
+#tab-analyza .a-card .desc{font-size:11px;color:var(--a-faint);margin:0 0 12px;line-height:1.5;text-transform:none;letter-spacing:0}
+#tab-analyza .a-kpi{background:var(--a-soft);border-radius:8px;padding:14px 16px;box-shadow:none;border-left:3px solid #ddd}
+#tab-analyza .a-kpi .label{font-size:11px;color:var(--a-muted);text-transform:none;letter-spacing:0;font-weight:500;margin-bottom:4px}
+#tab-analyza .a-kpi .value{font-size:26px;font-weight:500;line-height:1.1;color:var(--a-ink)}
+#tab-analyza .a-kpi .value small{font-size:15px;font-weight:500;color:var(--a-muted)}
+#tab-analyza .a-kpi .foot{font-size:11px;color:var(--a-faint);margin-top:4px}
+#tab-analyza .a-kpi.ok{border-left-color:#1D9E75}
+#tab-analyza .a-kpi.ok .value{color:#3B6D11}
+#tab-analyza .a-kpi.warn{border-left-color:#EF9F27}
+#tab-analyza .a-kpi.warn .value{color:#BA7517}
+#tab-analyza .a-kpi.bad{border-left-color:#E24B4A}
+#tab-analyza .a-kpi.bad .value{color:#A32D2D}
+#tab-analyza .a-kpi.neutral{border-left-color:#185FA5}
+#tab-analyza .a-kpi.neutral .value{color:#185FA5}
 #tab-analyza .cbox{height:250px}
 #tab-analyza .cbox.sm{height:205px}
-#tab-analyza table{font-size:12.5px}
-#tab-analyza th{background:var(--a-grey);color:var(--a-ink);text-transform:none;letter-spacing:0;font-size:12.5px;font-weight:600;padding:8px 10px;border-bottom:2px solid var(--a-line);position:sticky;top:0;z-index:3}
-#tab-analyza td{padding:7px 10px;border-bottom:1px solid #eee;white-space:nowrap}
-#tab-analyza tr:hover td{background:#fdf3f3}
-#tab-analyza .a-tw{max-height:440px;overflow:auto;border:1px solid var(--a-line);border-radius:6px}
+#tab-analyza table{font-size:12px}
+#tab-analyza th{background:var(--a-soft);color:var(--a-muted);text-transform:uppercase;letter-spacing:.3px;font-size:11px;font-weight:500;padding:8px 10px;border-bottom:0.5px solid var(--a-line);position:sticky;top:0;z-index:3}
+#tab-analyza td{padding:7px 10px;border-bottom:0.5px solid #f5f4ef;white-space:nowrap}
+#tab-analyza tr:hover td{background:#fafaf7}
+#tab-analyza .a-tw{max-height:440px;overflow:auto;border:0.5px solid var(--a-line);border-radius:8px}
 #tab-analyza .a-tbh{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}
-#tab-analyza .a-csv{background:transparent;color:#8a8a8a;border:1px solid var(--a-line);padding:5px 12px;border-radius:5px;font-size:11.5px;cursor:pointer;font-weight:600}
-#tab-analyza .a-csv:hover{background:var(--a-grey);color:var(--a-ink);border-color:#bbb}
-#tab-analyza .tg{background:#fff;border:1px solid var(--a-line);color:var(--a-ink);padding:5px 14px;border-radius:20px;cursor:pointer;font-size:12px;font-weight:600;transition:all .15s}
-#tab-analyza .tg:hover{background:var(--a-red);color:#fff;border-color:var(--a-red)}
-#tab-analyza .tg.active{background:var(--a-red);color:#fff;border-color:var(--a-red)}
-#tab-analyza .a-chip{display:inline-block;padding:2px 9px;border-radius:10px;font-size:11.5px;font-weight:600}
-#tab-analyza .a-ok{background:#D1E7DD;color:#0F5132}
-#tab-analyza .a-warn{background:#FFF3CD;color:#664D03}
-#tab-analyza .a-bad{background:#F8D7DA;color:#842029}
-#tab-analyza .a-glbl{font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--a-muted);font-weight:600;align-self:center}
-#tab-analyza .a-legend{display:flex;flex-wrap:wrap;gap:10px;font-size:11px;color:var(--a-muted);margin-top:6px}
+#tab-analyza .a-csv{background:#fff;color:var(--a-acc);border:1px solid var(--a-acc);padding:5px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-weight:500}
+#tab-analyza .a-csv:hover{background:#E6F1FB}
+#tab-analyza .tg{background:#fff;border:1px solid #ddd;color:var(--a-ink);padding:5px 12px;border-radius:6px;cursor:pointer;font-size:11px;font-weight:500;transition:all .15s}
+#tab-analyza .tg:hover{background:#E6F1FB;border-color:var(--a-acc)}
+#tab-analyza .tg.active{background:var(--a-acc);color:#fff;border-color:var(--a-acc)}
+#tab-analyza .a-chip{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:500}
+#tab-analyza .a-ok{background:#EAF3DE;color:#27500A}
+#tab-analyza .a-warn{background:#FAEEDA;color:#633806}
+#tab-analyza .a-bad{background:#FCEBEB;color:#501313}
+#tab-analyza .a-glbl{font-size:11px;letter-spacing:.3px;text-transform:uppercase;color:var(--a-muted);font-weight:500;align-self:center}
+#tab-analyza .a-legend{display:flex;flex-wrap:wrap;gap:10px;font-size:11px;color:var(--a-muted);margin-bottom:10px}
 #tab-analyza .a-legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:middle}
 #tab-analyza .a-note{background:#fff8e6;border-left:3px solid #e6a700;padding:8px 12px;border-radius:4px;font-size:12px;color:#664d03;margin:0 0 12px;line-height:1.55}
-#tab-analyza .a-sel{background:#fde8ea}
-#tab-analyza .a-sel:hover td{background:#fbdce0}
-#tab-analyza .a-rozbal{cursor:pointer;color:var(--a-red-dark);font-weight:600}
-#tab-analyza .hm-cell{border-radius:2px}
-#tab-analyza .empty{color:#999}
+#tab-analyza .a-sel{background:#E6F1FB}
+#tab-analyza .a-sel:hover td{background:#d9e9f8}
+#tab-analyza .a-rozbal{cursor:pointer;color:var(--a-acc);font-weight:500}
+#tab-analyza .hm-cell{border-radius:3px}
+#tab-analyza .empty{color:var(--a-faint)}
 </style>
 </head>
 <body>
@@ -281,7 +290,7 @@ tr:hover td{background:#fafaf7}
 
     <!-- PŘEHLED -->
     <div id="tab-prehled" class="view active">
-      <div class="note"><b>Jednotné pravidlo ±5 min:</b> příjezd dopravce se porovnává s plánovaným začátkem — do 5 min před i po je <i>na čas</i>. „Dochvilnost“ = přijel nejpozději 5 min po začátku. <b>U každého čísla je uvedeno, z čeho se počítá</b> — nedorazilá vozidla i příjezdy bez rezervace zůstávají v datech, jen se nepočítají tam, kam nepatří. Rezervace na státní svátky a naplánované budoucí jízdy do souhrnů nevstupují.</div>
+      <div class="note"><b>Jednotné pravidlo ±5 min:</b> příjezd dopravce se porovnává s plánovaným začátkem — do 5 min před i po je <i>na čas</i>. „Dochvilnost“ (v tabulkách) a „Včas nebo dříve“ (na dlaždicích) je <b>totéž číslo</b>: přijel nejpozději 5 min po plánovaném začátku. <b>Neznamená to „trefil svůj slot“</b> — do ±5 min se vejde jen 8 % vozidel, 69 % přijede dřív. <b>U každého čísla je uvedeno, z čeho se počítá</b> — nedorazilá vozidla i příjezdy bez rezervace zůstávají v datech, jen se nepočítají tam, kam nepatří. Rezervace na státní svátky a naplánované budoucí jízdy do souhrnů nevstupují.</div>
       <div class="metrics m6" id="pre-kpi"></div>
       <div class="grid2">
         <div class="card"><h3>Dochvilnost v čase</h3><div class="card-desc" id="pre-trend-desc">Příjezd dopravce včas a naše odbavení v okně.</div>
@@ -1123,12 +1132,13 @@ function rPrehled(){
   $('pre-kpi').innerHTML =
     metric('info','Rezervací celkem',fmtN(s.n),'plán včetně nedorazilých') +
     metric('','Uskutečněno',fmtN(s.uskutecneno), s.noshow ? 'z toho '+fmtN(s.noshow)+' nedorazilo' : 'žádné nedorazilo') +
-    // „Dochvilnost" tu znamená NEPŘIJEL POZDĚ, ne „přijel na čas": do ±5 min
-    // se trefí jen 15 % vozidel, většina přijede dřív. Pojmenování předepisuje
-    // 03_metriky/tsc-dochvilnost, M5 — bez něj si to každý přečte jinak.
-    metric(s.ev ? prahCls(pct(s.punct,s.ev),'ok','warn','danger') : 'warn','Nepřijel pozdě',
+    // NE „přijel na čas": do ±5 min se trefí 8 % vozidel, 69 % přijede dřív.
+    // Tahle metrika počítá včasné i předčasné dohromady, takže to musí být
+    // v názvu — jinak si každý přečte, že 70 % vozidel trefilo svůj slot.
+    // Pojmenování předepisuje 03_metriky/tsc-dochvilnost, M5.
+    metric(s.ev ? prahCls(pct(s.punct,s.ev),'ok','warn','danger') : 'warn','Včas nebo dříve',
            s.ev?pct(s.punct,s.ev)+' %':'—',
-           'do plánu + 5 min · z '+fmtN(s.ev)+' hodnocených · práh '+PRAH_OK+' %') +
+           'nejpozději plán + 5 min · z '+fmtN(s.ev)+' hodnocených · práh '+PRAH_OK+' %') +
     metric(w.eval ? prahCls(w.pct,'ok','warn','danger') : 'warn','Odbaveno v okně', w.eval?w.pct+' %':'—',
            'hodnoceno '+fmtN(w.eval)+' z '+fmtN(s.n)+' rezervací · práh '+PRAH_OK+' %') +
     metric('','Medián odchylky', med_==null?'—':(med_>0?'+':'')+Math.round(med_)+' min','záporně = přijel dřív') +
@@ -1248,7 +1258,7 @@ function rDispecer(){
   $('disp-stats').innerHTML =
     metric('info','Rezervací celkem',fmtN(d.length),'') +
     metric('warn','Přijelo pozdě',s.ev?pct(s.late,s.ev)+' %':'—',fmtN(s.late)+' vozidel') +
-    metric(s.ev ? prahCls(pct(s.punct,s.ev),'ok','warn','danger') : 'warn','Včas / dříve',s.ev?pct(s.punct,s.ev)+' %':'—',fmtN(s.punct)+' vozidel') +
+    metric(s.ev ? prahCls(pct(s.punct,s.ev),'ok','warn','danger') : 'warn','Včas nebo dříve',s.ev?pct(s.punct,s.ev)+' %':'—',fmtN(s.punct)+' vozidel') +
     metric('danger','Nedorazilo',fmtN(s.noshow),'+ '+s.bez+' bez rezervace') +
     metric(w.eval ? prahCls(w.pct,'ok','warn','danger') : 'warn','V okně',w.eval?w.pct+' %':'—',w.ok+' z '+w.eval);
   $('disp-tbody').innerHTML = d.map(o=>`<tr>
@@ -1397,7 +1407,7 @@ function rDopravci(){
   const ds = stats(dod);
   $('dop-dod-kpi').innerHTML =
     metric('info','Jízd',          fmtN(ds.n), 'objednal dodavatel') +
-    metric(ds.ev ? prahCls(pct(ds.punct,ds.ev),'ok','warn','danger') : 'warn','Dochvilnost', ds.ev?pct(ds.punct,ds.ev)+' %':'—', 'z '+fmtN(ds.ev)+' hodnocených · práh '+PRAH_OK+' %') +
+    metric(ds.ev ? prahCls(pct(ds.punct,ds.ev),'ok','warn','danger') : 'warn','Včas nebo dříve', ds.ev?pct(ds.punct,ds.ev)+' %':'—', 'z '+fmtN(ds.ev)+' hodnocených · práh '+PRAH_OK+' %') +
     metric('warn','Pozdě',         ds.ev?pct(ds.late,ds.ev)+' %':'—', fmtN(ds.late)+' příjezdů') +
     metric(ds.noshow?'danger':'','Nedorazilo', fmtN(ds.noshow), ds.n?pct(ds.noshow,ds.n)+' % jízd':'');
   const dodC = carrierRows(dod).filter(c=>c.n>=3 && !BEZ_JMENA(c.name)).sort((a,b)=>b.n-a.n).slice(0,20);
@@ -1891,12 +1901,13 @@ const AN_UCAST = [['Odbaveno',      o=>!o.nedorazil && !o.bez, '#3c9e5f'],
                   ['Nedorazilo',    o=>o.nedorazil,            '#d24b4b'],
                   ['Bez rezervace', o=>o.bez && !o.nedorazil,  '#7a5ea8']];
 
-// Společné nastavení grafů v jejím vizuálu: tenká mřížka, Segoe UI,
-// legenda dole.
+// Společné nastavení grafů: rozmístění má po jejím (legenda dole, tenká
+// mřížka), písmo je systémové jako ve zbytku dashboardu — Chart.js jinak
+// kreslí jiným fontem než okolní text a je to vidět.
 function aOpt(extra){
   return Object.assign({
     responsive:true, maintainAspectRatio:false,
-    plugins:{legend:{position:'bottom', labels:{font:{size:10, family:"'Segoe UI',Arial,sans-serif"}, boxWidth:10, padding:10}}},
+    plugins:{legend:{position:'bottom', labels:{font:{size:10, family:"system-ui,-apple-system,'Segoe UI',sans-serif"}, boxWidth:10, padding:10}}},
     scales:{x:{grid:{display:false}, ticks:{font:{size:10}}},
             y:{grid:{color:'#eee'}, ticks:{font:{size:10}}}}
   }, extra || {});
@@ -1925,7 +1936,7 @@ function rAnalyza(){
   const s0 = stats(d);
   $('an-kpi').innerHTML =
     aMetric('neutral','Rezervací', fmtN(d.length), f.cs ? SK[f.cs] : 'všechny sklady') +
-    aMetric(s0.ev ? prahCls(pct(s0.punct,s0.ev),'ok','warn','bad') : 'warn','Dochvilnost příjezdu',
+    aMetric(s0.ev ? prahCls(pct(s0.punct,s0.ev),'ok','warn','bad') : 'warn','Příjezd včas nebo dříve',
             s0.ev ? pct(s0.punct,s0.ev)+' <small>%</small>' : '—',
             'z '+fmtN(s0.ev)+' hodnocených příjezdů · práh '+PRAH_OK+' %') +
     aMetric(w.eval ? prahCls(w.pct,'ok','warn','bad') : 'warn','Odbaveno v okně',
