@@ -8,7 +8,11 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;background:#f8f7f2;color:#1a1a18;font-size:14px}
-.topbar{background:#fff;border-bottom:0.5px solid #e8e7e2;padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:48px;position:sticky;top:0;z-index:100}
+.topbar{background:#fff;border-bottom:0.5px solid #e8e7e2;padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:48px}
+/* Ukotvená hlavička: logo, filtr i záložky zůstávají na místě při rolování.
+   Sticky musí být na obalu, ne na .topbar zvlášť — jinak se při rolování
+   zasekne jen lišta a filtr se záložkami odjede pryč. */
+.hlavicka{position:sticky;top:0;z-index:100;background:#fff}
 .topbar-left{display:flex;align-items:center;gap:12px}
 /* Logo DEK se načítá ze souboru logo-dek.png vedle index.html (261×88 px,
    průhledné pozadí — zobrazuje se na 22 px, takže má rezervu pro retinu).
@@ -77,6 +81,10 @@ td{padding:7px 10px;border-bottom:0.5px solid #f5f4ef;vertical-align:middle;whit
 tr:last-child td{border-bottom:none}
 tr:hover td{background:#fafaf7}
 .tw{overflow-x:auto}
+tbody:not(.rozbaleno) tr[data-vic]{display:none}
+.vic-row td{text-align:center;padding:8px;border-bottom:none}
+.vic-btn{background:#f8f7f2;border:0.5px solid #e8e7e2;border-radius:6px;padding:5px 14px;font-size:11.5px;font-family:inherit;color:#185FA5;cursor:pointer}
+.vic-btn:hover{background:#E6F1FB}
 .pill{display:inline-block;font-size:10px;padding:2px 8px;border-radius:20px;font-weight:500}
 .pill-late{background:#FAEEDA;color:#633806}.pill-ok{background:#EAF3DE;color:#27500A}.pill-early{background:#E6F1FB;color:#185FA5}.pill-bad{background:#FCEBEB;color:#501313}.pill-nd{background:#f0efea;color:#888}
 .rank-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid #f5f4ef}
@@ -212,6 +220,7 @@ tr:hover td{background:#fafaf7}
 </div>
 
 <div id="app" style="display:none">
+ <div class="hlavicka">
   <div class="topbar">
     <div class="topbar-left">
       <img class="logo-dek" src="logo-dek.png" alt="DEK"
@@ -285,6 +294,7 @@ tr:hover td{background:#fafaf7}
     <button class="tab" onclick="showTab('pauzy',this)">⏸ Pauzy CS z TSC</button>
     <button class="tab" onclick="showTab('m3',this)">📦 m3 analýza</button>
   </div>
+ </div>
 
   <div class="content">
 
@@ -654,15 +664,9 @@ tr:hover td{background:#fafaf7}
       </div>
       <div class="card"><h3>Detail po pobočkách — TOP 20</h3><div class="card-desc">Podle odjelo m3. Červeně = více než 20 % zbytkového. % zbytkové = zbytkové / (odjelo + zbytkové).</div>
         <div class="tw"><table><thead><tr><th>Pobočka</th><th>Sklad</th><th>Závozy</th><th>Vstup m3</th><th>Odjelo m3</th><th>Zbytkové m3</th><th>% zbytk.</th><th>Převozy</th><th>Zrušeno</th></tr></thead><tbody id="m3-table"></tbody></table></div></div>
-      <div class="card"><h3>Propojení s TSC rezervacemi</h3>
-        <div class="card-desc">⚠ <strong>Každý sloupec počítá něco jiného, nejsou to dvě strany téže mince.</strong>
-        <em>Závozů (m3)</em> je počet řádků v tabulce Vytížení aut — to je zhruba <strong>jeden plánovaný závoz na pobočku a den</strong>.
-        <em>Vozidel (TSC)</em> je počet nakládek, tedy <strong>jednotlivých aut na rampě</strong>. Když pobočku obslouží dvě auta, je to
-        jeden řádek m3 a dvě rezervace — proto u velkých poboček vychází <strong>TSC víc a je to správně</strong>.
-        Sloupec <em>Aut na závoz</em> ten poměr ukazuje přímo.<br>
-        Z hlavního filtru platí <b>období a sklad</b>; typ akce, skupina dopravy a den v týdnu se tu vědomě neuplatňují, protože m3 tabulka ty rozměry nemá.</div>
-        <div class="note" style="background:#FAEEDA;color:#633806" id="m3-shoda"></div>
-        <div class="tw"><table><thead><tr><th>Pobočka</th><th>Sklad</th><th>Závozů (m3)</th><th>Vozidel (TSC)</th><th>Aut na závoz</th><th>Odjelo m3</th><th>Zbytkové m3</th><th>% zbytk.</th></tr></thead><tbody id="m3-tsctable"></tbody></table></div></div>
+      <!-- Karta „Propojení s TSC rezervacemi" odebrána 3. 11. 2026 (Jana, „zatím
+           pryč"). Párování pobočky z pole Číslo NO / Zakázka i tabulka jsou
+           v historii tohoto commitu, dají se vrátit beze zbytku. -->
       </div>
     </div>
 
@@ -817,6 +821,31 @@ function orezRadek(celkem, zobrazeno, sloupcu, co, duvod){
   return celkem > zobrazeno
     ? `<tr><td colspan="${sloupcu}" style="color:#888;font-style:italic;text-align:center;white-space:normal">Zobrazeno ${fmtN(zobrazeno)} z ${fmtN(celkem)} ${co} — ${duvod || 'zbytek se sem nevejde, zužte filtr nahoře.'}</td></tr>`
     : '';
+}
+
+// Výpisy jednotlivých rezervací odsouvaly všechno pod sebou o několik
+// obrazovek. Vidět je prvních pět, zbytek je pořád v DOM — jen schovaný —
+// takže Ctrl+F i CSV pracují dál s celým seznamem. Schovává se přes
+// data-vic, ne přes class: řádky už svoje class mají (klik, pill…).
+const SEZNAM_VIDET = 5;
+function vypisSeznam(id, radky, sloupcu, celkem, co, duvod, prazdne){
+  const tb = $(id);
+  if (!tb) return;
+  tb.classList.remove('rozbaleno');   // po překreslení se seznam vrací sbalený
+  if (!radky.length) { tb.innerHTML = prazdne; return; }
+  const orez = orezRadek(celkem, radky.length, sloupcu, co, duvod);
+  if (radky.length <= SEZNAM_VIDET) { tb.innerHTML = radky.join('') + orez; return; }
+  const skryto = radky.length - SEZNAM_VIDET;
+  tb.innerHTML = radky.slice(0, SEZNAM_VIDET).join('')
+    + radky.slice(SEZNAM_VIDET).map(r=>r.replace('<tr', '<tr data-vic="1"')).join('')
+    + `<tr class="vic-row"><td colspan="${sloupcu}"><button class="vic-btn" onclick="rozbalSeznam(this)">Zobrazit dalších ${fmtN(skryto)} ▾</button></td></tr>`
+    + orez;
+}
+function rozbalSeznam(btn){
+  const tb = btn.closest('tbody');
+  const otevreno = tb.classList.toggle('rozbaleno');
+  const skryto = tb.querySelectorAll('tr[data-vic]').length;
+  btn.textContent = otevreno ? `Sbalit zpět na ${SEZNAM_VIDET} ▴` : `Zobrazit dalších ${fmtN(skryto)} ▾`;
 }
 
 // ============================================================
@@ -1606,15 +1635,15 @@ function rLogistik(){
      <div><strong style="font-size:20px">${fmtN(budouc.filter(o=>o.date===zitra).length)}</strong> zítra</div>
      <div><strong style="font-size:20px">${fmtN(budouc.length)}</strong> naplánováno celkem, do ${budouc.length?obdobiPopis(budouc[budouc.length-1].date,'den'):'—'}</div>
      <div style="color:#888;font-size:11.5px;margin-top:6px">Dál než 14 dní dopředu se ze stahování nic nenačítá, takže delší plán tu nebude, i když v TSC existuje.</div>`;
-  $('log-plan').innerHTML = budouc.slice(0,40).map(o=>{
+  vypisSeznam('log-plan', budouc.slice(0,40).map(o=>{
     const e = ocek(o);
     return `<tr><td>${esc(o.r[C.datum])}</td><td>${hhmm(o.start)}</td><td>${SK[o.sklad]||o.sklad}</td><td>${esc(o.rampa)||'—'}</td>
       <td style="font-family:monospace;font-size:11px">${esc(o.id)}</td>
       <td title="${esc(o.dopravce)}">${esc(o.dopravce.substring(0,24))||'—'}</td><td>${esc(o.typ)||'—'}</td>
       <td>${e ? hhmm(e.t)+' <span style="color:#888;font-size:11px">('+(e.m>0?'+':'')+e.m+' min, z '+e.n+' jízd)</span>'
                 : '<span style="color:#ccc">málo historie</span>'}</td></tr>`;
-  }).join('') + orezRadek(budouc.length, 40, 9, 'naplánovaných rezervací')
-    || '<tr><td colspan="9" class="empty">Nic naplánovaného</td></tr>';
+  }), 9, budouc.length, 'naplánovaných rezervací', null,
+    '<tr><td colspan="9" class="empty">Nic naplánovaného</td></tr>');
 
   // --- 3. dodržení okna a příčiny ---
   const pookne = d.filter(o=>o.win==='over');
@@ -1641,7 +1670,7 @@ function rLogistik(){
       `<tr><td><span class="ld" style="display:inline-block;background:${p.c};margin-right:6px"></span><strong>${p.t}</strong></td>
            <td style="color:#888">${p.ci}</td><td>${fmtN(poc[p.k])}</td><td>${pct(poc[p.k], pookne.length)} %</td></tr>`)
     .join('') || '<tr><td colspan="4" class="empty">Všechno odbaveno v okně 👍</td></tr>';
-  $('log-pripady').innerHTML = prepad.slice().sort((a,b)=>(b.o.date||'').localeCompare(a.o.date||'')).slice(0,40).map(x=>{
+  vypisSeznam('log-pripady', prepad.slice().sort((a,b)=>(b.o.date||'').localeCompare(a.o.date||'')).slice(0,40).map(x=>{
     const o = x.o, p = PRICINA[x.p.k];
     return `<tr class="klik" onclick="otevriOsu('${esc(o.id)}')" title="Otevřít časovou osu rampy">
       <td>${esc(o.r[C.datum])}</td><td>${SK[o.sklad]||o.sklad}</td><td>${esc(o.rampa)||'—'}</td>
@@ -1650,7 +1679,8 @@ function rLogistik(){
       <td>${hhmm(o.start)}–${hhmm(o.end)}</td><td>${hhmm(o.dok)}</td>
       <td style="color:#A32D2D;font-weight:600">+${o.dok-o.end} min</td>
       <td><span class="ld" style="display:inline-block;background:${p.c};margin-right:6px"></span>${p.t}</td></tr>`;
-  }).join('') || '<tr><td colspan="9" class="empty">Žádné ujeté okno</td></tr>';
+  }), 9, prepad.length, 'případů ujetého okna', null,
+    '<tr><td colspan="9" class="empty">Žádné ujeté okno</td></tr>');
 
   // --- 4. datová kvalita ---
   // Rozpad po skladech je tu schválně: u „Parkuje mimo areál" a „Připraveno
@@ -1708,19 +1738,21 @@ function rLogistik(){
     metric('','Pod 10 minut', fmtN(pod10.length), pct(pod10.length, sProc.length)+' % — běžná práce') +
     metric('info','Medián zpracování', (medProc!=null?Math.round(medProc):'—')+' min', 'z '+fmtN(sProc.length)+' vozidel') +
     metric('','Medián délky slotu', (medSlot!=null?Math.round(medSlot):'—')+' min', 'kolik času je na vozidlo plánováno');
-  $('log-kratke').innerHTML = pod5.sort((a,b)=>a.proc-b.proc || (b.date||'').localeCompare(a.date||'')).slice(0,40).map(o=>
+  vypisSeznam('log-kratke', pod5.sort((a,b)=>a.proc-b.proc || (b.date||'').localeCompare(a.date||'')).slice(0,40).map(o=>
     `<tr class="klik" onclick="otevriOsu('${esc(o.id)}')" title="Otevřít časovou osu rampy">
       <td>${esc(o.r[C.datum])}</td><td>${SK[o.sklad]||o.sklad}</td><td>${esc(o.rampa)||'—'}</td>
       <td style="font-family:monospace;font-size:11px">${esc(o.id)}</td>
       <td title="${esc(o.dopravce)}">${esc(o.dopravce.substring(0,20))||'—'}</td><td>${esc(o.typ)||'—'}</td>
       <td>${hhmm(o.zah)}</td><td>${hhmm(o.dok)}</td>
-      <td style="font-weight:600;color:#A32D2D">${o.proc} min</td></tr>`).join('')
-    + orezRadek(pod5.length, 40, 10, 'odbavení pod 5 minut')
-    || '<tr><td colspan="10" class="empty">Žádné odbavení pod 5 minut 👍</td></tr>';
+      <td style="font-weight:600;color:#A32D2D">${o.proc} min</td></tr>`),
+    10, pod5.length, 'odbavení pod 5 minut', null,
+    '<tr><td colspan="10" class="empty">Žádné odbavení pod 5 minut 👍</td></tr>');
 
   // --- 5. nevyplněná data ---
   $('nevypl-count').textContent = `(${fmtN(nevyp.length)} záznamů)`;
-  $('nevypl-table').innerHTML = nevyp.slice(0,50).map(o=>`<tr><td style="font-family:monospace;font-size:11px">${esc(o.id)}</td><td>${esc(o.r[C.datum])}</td><td>${SK[o.sklad]||o.sklad}</td><td>${esc(o.rampa)||'—'}</td><td>${hhmm(o.start)}</td><td>${esc(o.dopravce.substring(0,24))||'—'}</td><td><span class="pill pill-bad">${esc(o.stav)}</span></td></tr>`).join('') || '<tr><td colspan="7" class="empty">Vše vyplněno 👍</td></tr>';
+  vypisSeznam('nevypl-table', nevyp.slice(0,50).map(o=>`<tr><td style="font-family:monospace;font-size:11px">${esc(o.id)}</td><td>${esc(o.r[C.datum])}</td><td>${SK[o.sklad]||o.sklad}</td><td>${esc(o.rampa)||'—'}</td><td>${hhmm(o.start)}</td><td>${esc(o.dopravce.substring(0,24))||'—'}</td><td><span class="pill pill-bad">${esc(o.stav)}</span></td></tr>`),
+    7, nevyp.length, 'nevyplněných rezervací', null,
+    '<tr><td colspan="7" class="empty">Vše vyplněno 👍</td></tr>');
 
   // --- 6. vyřazené rezervace (bez ohledu na filtr) ---
   const vadne = ALL.filter(o=>o.bad);
@@ -1732,13 +1764,14 @@ function rLogistik(){
     metric('','Blokované sloty', fmtN(BLOKOVANE.length), 'nepočítají se nikam') +
     metric('info','Rezervací celkem v datech', fmtN(ALL.length+BLOKOVANE.length), 'bez svátků') +
     metric('','Zobrazeno', fmtN(Math.min(chybne.length,60)), 'nejnovější nahoře');
-  $('log-chyby').innerHTML = chybne.slice(0,60).map(x=>{ const o = x.o;
+  vypisSeznam('log-chyby', chybne.slice(0,60).map(x=>{ const o = x.o;
     return `<tr><td style="font-family:monospace;font-size:11px">${esc(o.id)}</td><td>${esc(o.r[C.datum])}</td>
       <td>${SK[o.sklad]||o.sklad}</td><td>${esc(o.rampa)||'—'}</td>
       <td title="${esc(o.dopravce)}">${esc(o.dopravce.substring(0,22))||'—'}</td>
       <td>${o.zah!=null?hhmm(o.zah):'—'}</td><td>${o.dok!=null?hhmm(o.dok):'—'}</td>
-      <td><span class="pill pill-bad">${esc(x.duvod)}</span></td></tr>`; }).join('')
-    || '<tr><td colspan="8" class="empty">Žádné vyřazené rezervace 👍</td></tr>';
+      <td><span class="pill pill-bad">${esc(x.duvod)}</span></td></tr>`; }),
+    8, chybne.length, 'vyřazených rezervací', null,
+    '<tr><td colspan="8" class="empty">Žádné vyřazené rezervace 👍</td></tr>');
 
   // --- 7. KPI skladníků (jména zůstávají, rozhodnuto 29. 10. 2026) ---
   const names = new Set(); d.forEach(o=>{ if(o.zadZah) names.add(o.zadZah); if(o.zadDok) names.add(o.zadDok); });
@@ -1752,15 +1785,16 @@ function rLogistik(){
     return `<tr><td><strong>${esc(x.n)}</strong></td><td style="text-align:center">${x.zah}</td><td style="text-align:center">${x.dok}</td><td style="text-align:center">${x.avg!=null?Math.round(x.avg)+' min':'—'}</td><td style="text-align:center">${x.ok} / ${x.ev}</td><td style="text-align:center;font-weight:600;color:${col}">${p!=null?p+'%':'—'}</td></tr>`; }).join('') || '<tr><td colspan="6" class="empty">Žádná data</td></tr>';
 
   // --- 8. posledních 20 odbavených ---
-  $('log-posledni').innerHTML = d.filter(o=>o.dok != null).sort((a,b)=>b.dok-a.dok).slice(0,20).map(o=>
+  vypisSeznam('log-posledni', d.filter(o=>o.dok != null).sort((a,b)=>b.dok-a.dok).slice(0,20).map(o=>
     `<tr class="klik" onclick="otevriOsu('${esc(o.id)}')" title="Otevřít časovou osu rampy">
       <td>${esc(o.r[C.datum])}</td><td>${SK[o.sklad]||o.sklad}</td><td>${esc(o.rampa)||'—'}</td>
       <td style="font-family:monospace;font-size:11px">${esc(o.id)}</td>
       <td title="${esc(o.dopravce)}">${esc(o.dopravce.substring(0,20))||'—'}</td>
       <td>${hhmm(o.start)}</td><td>${o.arr!=null?hhmm(o.arr):'—'}</td>
       <td style="color:${diffColor(o)};font-weight:600">${fmtDiff(o)}</td>
-      <td>${o.proc!=null?o.proc+' min':'—'}</td><td>${winPill(o)}</td></tr>`).join('')
-    || '<tr><td colspan="10" class="empty">Žádná dokončená zpracování</td></tr>';
+      <td>${o.proc!=null?o.proc+' min':'—'}</td><td>${winPill(o)}</td></tr>`),
+    10, 20, 'odbavených', null,
+    '<tr><td colspan="10" class="empty">Žádná dokončená zpracování</td></tr>');
 }
 
 // ============================================================
@@ -2652,54 +2686,9 @@ function rM3(){
     return `<tr><td><strong>${esc(p.kod)}</strong></td><td>${SK[p.sklad]||p.sklad}</td><td style="text-align:center">${p.n}</td><td style="text-align:right">${R(p.vstup)}</td><td style="text-align:right">${R(p.odjelo)}</td><td style="text-align:right;color:${col}">${R(p.zb)}</td><td style="text-align:center;color:${col};font-weight:500">${pz}%</td><td style="text-align:right">${R(p.prev)}</td><td style="text-align:center">${p.zr}</td></tr>`; }).join('')
     + orezRadek(pobockyVse.length, pobocky.length, 9, 'poboček', 'řadí se podle odjetých m3.')
     || '<tr><td colspan="9" class="empty">Žádná data</td></tr>';
-  // TSC rezervace za STEJNÉ období a sklad jako m3 řádky vedle nich.
-  // Schválně se nebere `filtered`: ten navíc filtruje typ akce, skupinu
-  // dopravy a den v týdnu, které m3 tabulka nemá — sloupce by se pak
-  // porovnávaly každý za jinou množinu a nikdo by to nepoznal.
-  const tscProM3 = filt(ALL, {from:f.from, to:f.to, cs:f.cs, dop:'', typ:'', den:''}, false);
-  // Z pole „Číslo NO / Zakázka" se berou VŠECHNY kódy poboček, ne jen první
-  // token: jedna jízda běžně obsluhuje víc poboček („P110 + P235").
-  // Tři způsoby zápisu, které se v poli reálně vyskytují:
-  //   P250 / P 250 / P-250  → prefix P, mezera nebo pomlčka se ignoruje
-  //   NO-100-26-00030, VRATKY 131 → samostatné trojčíslí bez P
-  // Trojčíslí bez P se uzná jen tehdy, když taková pobočka v m3 opravdu
-  // existuje. Jinak by se jako pobočka počítalo číslo zakázky, rok nebo
-  // kód skladu (S095 → 095), a tabulka by tiše nabrala neexistující vozy.
-  const znameKody = new Set(Object.keys(byPob));
-  const kodyPobocek = o => {
-    const u = String(o.no||'').toUpperCase(), out = new Set();
-    let m;
-    const reP = /P\s*[-.]?\s*(\d{3,4})/g;
-    while ((m = reP.exec(u))) out.add('P'+m[1]);
-    const reN = /(?<![\dA-Z])(\d{3})(?!\d)/g;
-    while ((m = reN.exec(u))) if (znameKody.has('P'+m[1])) out.add('P'+m[1]);
-    return [...out];
-  };
-  // Do sloupce „Vozidel (TSC)" patří jen nakládky, protože řádek m3 je
-  // plánovaný ZÁVOZ na pobočku. Vykládka je pohyb opačným směrem: příjem od
-  // dodavatele (pobočku nemá) nebo vratka z pobočky („VRATKY 131"). Vratka
-  // kód pobočky nese, takže by se tiše připočítala k závozům a poměr
-  // „Aut na závoz" by u poboček s hodně vratkami vyšel vyšší, než je pravda.
-  // Nakládka + Vykládka se počítá — to je závoz, který cestou bere vratky.
-  const naklProM3 = tscProM3.filter(o=>o.isLoad);
-  const tscBy = {};
-  naklProM3.forEach(o=>kodyPobocek(o).forEach(x=>(tscBy[x] || (tscBy[x] = [])).push(o)));
-  const naparovano = naklProM3.filter(o=>kodyPobocek(o).length).length;
-  const vykSKodem = tscProM3.filter(o=>!o.isLoad && kodyPobocek(o).length).length;
-  $('m3-shoda').innerHTML = `Pobočku se podařilo vyčíst u <strong>${fmtN(naparovano)} z ${fmtN(naklProM3.length)}</strong>
-    nakládek (${pct(naparovano, naklProM3.length)} %). U zbytku je v poli <em>Číslo NO / Zakázka</em> něco, z čeho se
-    pobočka vyčíst nedá: většinou převoz mezi sklady (<code>S095, S093</code>), <code>Geis CZ s.r.o.</code> nebo „více NO".
-    <strong>U těch poboček proto vyjde méně vozidel, než ve skutečnosti přijelo.</strong><br>
-    Vykládky se do tabulky nepočítají — je to opačný směr: příjem od dodavatele, nebo vratka z pobočky.
-    Kód pobočky jich nese ${fmtN(vykSKodem)} a k závozům se nepřičítají.`;
-  $('m3-tsctable').innerHTML = pobocky.slice(0,20).map(p=>{ const tr = tscBy[p.kod] || tscBy['P'+p.kod] || []; const pz=pP(p.zb,p.odjelo+p.zb); const col=pz>20?'#A32D2D':(pz>10?'#BA7517':'inherit');
-    const pomer = p.n ? (tr.length / p.n) : null;
-    return `<tr><td><strong>${esc(p.kod)}</strong></td><td>${SK[p.sklad]||p.sklad}</td><td style="text-align:center">${p.n}</td>
-      <td style="text-align:center;color:${tr.length?'inherit':'#aaa'}">${tr.length||'—'}</td>
-      <td style="text-align:center;color:#888">${pomer?pomer.toFixed(1).replace('.',','):'—'}</td>
-      <td style="text-align:right">${R(p.odjelo)}</td><td style="text-align:right;color:${col}">${R(p.zb)}</td><td style="text-align:center;color:${col};font-weight:500">${pz}%</td></tr>`; }).join('')
-    + orezRadek(pobockyVse.length, pobocky.length, 8, 'poboček', 'řadí se podle odjetých m3.')
-    || '<tr><td colspan="8" class="empty">Žádná data</td></tr>';
+  // Párování m3 poboček na TSC rezervace odebráno 3. 11. 2026 spolu s kartou
+  // „Propojení s TSC rezervacemi" (Jana, „zatím pryč"). V historii commitu je
+  // i vyčítání kódu pobočky z pole Číslo NO / Zakázka.
 }
 
 // ============================================================
